@@ -9,6 +9,7 @@ import {
   Platform,
   StatusBar as RNStatusBar,
   LayoutChangeEvent,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -17,6 +18,7 @@ import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette } from "luc
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
+import { saveAnimal } from "../src/utils/savedAnimals";
 
 // Types for route params (adjust to your navigator's typing as needed)
 type ColoringParams = {
@@ -173,7 +175,21 @@ export default function ColoringScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.saveBtn}
             >
-              <Pressable style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <Pressable
+                style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+                onPress={async () => {
+                  try {
+                    const imageUri = await canvasRef.current?.save();
+                    if (imageUri && hybridKey) {
+                      await saveAnimal(hybridKey, animalName, imageUri);
+                      Alert.alert("Success!", "Your artwork has been saved to the gallery and your Animal Pen!");
+                    }
+                  } catch (error) {
+                    console.error("Save error:", error);
+                    Alert.alert("Error", "Failed to save image. Please try again.");
+                  }
+                }}
+              >
                 <Save size={18} color="#fff" />
                 <Text style={styles.saveText}>Save to Pen</Text>
               </Pressable>

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { GLView } from "expo-gl";
+import { GLView, ExpoWebGLRenderingContext } from "expo-gl";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
 import { getHybridPngUri } from "../src/utils/assetLoader.native";
 import { floodFill, hexToRgba } from "../src/utils/floodFill";
 
@@ -19,6 +21,7 @@ interface GlColoringCanvasProps {
 export interface GlColoringCanvasRef {
   undo: () => void;
   clear: () => void;
+  save: () => Promise<string>;
 }
 
 // Vertex shader - passes through positions and texture coordinates
@@ -266,7 +269,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     render();
   }, [render]);
 
-  // Expose undo and clear methods
+  // Expose undo, clear, and save methods
   useImperativeHandle(ref, () => ({
     undo: () => {
       if (historyRef.current.length === 0) return;
@@ -285,6 +288,33 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       pixelDataRef.current = new Uint8ClampedArray(originalPixelDataRef.current);
       historyRef.current = [];
       updateOverlayFromPixelData();
+    },
+    save: async () => {
+      const gl = glRef.current as ExpoWebGLRenderingContext | null;
+      if (!gl) throw new Error("WebGL context not available");
+
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error("Media library permission not granted");
+      }
+
+      // Take snapshot of the WebGL canvas
+      const snapshot = await gl.takeSnapshotAsync({
+        format: 'png',
+        compress: 1,
+        rect: {
+          x: 0,
+          y: 0,
+          width: gl.drawingBufferWidth,
+          height: gl.drawingBufferHeight
+        }
+      });
+
+      // Save to media library
+      const asset = await MediaLibrary.createAssetAsync(snapshot.uri);
+
+      return asset.uri;
     }
   }), [updateOverlayFromPixelData]);
 

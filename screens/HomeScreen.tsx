@@ -478,7 +478,7 @@ useEffect(() => {
               </Text>
             </Pressable>
 
-            <Pressable style={styles.secondaryBtn}>
+            <Pressable style={styles.secondaryBtn} onPress={() => navigation.navigate("Pen")}>
               <PawPrint color="#333" size={20} style={{ marginRight: 8 }} />
               <Text style={styles.secondaryText}>My Animal Pen</Text>
             </Pressable>
