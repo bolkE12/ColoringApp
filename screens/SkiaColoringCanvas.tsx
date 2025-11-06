@@ -115,8 +115,34 @@ export default function SkiaColoringCanvas({
         // Store the pixel data for flood-fill operations
         pixelDataRef.current = pixels;
 
+        // Debug: Check if we have any dark pixels (the outline)
+        let darkPixelCount = 0;
+        let whitePixelCount = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+          const a = pixels[i + 3];
+
+          if (a > 200 && r < 50 && g < 50 && b < 50) {
+            darkPixelCount++;
+          }
+          if (a > 200 && r > 240 && g > 240 && b > 240) {
+            whitePixelCount++;
+          }
+        }
+
+        console.log("[SkiaColoringCanvas] Bitmap analysis:");
+        console.log("  - Dark pixels (outline):", darkPixelCount);
+        console.log("  - White pixels (interior):", whitePixelCount);
+        console.log("  - Total pixels:", pixels.length / 4);
+
+        if (darkPixelCount === 0) {
+          console.warn("[SkiaColoringCanvas] WARNING: No dark outline pixels found!");
+          console.warn("[SkiaColoringCanvas] Skia SVG rendering failed. Bitmap is completely white.");
+        }
+
         console.log("[SkiaColoringCanvas] Initialization complete!");
-        console.log("[SkiaColoringCanvas] Bitmap ready with", pixels.length / 4, "pixels for coloring");
         setLoading(false);
 
       } catch (err) {
