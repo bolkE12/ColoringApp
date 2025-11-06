@@ -205,22 +205,40 @@ export default function SkiaColoringCanvas({
 
     // Create a colored overlay PNG (only the colored pixels, rest transparent)
     const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
+    let overlayPixelCount = 0;
+
     for (let i = 0; i < overlayPixels.length; i += 4) {
-      // If this pixel was colored (matches fill color), show it
-      if (workingPixels[i] === fillColor[0] &&
-          workingPixels[i+1] === fillColor[1] &&
-          workingPixels[i+2] === fillColor[2] &&
-          workingPixels[i+3] === fillColor[3] &&
-          workingPixels[i] !== 255) { // Not white
-        overlayPixels[i] = workingPixels[i];
-        overlayPixels[i+1] = workingPixels[i+1];
-        overlayPixels[i+2] = workingPixels[i+2];
-        overlayPixels[i+3] = workingPixels[i+3];
+      const r = workingPixels[i];
+      const g = workingPixels[i+1];
+      const b = workingPixels[i+2];
+      const a = workingPixels[i+3];
+
+      // Check if this pixel matches the fill color (was just colored)
+      const matchesFillColor = (r === fillColor[0] && g === fillColor[1] &&
+                                b === fillColor[2] && a === fillColor[3]);
+
+      // Check if it's NOT white (white is r=255, g=255, b=255)
+      const isNotWhite = !(r === 255 && g === 255 && b === 255);
+
+      // Check if it's NOT black (the outline)
+      const isNotBlack = !(r < 50 && g < 50 && b < 50);
+
+      if (matchesFillColor && isNotWhite && isNotBlack) {
+        overlayPixels[i] = r;
+        overlayPixels[i+1] = g;
+        overlayPixels[i+2] = b;
+        overlayPixels[i+3] = a;
+        overlayPixelCount++;
       } else {
         // Transparent
+        overlayPixels[i] = 0;
+        overlayPixels[i+1] = 0;
+        overlayPixels[i+2] = 0;
         overlayPixels[i+3] = 0;
       }
     }
+
+    console.log("[SkiaColoringCanvas] Overlay has", overlayPixelCount, "colored pixels");
 
     // Encode overlay to data URI
     const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
