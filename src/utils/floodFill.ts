@@ -17,10 +17,12 @@ export function floodFill(
     data[start + 3],
   ];
 
-  // Don’t fill transparent or stroke-black
-  if (target[3] === 0) return;
-  const isStrokeBlack = target[0] < 20 && target[1] < 20 && target[2] < 20;
+  // Don't fill if tapping on opaque black stroke (the outline)
+  // Opaque black: alpha > 200 AND rgb all < 20
+  const isStrokeBlack = target[3] > 200 && target[0] < 20 && target[1] < 20 && target[2] < 20;
   if (isStrokeBlack) return;
+
+  // ALLOW transparent pixels to be filled (for PNGs with transparent interiors)
 
   const nearly = (a: number, b: number) => Math.abs(a - b) <= tolerance;
   const isTarget = (i: number) =>
