@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
-import SkiaFillCanvas, { SkiaFillCanvasHandle } from "./SkiaFillCanvas";
+import SimpleSvgDisplay from "./SimpleSvgDisplay";
 
 // Types for route params (adjust to your navigator's typing as needed)
 type ColoringParams = {
@@ -44,8 +44,6 @@ export default function ColoringScreen() {
   const [activeTool, setActiveTool] = useState<"fill" | "brush">("fill");
   const [activeColor, setActiveColor] = useState<string>(DEFAULT_COLORS[0]);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
-
-  const canvasRef = useRef<SkiaFillCanvasHandle | null>(null);
 
   if (!fontsLoaded) return null;
 
@@ -85,15 +83,10 @@ export default function ColoringScreen() {
               }}
             >
               {hybridKey ? (
-                <SkiaFillCanvas
-                  ref={canvasRef}
+                <SimpleSvgDisplay
                   hybridKey={hybridKey}
-                  color={activeColor}
                   width="100%"
                   height="100%"
-                  onDidPaint={() => {}}
-                  onUndo={() => {}}
-                  onClear={() => {}}
                 />
               ) : (
                 <Text style={styles.canvasPlaceholder}>Your animal will appear here</Text>
@@ -150,7 +143,8 @@ export default function ColoringScreen() {
             <View style={styles.row}>
               <Pressable
                 onPress={() => {
-                  canvasRef.current?.undo?.();
+                  // Undo functionality will be added later
+                  console.log("Undo pressed");
                 }}
                 style={styles.ghostBtn}
               >
@@ -161,7 +155,8 @@ export default function ColoringScreen() {
             <View style={styles.row}>
               <Pressable
                 onPress={() => {
-                  canvasRef.current?.clear?.();
+                  // Clear functionality will be added later
+                  console.log("Clear pressed");
                 }}
                 style={styles.ghostBtn}
               >
