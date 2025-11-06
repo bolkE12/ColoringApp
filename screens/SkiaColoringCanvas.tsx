@@ -80,39 +80,40 @@ export default function SkiaColoringCanvas({
         // Store the pixel data for flood-fill operations
         pixelDataRef.current = pixels;
 
-        // Debug: Check if we have any dark pixels (the outline)
-        let darkPixelCount = 0;
+        // Debug: Check if we have the expected pixel distribution
+        let blackPixelCount = 0;
         let whitePixelCount = 0;
-        let transparentPixelCount = 0;
+        let coloredPixelCount = 0;
         for (let i = 0; i < pixels.length; i += 4) {
           const r = pixels[i];
           const g = pixels[i + 1];
           const b = pixels[i + 2];
-          const a = pixels[i + 3];
 
-          if (a > 200 && r < 50 && g < 50 && b < 50) {
-            darkPixelCount++;
+          // Black outline pixels
+          if (r < 50 && g < 50 && b < 50) {
+            blackPixelCount++;
           }
-          if (a > 200 && r > 240 && g > 240 && b > 240) {
+          // White/colorable pixels
+          else if (r > 240 && g > 240 && b > 240) {
             whitePixelCount++;
           }
-          if (a < 50) {
-            transparentPixelCount++;
+          // Already colored pixels
+          else {
+            coloredPixelCount++;
           }
         }
 
         console.log("[PngColoringCanvas] Bitmap analysis:");
-        console.log("  - Dark pixels (outline):", darkPixelCount);
-        console.log("  - White pixels (interior):", whitePixelCount);
-        console.log("  - Transparent pixels (colorable):", transparentPixelCount);
+        console.log("  - Black pixels (outline):", blackPixelCount);
+        console.log("  - White pixels (colorable):", whitePixelCount);
+        console.log("  - Colored pixels:", coloredPixelCount);
         console.log("  - Total pixels:", pixels.length / 4);
 
-        if (darkPixelCount === 0) {
-          console.warn("[PngColoringCanvas] WARNING: No dark outline pixels found!");
+        if (blackPixelCount === 0) {
+          console.warn("[PngColoringCanvas] WARNING: No black outline pixels found!");
         } else {
-          const colorablePixels = whitePixelCount + transparentPixelCount;
           console.log("[PngColoringCanvas] ✓ PNG loaded successfully");
-          console.log(`[PngColoringCanvas] ✓ ${darkPixelCount} outline pixels, ${colorablePixels} colorable pixels`);
+          console.log(`[PngColoringCanvas] ✓ ${blackPixelCount} outline pixels, ${whitePixelCount} colorable pixels`);
         }
 
         console.log("[PngColoringCanvas] Initialization complete!");
@@ -161,18 +162,24 @@ export default function SkiaColoringCanvas({
 
     console.log(`[PngColoringCanvas] Pixel color at tap: rgba(${r}, ${g}, ${b}, ${a})`);
 
-    // Don't fill if tapping on the black outline (opaque black pixels)
-    // Black outline should have high alpha (> 200) and low RGB (< 50)
-    if (a > 200 && r < 50 && g < 50 && b < 50) {
-      console.log("[PngColoringCanvas] Tapped on outline, ignoring");
+    // Don't fill if tapping on the black outline
+    if (r < 50 && g < 50 && b < 50) {
+      console.log("[PngColoringCanvas] Tapped on black outline, ignoring");
+      return;
+    }
+
+    // Check if already filled with selected color
+    const fillColor = hexToRgba(selectedColor);
+    if (r === fillColor[0] && g === fillColor[1] && b === fillColor[2] && a === fillColor[3]) {
+      console.log("[PngColoringCanvas] Region already filled with this color");
       return;
     }
 
     // Log what type of pixel we're filling
-    if (a < 50) {
-      console.log("[PngColoringCanvas] Filling transparent/interior region");
+    if (r > 240 && g > 240 && b > 240) {
+      console.log("[PngColoringCanvas] Filling white region");
     } else {
-      console.log("[PngColoringCanvas] Filling colored/white region");
+      console.log("[PngColoringCanvas] Filling already-colored region (re-coloring)");
     }
 
     console.log("[PngColoringCanvas] Step 3: Applying flood-fill algorithm...");
@@ -180,12 +187,10 @@ export default function SkiaColoringCanvas({
     // Make a copy of the pixel data for flood-fill
     const workingPixels = new Uint8ClampedArray(pixelDataRef.current);
 
-    // Convert selected color to RGBA
-    const fillColor = hexToRgba(selectedColor);
     console.log(`[PngColoringCanvas] Filling with color: rgba(${fillColor.join(", ")})`);
 
-    // Apply flood-fill (tolerance of 10 for anti-aliasing)
-    floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, bitmapX, bitmapY, fillColor, 10);
+    // Apply flood-fill with tolerance for anti-aliasing on edges
+    floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, bitmapX, bitmapY, fillColor, 20);
 
     // Update the stored pixel data
     pixelDataRef.current = workingPixels;
@@ -202,24 +207,23 @@ export default function SkiaColoringCanvas({
       const b = workingPixels[i+2];
       const a = workingPixels[i+3];
 
-      // Check if this pixel matches the fill color (was just colored)
-      const matchesFillColor = (r === fillColor[0] && g === fillColor[1] &&
-                                b === fillColor[2] && a === fillColor[3]);
+      // Include pixel in overlay if it's:
+      // 1. NOT white (r < 240 || g < 240 || b < 240)
+      // 2. NOT black outline (r >= 50 || g >= 50 || b >= 50)
+      // This captures all colored pixels
 
-      // Check if it's NOT white (white is r=255, g=255, b=255)
-      const isNotWhite = !(r === 255 && g === 255 && b === 255);
+      const isWhite = (r > 240 && g > 240 && b > 240);
+      const isBlack = (r < 50 && g < 50 && b < 50);
 
-      // Check if it's NOT black outline (opaque black: a > 200 && r < 50 && g < 50 && b < 50)
-      const isNotBlack = !(a > 200 && r < 50 && g < 50 && b < 50);
-
-      if (matchesFillColor && isNotWhite && isNotBlack) {
+      if (!isWhite && !isBlack) {
+        // This is a colored pixel - include it in the overlay
         overlayPixels[i] = r;
         overlayPixels[i+1] = g;
         overlayPixels[i+2] = b;
-        overlayPixels[i+3] = a;
+        overlayPixels[i+3] = 255; // Full opacity
         overlayPixelCount++;
       } else {
-        // Transparent
+        // Make transparent (white or black pixels)
         overlayPixels[i] = 0;
         overlayPixels[i+1] = 0;
         overlayPixels[i+2] = 0;
