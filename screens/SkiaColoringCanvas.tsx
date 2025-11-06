@@ -70,12 +70,16 @@ export default function SkiaColoringCanvas({
         // Create Skia image from PNG data
         const data = Skia.Data.fromBytes(pngArray);
         const image = Skia.Image.MakeImageFromEncoded(data);
+
+        console.log("[SkiaCanvas] Skia image created:", !!image);
+        console.log("[SkiaCanvas] Image dimensions:", image?.width?.(), "x", image?.height?.());
+
         baseImageRef.current = image;
 
         // Create initial empty color overlay (all transparent)
-        const emptyPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
         colorImageRef.current = null; // Start with no overlay
 
+        console.log("[SkiaCanvas] Triggering render");
         setUpdateCounter(prev => prev + 1);
 
       } catch (err) {
@@ -195,7 +199,15 @@ export default function SkiaColoringCanvas({
         ref={canvasRef}
         style={{ flex: 1 }}
       >
-        {baseImageRef.current && containerSize.width > 0 && (() => {
+        {(() => {
+          console.log("[SkiaCanvas] Rendering Canvas");
+          console.log("[SkiaCanvas] baseImage exists:", !!baseImageRef.current);
+          console.log("[SkiaCanvas] containerSize:", containerSize.width, containerSize.height);
+
+          if (!baseImageRef.current || containerSize.width === 0) {
+            return null;
+          }
+
           // Calculate scale to fit canvas
           const scale = Math.min(
             containerSize.width / TARGET_SIZE,
@@ -205,6 +217,8 @@ export default function SkiaColoringCanvas({
           const scaledHeight = TARGET_SIZE * scale;
           const offsetX = (containerSize.width - scaledWidth) / 2;
           const offsetY = (containerSize.height - scaledHeight) / 2;
+
+          console.log("[SkiaCanvas] Rendering image at:", offsetX, offsetY, scaledWidth, scaledHeight);
 
           return (
             <>
