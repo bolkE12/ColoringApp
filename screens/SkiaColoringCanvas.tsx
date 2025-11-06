@@ -24,13 +24,12 @@ export default function SkiaColoringCanvas({
 }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [baseImage, setBaseImage] = useState<any>(null);
+  const [colorImage, setColorImage] = useState<any>(null);
   const canvasRef = useCanvasRef();
 
-  // Store images and pixel data
-  const baseImageRef = useRef<any>(null);
-  const colorImageRef = useRef<any>(null);
+  // Store pixel data
   const pixelDataRef = useRef<Uint8ClampedArray | null>(null);
-  const [updateCounter, setUpdateCounter] = useState(0);
 
   // Load PNG and initialize
   useEffect(() => {
@@ -71,10 +70,8 @@ export default function SkiaColoringCanvas({
         const data = Skia.Data.fromBytes(pngArray);
         const image = Skia.Image.MakeImageFromEncoded(data);
 
-        baseImageRef.current = image;
-        colorImageRef.current = null; // Start with no overlay
-
-        setUpdateCounter(prev => prev + 1);
+        console.log("[SkiaCanvas] Setting base image, dimensions:", image?.width?.(), "x", image?.height?.());
+        setBaseImage(image);
 
       } catch (err) {
         if (!cancelled) {
@@ -167,10 +164,8 @@ export default function SkiaColoringCanvas({
       data,
       TARGET_SIZE * 4
     );
-    colorImageRef.current = overlayImage;
 
-    // Trigger re-render
-    setUpdateCounter(prev => prev + 1);
+    setColorImage(overlayImage);
   }, [selectedColor, containerSize]);
 
   if (error) {
@@ -192,9 +187,10 @@ export default function SkiaColoringCanvas({
       <Canvas
         ref={canvasRef}
         style={{ flex: 1 }}
-        key={updateCounter}
       >
-        {baseImageRef.current && containerSize.width > 0 && (() => {
+        {baseImage && containerSize.width > 0 && (() => {
+          console.log("[SkiaCanvas] Rendering - baseImage exists:", !!baseImage);
+
           // Calculate scale to fit canvas
           const scale = Math.min(
             containerSize.width / TARGET_SIZE,
@@ -205,11 +201,13 @@ export default function SkiaColoringCanvas({
           const offsetX = (containerSize.width - scaledWidth) / 2;
           const offsetY = (containerSize.height - scaledHeight) / 2;
 
+          console.log("[SkiaCanvas] Drawing at:", offsetX, offsetY, scaledWidth, scaledHeight);
+
           return (
             <>
               {/* Draw base PNG */}
               <SkiaImage
-                image={baseImageRef.current}
+                image={baseImage}
                 x={offsetX}
                 y={offsetY}
                 width={scaledWidth}
@@ -217,9 +215,9 @@ export default function SkiaColoringCanvas({
                 fit="contain"
               />
               {/* Draw color overlay */}
-              {colorImageRef.current && (
+              {colorImage && (
                 <SkiaImage
-                  image={colorImageRef.current}
+                  image={colorImage}
                   x={offsetX}
                   y={offsetY}
                   width={scaledWidth}
