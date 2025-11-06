@@ -66,23 +66,14 @@ export default function SkiaColoringCanvas({
         // Store pixel data for flood-fill
         pixelDataRef.current = pixels;
 
-        // Create Skia image directly from RGBA pixels (not encoded PNG)
-        const data = Skia.Data.fromBytes(pixels);
-        const image = Skia.Image.MakeImage(
-          {
-            width: decoded.width,
-            height: decoded.height,
-            alphaType: Skia.AlphaType.Unpremul,
-            colorType: Skia.ColorType.RGBA_8888,
-          },
-          data,
-          decoded.width * 4
-        );
+        // Create Skia image from encoded PNG bytes
+        const pngData = Skia.Data.fromBytes(pngArray);
+        const image = Skia.Image.MakeImageFromEncoded(pngData);
 
         if (image) {
           setBaseImage(image);
         } else {
-          throw new Error("Failed to create Skia image from pixels");
+          throw new Error("Failed to create Skia image from PNG");
         }
 
       } catch (err) {
@@ -164,20 +155,14 @@ export default function SkiaColoringCanvas({
       overlayPixels[i+3] = 255;
     }
 
-    // Create Skia image directly from pixel data (no PNG encoding!)
-    const data = Skia.Data.fromBytes(overlayPixels);
-    const overlayImage = Skia.Image.MakeImage(
-      {
-        width: TARGET_SIZE,
-        height: TARGET_SIZE,
-        alphaType: Skia.AlphaType.Unpremul,
-        colorType: Skia.ColorType.RGBA_8888,
-      },
-      data,
-      TARGET_SIZE * 4
-    );
+    // Encode overlay pixels to PNG using UPNG
+    const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
+    const overlayData = Skia.Data.fromBytes(new Uint8Array(overlayPng));
+    const overlayImage = Skia.Image.MakeImageFromEncoded(overlayData);
 
-    setColorImage(overlayImage);
+    if (overlayImage) {
+      setColorImage(overlayImage);
+    }
   }, [selectedColor, containerSize]);
 
   if (error) {
