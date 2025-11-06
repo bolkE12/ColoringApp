@@ -74,7 +74,8 @@ export default function ColoringScreen() {
 
         {/* Main layout */}
         <View style={styles.main}>
-          {/* Canvas */}
+          {/* Canvas - Displays the hybrid SVG chosen from CreateScreen
+              The hybridKey is passed via navigation params and loaded by SkiaFillCanvas */}
           <View style={styles.canvasWrap}>
             <View
               style={styles.canvas}
