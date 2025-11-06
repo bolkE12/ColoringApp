@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
-import GlColoringCanvas from "./GlColoringCanvas";
+import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
 
 // Types for route params (adjust to your navigator's typing as needed)
 type ColoringParams = {
@@ -44,6 +44,7 @@ export default function ColoringScreen() {
   const [activeTool, setActiveTool] = useState<"fill" | "brush">("fill");
   const [activeColor, setActiveColor] = useState<string>(DEFAULT_COLORS[0]);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
+  const canvasRef = useRef<GlColoringCanvasRef>(null);
 
   if (!fontsLoaded) return null;
 
@@ -84,6 +85,7 @@ export default function ColoringScreen() {
             >
               {hybridKey ? (
                 <GlColoringCanvas
+                  ref={canvasRef}
                   hybridKey={hybridKey}
                   selectedColor={activeColor}
                   width="100%"
@@ -144,8 +146,7 @@ export default function ColoringScreen() {
             <View style={styles.row}>
               <Pressable
                 onPress={() => {
-                  // Undo functionality will be added later
-                  console.log("Undo pressed");
+                  canvasRef.current?.undo();
                 }}
                 style={styles.ghostBtn}
               >
@@ -156,8 +157,7 @@ export default function ColoringScreen() {
             <View style={styles.row}>
               <Pressable
                 onPress={() => {
-                  // Clear functionality will be added later
-                  console.log("Clear pressed");
+                  canvasRef.current?.clear();
                 }}
                 style={styles.ghostBtn}
               >

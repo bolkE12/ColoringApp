@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { GLView } from "expo-gl";
 import { getHybridPngUri } from "../src/utils/assetLoader.native";
@@ -14,6 +14,11 @@ interface GlColoringCanvasProps {
   selectedColor: string;
   width?: string | number;
   height?: string | number;
+}
+
+export interface GlColoringCanvasRef {
+  undo: () => void;
+  clear: () => void;
 }
 
 // Vertex shader - passes through positions and texture coordinates
@@ -55,24 +60,26 @@ const overlayFragmentShaderSource = `
   }
 `;
 
-export default function GlColoringCanvas({
+const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(({
   hybridKey,
   selectedColor,
   width = "100%",
   height = "100%"
-}: GlColoringCanvasProps) {
+}, ref) => {
   const [error, setError] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   // Store WebGL context and resources
   const glRef = useRef<WebGLRenderingContext | null>(null);
   const pixelDataRef = useRef<Uint8ClampedArray | null>(null);
+  const originalPixelDataRef = useRef<Uint8ClampedArray | null>(null);
   const baseTextureRef = useRef<WebGLTexture | null>(null);
   const overlayTextureRef = useRef<WebGLTexture | null>(null);
   const overlayPixelsRef = useRef<Uint8ClampedArray | null>(null);
   const programRef = useRef<WebGLProgram | null>(null);
   const overlayProgramRef = useRef<WebGLProgram | null>(null);
   const layoutRef = useRef({ offsetX: 0, offsetY: 0, scale: 1, displayWidth: 0, displayHeight: 0 });
+  const historyRef = useRef<Uint8ClampedArray[]>([]);
 
   // Compile shader
   const compileShader = (gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null => {
@@ -225,6 +232,62 @@ export default function GlColoringCanvas({
     gl.endFrameEXP();
   }, []);
 
+  // Helper to update overlay from current pixel data
+  const updateOverlayFromPixelData = useCallback(() => {
+    if (!pixelDataRef.current || !overlayPixelsRef.current || !glRef.current || !overlayTextureRef.current) return;
+
+    const workingPixels = pixelDataRef.current;
+    const overlayPixels = overlayPixelsRef.current;
+    overlayPixels.fill(0); // Clear overlay
+
+    // Create overlay (filter out white/black)
+    for (let i = 0; i < workingPixels.length; i += 4) {
+      const r = workingPixels[i];
+      const g = workingPixels[i + 1];
+      const b = workingPixels[i + 2];
+
+      // Skip white and black pixels
+      if ((r > 240 && g > 240 && b > 240) || (r < 50 && g < 50 && b < 50)) {
+        continue;
+      }
+
+      overlayPixels[i] = r;
+      overlayPixels[i + 1] = g;
+      overlayPixels[i + 2] = b;
+      overlayPixels[i + 3] = 255;
+    }
+
+    // Update overlay texture
+    const gl = glRef.current;
+    gl.bindTexture(gl.TEXTURE_2D, overlayTextureRef.current);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TARGET_SIZE, TARGET_SIZE, gl.RGBA, gl.UNSIGNED_BYTE, overlayPixels);
+
+    // Re-render
+    render();
+  }, [render]);
+
+  // Expose undo and clear methods
+  useImperativeHandle(ref, () => ({
+    undo: () => {
+      if (historyRef.current.length === 0) return;
+
+      // Pop from history
+      const previousState = historyRef.current.pop();
+      if (previousState) {
+        pixelDataRef.current = previousState;
+        updateOverlayFromPixelData();
+      }
+    },
+    clear: () => {
+      if (!originalPixelDataRef.current) return;
+
+      // Reset to original state
+      pixelDataRef.current = new Uint8ClampedArray(originalPixelDataRef.current);
+      historyRef.current = [];
+      updateOverlayFromPixelData();
+    }
+  }), [updateOverlayFromPixelData]);
+
   // Initialize WebGL context
   const onContextCreate = useCallback(async (gl: WebGLRenderingContext) => {
     try {
@@ -258,6 +321,8 @@ export default function GlColoringCanvas({
       const rgba = UPNG.toRGBA8(decoded);
       const pixels = new Uint8ClampedArray(rgba[0]);
 
+      // Save original and current pixel data
+      originalPixelDataRef.current = new Uint8ClampedArray(pixels);
       pixelDataRef.current = pixels;
 
       // Create base texture
@@ -310,40 +375,18 @@ export default function GlColoringCanvas({
 
     if (r < 50 && g < 50 && b < 50) return; // Black outline
 
+    // Save current state to history before making changes
+    historyRef.current.push(new Uint8ClampedArray(pixelDataRef.current));
+
     // Perform flood-fill
     const fillColor = hexToRgba(selectedColor);
     const workingPixels = new Uint8ClampedArray(pixelDataRef.current);
     floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, bitmapX, bitmapY, fillColor, 20);
     pixelDataRef.current = workingPixels;
 
-    // Create overlay (filter out white/black)
-    const overlayPixels = overlayPixelsRef.current;
-    overlayPixels.fill(0); // Clear overlay
-
-    for (let i = 0; i < workingPixels.length; i += 4) {
-      const r = workingPixels[i];
-      const g = workingPixels[i + 1];
-      const b = workingPixels[i + 2];
-
-      // Skip white and black pixels
-      if ((r > 240 && g > 240 && b > 240) || (r < 50 && g < 50 && b < 50)) {
-        continue;
-      }
-
-      overlayPixels[i] = r;
-      overlayPixels[i + 1] = g;
-      overlayPixels[i + 2] = b;
-      overlayPixels[i + 3] = 255;
-    }
-
-    // Update overlay texture directly (NO PNG ENCODING!)
-    const gl = glRef.current;
-    gl.bindTexture(gl.TEXTURE_2D, overlayTextureRef.current);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TARGET_SIZE, TARGET_SIZE, gl.RGBA, gl.UNSIGNED_BYTE, overlayPixels);
-
-    // Re-render
-    render();
-  }, [selectedColor, render]);
+    // Update overlay and render
+    updateOverlayFromPixelData();
+  }, [selectedColor, updateOverlayFromPixelData]);
 
   // Update layout when container size changes
   useEffect(() => {
@@ -393,7 +436,11 @@ export default function GlColoringCanvas({
       )}
     </View>
   );
-}
+});
+
+GlColoringCanvas.displayName = 'GlColoringCanvas';
+
+export default GlColoringCanvas;
 
 const styles = StyleSheet.create({
   container: {
