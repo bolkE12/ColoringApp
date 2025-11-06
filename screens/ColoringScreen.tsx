@@ -182,7 +182,7 @@ export default function ColoringScreen() {
                     const imageUri = await canvasRef.current?.save();
                     if (imageUri && hybridKey) {
                       await saveAnimal(hybridKey, animalName, imageUri);
-                      Alert.alert("Success!", "Your artwork has been saved to the gallery and your Animal Pen!");
+                      Alert.alert("Success!", "Your artwork has been saved to your Animal Pen!");
                     }
                   } catch (error) {
                     console.error("Save error:", error);

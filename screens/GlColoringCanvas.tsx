@@ -293,12 +293,6 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       const gl = glRef.current;
       if (!gl || !pixelDataRef.current) throw new Error("Canvas not ready");
 
-      // Request media library permissions
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        throw new Error("Media library permission not granted");
-      }
-
       // Create final composite image by merging base and colored pixels
       const finalPixels = new Uint8ClampedArray(pixelDataRef.current);
 
@@ -313,10 +307,18 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       await file.create();
       await file.write(pngArray);
 
-      // Save to media library
-      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      // Try to save to media library (will fail gracefully in Expo Go)
+      try {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          await MediaLibrary.createAssetAsync(fileUri);
+        }
+      } catch (error) {
+        console.log('[Save] Media library save skipped (Expo Go limitation):', error);
+      }
 
-      return asset.uri;
+      // Return the file URI (works in both Expo Go and production)
+      return fileUri;
     }
   }), [updateOverlayFromPixelData]);
 
