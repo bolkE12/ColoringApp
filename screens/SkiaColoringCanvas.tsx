@@ -26,9 +26,42 @@ export default function SkiaColoringCanvas({
   const [pngUri, setPngUri] = useState<string | null>(null);
   const [colorOverlay, setColorOverlay] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [imageLayout, setImageLayout] = useState({ width: 0, height: 0, offsetX: 0, offsetY: 0 });
 
   // Store the pixel data for flood-fill operations
   const pixelDataRef = useRef<Uint8ClampedArray | null>(null);
+
+  // Calculate actual image layout when container size changes
+  useEffect(() => {
+    if (containerSize.width > 0 && containerSize.height > 0) {
+      // PNG is 1024x1024 (square)
+      // With resizeMode="contain", it scales to fit while maintaining aspect ratio
+      const scale = Math.min(
+        containerSize.width / TARGET_SIZE,
+        containerSize.height / TARGET_SIZE
+      );
+
+      const displayWidth = TARGET_SIZE * scale;
+      const displayHeight = TARGET_SIZE * scale;
+
+      // Center the image in the container
+      const offsetX = (containerSize.width - displayWidth) / 2;
+      const offsetY = (containerSize.height - displayHeight) / 2;
+
+      setImageLayout({
+        width: displayWidth,
+        height: displayHeight,
+        offsetX,
+        offsetY
+      });
+
+      console.log(`[PngColoringCanvas] Image layout calculated:`);
+      console.log(`  Container: ${containerSize.width}x${containerSize.height}`);
+      console.log(`  Display: ${displayWidth.toFixed(1)}x${displayHeight.toFixed(1)}`);
+      console.log(`  Offset: (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
+      console.log(`  Scale: ${scale.toFixed(3)}`);
+    }
+  }, [containerSize]);
 
   // Step 1: Load PNG file
   // Step 2: Decode PNG to get pixel data
@@ -143,18 +176,39 @@ export default function SkiaColoringCanvas({
       return;
     }
 
+    if (imageLayout.width === 0 || imageLayout.height === 0) {
+      console.log("[PngColoringCanvas] Image layout not calculated yet");
+      return;
+    }
+
     const { locationX, locationY } = event.nativeEvent;
 
-    // Map touch coordinates to bitmap coordinates
-    const scaleX = TARGET_SIZE / containerSize.width;
-    const scaleY = TARGET_SIZE / containerSize.height;
-    const bitmapX = Math.floor(locationX * scaleX);
-    const bitmapY = Math.floor(locationY * scaleY);
+    console.log(`[PngColoringCanvas] Touch at: (${locationX.toFixed(1)}, ${locationY.toFixed(1)})`);
 
-    console.log(`[PngColoringCanvas] Tap at: (${bitmapX}, ${bitmapY})`);
+    // Subtract offset to get position within the displayed image
+    const imageX = locationX - imageLayout.offsetX;
+    const imageY = locationY - imageLayout.offsetY;
+
+    console.log(`[PngColoringCanvas] Image coords: (${imageX.toFixed(1)}, ${imageY.toFixed(1)})`);
+
+    // Check if tap is within image bounds
+    if (imageX < 0 || imageX >= imageLayout.width || imageY < 0 || imageY >= imageLayout.height) {
+      console.log("[PngColoringCanvas] Tap outside image bounds, ignoring");
+      return;
+    }
+
+    // Scale from display coordinates to bitmap coordinates (1024x1024)
+    const bitmapX = Math.floor((imageX / imageLayout.width) * TARGET_SIZE);
+    const bitmapY = Math.floor((imageY / imageLayout.height) * TARGET_SIZE);
+
+    // Clamp to bitmap bounds
+    const clampedX = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapX));
+    const clampedY = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapY));
+
+    console.log(`[PngColoringCanvas] Bitmap coords: (${clampedX}, ${clampedY})`);
 
     // Check the pixel color at tap location
-    const idx = (bitmapY * TARGET_SIZE + bitmapX) * 4;
+    const idx = (clampedY * TARGET_SIZE + clampedX) * 4;
     const r = pixelDataRef.current[idx];
     const g = pixelDataRef.current[idx + 1];
     const b = pixelDataRef.current[idx + 2];
@@ -190,7 +244,7 @@ export default function SkiaColoringCanvas({
     console.log(`[PngColoringCanvas] Filling with color: rgba(${fillColor.join(", ")})`);
 
     // Apply flood-fill with tolerance for anti-aliasing on edges
-    floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, bitmapX, bitmapY, fillColor, 20);
+    floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, clampedX, clampedY, fillColor, 20);
 
     // Update the stored pixel data
     pixelDataRef.current = workingPixels;
@@ -248,7 +302,7 @@ export default function SkiaColoringCanvas({
     setColorOverlay(dataUri);
     console.log("[PngColoringCanvas] Flood-fill complete!");
 
-  }, [selectedColor, containerSize]);
+  }, [selectedColor, imageLayout]);
 
   if (loading) {
     return (
