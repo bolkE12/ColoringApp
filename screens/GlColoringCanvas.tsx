@@ -173,9 +173,35 @@ export default function GlColoringCanvas({
     const gl = glRef.current;
     if (!gl || !programRef.current || !overlayProgramRef.current || !baseTextureRef.current) return;
 
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    // Calculate viewport to maintain 1:1 aspect ratio (letterbox/pillarbox)
+    const canvasWidth = gl.drawingBufferWidth;
+    const canvasHeight = gl.drawingBufferHeight;
+    const canvasAspect = canvasWidth / canvasHeight;
+    const imageAspect = 1.0; // 1024x1024 is square
+
+    let viewportWidth, viewportHeight, viewportX, viewportY;
+
+    if (canvasAspect > imageAspect) {
+      // Canvas is wider - add pillarboxing (black bars on sides)
+      viewportHeight = canvasHeight;
+      viewportWidth = canvasHeight * imageAspect;
+      viewportX = (canvasWidth - viewportWidth) / 2;
+      viewportY = 0;
+    } else {
+      // Canvas is taller - add letterboxing (black bars on top/bottom)
+      viewportWidth = canvasWidth;
+      viewportHeight = canvasWidth / imageAspect;
+      viewportX = 0;
+      viewportY = (canvasHeight - viewportHeight) / 2;
+    }
+
+    // Clear entire canvas
+    gl.viewport(0, 0, canvasWidth, canvasHeight);
     gl.clearColor(1, 1, 1, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Set viewport for image rendering
+    gl.viewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
     // Enable blending for overlay
     gl.enable(gl.BLEND);
