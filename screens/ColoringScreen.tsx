@@ -16,7 +16,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
-import SkiaColoringCanvas from "./SkiaColoringCanvas";
+import GlColoringCanvas from "./GlColoringCanvas";
 
 // Types for route params (adjust to your navigator's typing as needed)
 type ColoringParams = {
@@ -72,8 +72,8 @@ export default function ColoringScreen() {
 
         {/* Main layout */}
         <View style={styles.main}>
-          {/* Canvas - Displays the hybrid SVG chosen from CreateScreen
-              The hybridKey is passed via navigation params and loaded by SkiaFillCanvas */}
+          {/* Canvas - Displays the hybrid PNG chosen from CreateScreen
+              The hybridKey is passed via navigation params and loaded by GlColoringCanvas */}
           <View style={styles.canvasWrap}>
             <View
               style={styles.canvas}
@@ -83,7 +83,7 @@ export default function ColoringScreen() {
               }}
             >
               {hybridKey ? (
-                <SkiaColoringCanvas
+                <GlColoringCanvas
                   hybridKey={hybridKey}
                   selectedColor={activeColor}
                   width="100%"
