@@ -88,10 +88,9 @@ export default function ColorableSvgDisplay({
       const surface = MakeOffscreen(TARGET_SIZE, TARGET_SIZE);
       const canvas = surface.getCanvas();
 
-      // White background
-      const bgPaint = Skia.Paint();
-      bgPaint.setColor(Skia.Color("#FFFFFFFF"));
-      canvas.drawRect({ x: 0, y: 0, width: TARGET_SIZE, height: TARGET_SIZE }, bgPaint);
+      // Start with transparent background (no fill)
+      // The SVG will be drawn with white interior and black outline on transparent canvas
+      canvas.clear(Skia.Color("#00000000"));
 
       // Parse and draw SVG
       const svg = Skia.SVG.MakeFromString(xml);
@@ -154,8 +153,8 @@ export default function ColorableSvgDisplay({
         const b = data[idx + 2];
         const a = data[idx + 3];
 
-        // Look for dark pixels (the outline) or non-white colored pixels
-        const isDark = a > 200 && r < 220 && g < 220 && b < 220;
+        // Look for dark pixels (the outline) - these define the animal shape
+        const isDark = a > 200 && r < 200 && g < 200 && b < 200;
 
         if (isDark) {
           found = true;
@@ -226,9 +225,9 @@ export default function ColorableSvgDisplay({
 
       console.log("[ColorableSvgDisplay] Tap pixel color:", { r: tapR, g: tapG, b: tapB, a: tapA });
 
-      // Don't fill transparent pixels
-      if (tapA < 200) {
-        console.log("[ColorableSvgDisplay] Tapped on transparent pixel, ignoring");
+      // Don't fill transparent pixels (these are outside the animal)
+      if (tapA < 50) {
+        console.log("[ColorableSvgDisplay] Tapped on transparent/background pixel, ignoring");
         setIsProcessing(false);
         return;
       }
@@ -287,12 +286,14 @@ export default function ColorableSvgDisplay({
         const base = baseImageData.current;
         const colored = coloredImageData.current;
 
-        // Check if this pixel was white in the base and is now colored
-        const wasWhite = base[i] > 240 && base[i+1] > 240 && base[i+2] > 240 && base[i+3] > 200;
+        // Check if this pixel was white/light in the base (inside animal, not outline)
+        // and is now colored with the target color
+        const wasLight = base[i] > 200 && base[i+1] > 200 && base[i+2] > 200 && base[i+3] > 200;
+        const wasNotTransparent = base[i+3] > 200; // Had alpha in original
         const isNowColored = colored[i] === rgba[0] && colored[i+1] === rgba[1] &&
                             colored[i+2] === rgba[2] && colored[i+3] === rgba[3];
 
-        if (wasWhite && isNowColored) {
+        if (wasLight && wasNotTransparent && isNowColored) {
           overlayData[i] = colored[i];
           overlayData[i+1] = colored[i+1];
           overlayData[i+2] = colored[i+2];
