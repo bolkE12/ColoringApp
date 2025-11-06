@@ -88,11 +88,13 @@ export default function ColorableSvgDisplay({
       const surface = MakeOffscreen(TARGET_SIZE, TARGET_SIZE);
       const canvas = surface.getCanvas();
 
-      // Start with transparent background (no fill)
-      // The SVG will be drawn with white interior and black outline on transparent canvas
-      canvas.clear(Skia.Color("#00000000"));
+      // Start with WHITE background so the SVG interior is white
+      // This way flood-fill can detect and fill the white regions
+      const bgPaint = Skia.Paint();
+      bgPaint.setColor(Skia.Color("#FFFFFFFF"));
+      canvas.drawRect({ x: 0, y: 0, width: TARGET_SIZE, height: TARGET_SIZE }, bgPaint);
 
-      // Parse and draw SVG
+      // Parse and draw SVG (black outline)
       const svg = Skia.SVG.MakeFromString(xml);
       if (!svg) {
         console.warn("[ColorableSvgDisplay] Failed to parse SVG");
@@ -114,6 +116,66 @@ export default function ColorableSvgDisplay({
       else (svg as any)?.render?.(canvas);
 
       canvas.restore();
+
+      // Now we need to make everything outside the SVG bounds transparent
+      // Get pixel data and make background transparent
+      const tempSnapshot = surface.makeImageSnapshot();
+      const tempPng = tempSnapshot.encodeToBytes();
+      const tempU8 = new Uint8Array((tempPng as any).buffer || tempPng);
+      const tempDecoded = UPNG.decode(tempU8);
+      const tempRgba = UPNG.toRGBA8(tempDecoded);
+      const pixelData = new Uint8ClampedArray(tempRgba[0]);
+
+      // Find the bounding box of non-white pixels (the outline)
+      let minX = TARGET_SIZE, minY = TARGET_SIZE, maxX = 0, maxY = 0;
+      for (let y = 0; y < TARGET_SIZE; y++) {
+        for (let x = 0; x < TARGET_SIZE; x++) {
+          const idx = (y * TARGET_SIZE + x) * 4;
+          const r = pixelData[idx];
+          const g = pixelData[idx + 1];
+          const b = pixelData[idx + 2];
+          const a = pixelData[idx + 3];
+
+          // Look for dark pixels (the SVG outline)
+          if (a > 200 && r < 100 && g < 100 && b < 100) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      // Expand bounds with padding
+      const padding = 5;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(TARGET_SIZE - 1, maxX + padding);
+      maxY = Math.min(TARGET_SIZE - 1, maxY + padding);
+
+      console.log("[ColorableSvgDisplay] SVG bounds:", { minX, minY, maxX, maxY });
+
+      // Make pixels outside the bounds transparent
+      for (let y = 0; y < TARGET_SIZE; y++) {
+        for (let x = 0; x < TARGET_SIZE; x++) {
+          if (x < minX || x > maxX || y < minY || y > maxY) {
+            const idx = (y * TARGET_SIZE + x) * 4;
+            pixelData[idx + 3] = 0; // Make transparent
+          }
+        }
+      }
+
+      // Re-encode and draw back to surface
+      const finalPng = UPNG.encode([pixelData.buffer], TARGET_SIZE, TARGET_SIZE, 0);
+      const finalU8 = new Uint8Array(finalPng);
+      const finalData = Skia.Data.fromBytes(finalU8);
+      const finalImg = (Skia as any).Image.MakeImageFromEncoded(finalData);
+
+      if (finalImg) {
+        canvas.clear(Skia.Color("#00000000"));
+        const p = Skia.Paint();
+        canvas.drawImage(finalImg, 0, 0, p);
+      }
 
       // Get pixel data
       const snapshot = surface.makeImageSnapshot();
@@ -226,7 +288,7 @@ export default function ColorableSvgDisplay({
       console.log("[ColorableSvgDisplay] Tap pixel color:", { r: tapR, g: tapG, b: tapB, a: tapA });
 
       // Don't fill transparent pixels (these are outside the animal)
-      if (tapA < 50) {
+      if (tapA < 200) {
         console.log("[ColorableSvgDisplay] Tapped on transparent/background pixel, ignoring");
         setIsProcessing(false);
         return;
