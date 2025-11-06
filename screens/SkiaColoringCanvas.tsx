@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { View, ActivityIndicator, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { getHybridPngUri } from "../src/utils/assetLoader.native";
 import { floodFill, hexToRgba } from "../src/utils/floodFill";
 
@@ -21,7 +21,6 @@ export default function SkiaColoringCanvas({
   width = "100%",
   height = "100%"
 }: Props) {
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pngUri, setPngUri] = useState<string | null>(null);
   const [colorOverlay, setColorOverlay] = useState<string | null>(null);
@@ -70,10 +69,9 @@ export default function SkiaColoringCanvas({
 
     async function initializeCanvas() {
       try {
-        setLoading(true);
         setError(null);
 
-        console.log("[PngColoringCanvas] Step 1: Loading PNG file...");
+        console.log("[PngColoringCanvas] Loading PNG...");
 
         // Load the PNG asset using the asset loader
         const uri = await getHybridPngUri(hybridKey);
@@ -82,8 +80,6 @@ export default function SkiaColoringCanvas({
 
         // Store URI for display
         setPngUri(uri);
-
-        console.log("[PngColoringCanvas] Step 2: Fetching PNG data...");
 
         // Fetch the PNG file as a blob
         const response = await fetch(uri);
@@ -99,16 +95,13 @@ export default function SkiaColoringCanvas({
 
         if (cancelled) return;
 
-        console.log("[PngColoringCanvas] Step 3: Decoding PNG to pixel data...");
-
         // Decode PNG to RGBA pixels using UPNG
         const pngArray = new Uint8Array(arrayBuffer);
         const decoded = UPNG.decode(pngArray);
         const rgba = UPNG.toRGBA8(decoded);
         const pixels = new Uint8ClampedArray(rgba[0]);
 
-        console.log("[PngColoringCanvas] PNG dimensions:", decoded.width, "x", decoded.height);
-        console.log("[PngColoringCanvas] Total pixels:", pixels.length / 4);
+        console.log("[PngColoringCanvas] PNG loaded:", decoded.width, "x", decoded.height);
 
         // Store the pixel data for flood-fill operations
         pixelDataRef.current = pixels;
@@ -145,18 +138,13 @@ export default function SkiaColoringCanvas({
         if (blackPixelCount === 0) {
           console.warn("[PngColoringCanvas] WARNING: No black outline pixels found!");
         } else {
-          console.log("[PngColoringCanvas] ✓ PNG loaded successfully");
-          console.log(`[PngColoringCanvas] ✓ ${blackPixelCount} outline pixels, ${whitePixelCount} colorable pixels`);
+          console.log("[PngColoringCanvas] ✓ Ready -", blackPixelCount, "outline,", whitePixelCount, "colorable");
         }
-
-        console.log("[PngColoringCanvas] Initialization complete!");
-        setLoading(false);
 
       } catch (err) {
         if (!cancelled) {
           console.error("[PngColoringCanvas] Error:", err);
-          setError(err instanceof Error ? err.message : "Failed to initialize canvas");
-          setLoading(false);
+          setError(err instanceof Error ? err.message : "Failed to load PNG");
         }
       }
     }
@@ -249,69 +237,56 @@ export default function SkiaColoringCanvas({
     // Update the stored pixel data
     pixelDataRef.current = workingPixels;
 
-    console.log("[PngColoringCanvas] Step 4: Creating new image from modified pixels...");
+    console.log("[PngColoringCanvas] Step 4: Creating overlay...");
 
-    // Create a colored overlay PNG (only the colored pixels, rest transparent)
-    const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
-    let overlayPixelCount = 0;
+    // Use setTimeout to make UI feel more responsive
+    setTimeout(() => {
+      // Create a colored overlay PNG (only the colored pixels, rest transparent)
+      const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
+      let overlayPixelCount = 0;
 
-    for (let i = 0; i < overlayPixels.length; i += 4) {
-      const r = workingPixels[i];
-      const g = workingPixels[i+1];
-      const b = workingPixels[i+2];
-      const a = workingPixels[i+3];
+      // Optimized loop - check conditions in order of likelihood
+      for (let i = 0; i < overlayPixels.length; i += 4) {
+        const r = workingPixels[i];
+        const g = workingPixels[i+1];
+        const b = workingPixels[i+2];
 
-      // Include pixel in overlay if it's:
-      // 1. NOT white (r < 240 || g < 240 || b < 240)
-      // 2. NOT black outline (r >= 50 || g >= 50 || b >= 50)
-      // This captures all colored pixels
+        // Quick checks: white (most common) or black (second most common)
+        if ((r > 240 && g > 240 && b > 240) || (r < 50 && g < 50 && b < 50)) {
+          // Transparent - no need to set (already zeros)
+          continue;
+        }
 
-      const isWhite = (r > 240 && g > 240 && b > 240);
-      const isBlack = (r < 50 && g < 50 && b < 50);
-
-      if (!isWhite && !isBlack) {
         // This is a colored pixel - include it in the overlay
         overlayPixels[i] = r;
         overlayPixels[i+1] = g;
         overlayPixels[i+2] = b;
-        overlayPixels[i+3] = 255; // Full opacity
+        overlayPixels[i+3] = 255;
         overlayPixelCount++;
-      } else {
-        // Make transparent (white or black pixels)
-        overlayPixels[i] = 0;
-        overlayPixels[i+1] = 0;
-        overlayPixels[i+2] = 0;
-        overlayPixels[i+3] = 0;
       }
-    }
 
-    console.log("[PngColoringCanvas] Overlay has", overlayPixelCount, "colored pixels");
+      console.log("[PngColoringCanvas] Overlay:", overlayPixelCount, "pixels");
 
-    // Encode overlay to data URI
-    const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
-    const overlayU8 = new Uint8Array(overlayPng);
-    let binary = "";
-    const chunkSize = 0x8000;
-    for (let i = 0; i < overlayU8.length; i += chunkSize) {
-      binary += String.fromCharCode.apply(null, Array.from(overlayU8.subarray(i, i + chunkSize)));
-    }
-    // @ts-ignore - btoa is available in React Native
-    const base64 = btoa(binary);
-    const dataUri = `data:image/png;base64,${base64}`;
+      // Encode overlay to PNG with compression level 0 (fastest)
+      const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
+      const overlayU8 = new Uint8Array(overlayPng);
 
-    setColorOverlay(dataUri);
-    console.log("[PngColoringCanvas] Flood-fill complete!");
+      // Fast base64 conversion with chunking (avoids stack overflow)
+      const chunkSize = 32768; // 32KB chunks
+      let binary = "";
+      for (let i = 0; i < overlayU8.length; i += chunkSize) {
+        const chunk = overlayU8.subarray(i, Math.min(i + chunkSize, overlayU8.length));
+        binary += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      // @ts-ignore - btoa is available in React Native
+      const base64 = btoa(binary);
+      const dataUri = `data:image/png;base64,${base64}`;
+
+      setColorOverlay(dataUri);
+      console.log("[PngColoringCanvas] ✓ Done!");
+    }, 0);
 
   }, [selectedColor, imageLayout]);
-
-  if (loading) {
-    return (
-      <View style={[styles.container, { width, height }]}>
-        <ActivityIndicator size="large" color="#A133F5" />
-        <Text style={styles.text}>Loading canvas...</Text>
-      </View>
-    );
-  }
 
   if (error) {
     return (
@@ -364,12 +339,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-  },
-  text: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#666",
-    fontFamily: "MadimiOne_400Regular",
   },
   errorText: {
     fontSize: 16,
