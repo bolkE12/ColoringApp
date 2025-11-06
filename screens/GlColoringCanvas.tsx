@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { GLView, ExpoWebGLRenderingContext } from "expo-gl";
-import * as FileSystem from "expo-file-system";
+import { File, Paths } from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 import { getHybridPngUri } from "../src/utils/assetLoader.native";
 import { floodFill, hexToRgba } from "../src/utils/floodFill";
@@ -306,19 +306,12 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       const pngData = UPNG.encode([finalPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
       const pngArray = new Uint8Array(pngData);
 
-      // Convert to base64
-      let binary = '';
-      for (let i = 0; i < pngArray.length; i++) {
-        binary += String.fromCharCode(pngArray[i]);
-      }
-      const base64 = btoa(binary);
-
-      // Save to file system
+      // Save to file system using new File API
       const filename = `colored_animal_${Date.now()}.png`;
-      const fileUri = FileSystem.documentDirectory + filename;
-      await FileSystem.writeAsStringAsync(fileUri, base64, {
-        encoding: 'base64',
-      });
+      const fileUri = Paths.document + '/' + filename;
+      const file = new File(fileUri);
+      await file.create();
+      await file.write(pngArray);
 
       // Save to media library
       const asset = await MediaLibrary.createAssetAsync(fileUri);
