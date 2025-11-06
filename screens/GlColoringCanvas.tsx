@@ -293,32 +293,45 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       const gl = glRef.current;
       if (!gl || !pixelDataRef.current) throw new Error("Canvas not ready");
 
-      // Create final composite image by merging base and colored pixels
-      const finalPixels = new Uint8ClampedArray(pixelDataRef.current);
-
-      // Encode to PNG
-      const pngData = UPNG.encode([finalPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
-      const pngArray = new Uint8Array(pngData);
-
-      // Save to file system using new File API
-      const filename = `colored_animal_${Date.now()}.png`;
-      const fileUri = Paths.document + '/' + filename;
-      const file = new File(fileUri);
-      await file.create();
-      await file.write(pngArray);
-
-      // Try to save to media library (will fail gracefully in Expo Go)
       try {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status === 'granted') {
-          await MediaLibrary.createAssetAsync(fileUri);
-        }
-      } catch (error) {
-        console.log('[Save] Media library save skipped (Expo Go limitation):', error);
-      }
+        // Create final composite image by merging base and colored pixels
+        const finalPixels = new Uint8ClampedArray(pixelDataRef.current);
 
-      // Return the file URI (works in both Expo Go and production)
-      return fileUri;
+        // Encode to PNG
+        const pngData = UPNG.encode([finalPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
+        const pngArray = new Uint8Array(pngData);
+
+        // Save to file system using new File API
+        const filename = `colored_animal_${Date.now()}.png`;
+        const fileUri = Paths.document + '/' + filename;
+
+        console.log('[Save] Creating file at:', fileUri);
+        const file = new File(fileUri);
+        await file.create();
+        await file.write(pngArray);
+
+        console.log('[Save] File saved successfully');
+
+        // Try to save to media library (will fail gracefully in Expo Go)
+        try {
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+          if (status === 'granted') {
+            console.log('[Save] Attempting to save to media library...');
+            await MediaLibrary.createAssetAsync(fileUri);
+            console.log('[Save] Media library save successful');
+          } else {
+            console.log('[Save] Media library permission not granted');
+          }
+        } catch (mediaError) {
+          console.log('[Save] Media library save skipped (Expo Go limitation):', mediaError);
+        }
+
+        // Return the file URI (works in both Expo Go and production)
+        return fileUri;
+      } catch (error) {
+        console.error('[Save] Error during save:', error);
+        throw error;
+      }
     }
   }), [updateOverlayFromPixelData]);
 
