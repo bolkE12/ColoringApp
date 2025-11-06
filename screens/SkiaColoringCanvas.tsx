@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
+import { View, ActivityIndicator, Text, StyleSheet, Image } from "react-native";
 import { Canvas, Image as SkiaImage, Skia, useCanvasRef } from "@shopify/react-native-skia";
+import { SvgXml } from "react-native-svg";
 import { loadHybridXml } from "../src/utils/assetLoader.native";
 import { floodFill, hexToRgba } from "../src/utils/floodFill";
 
@@ -24,7 +25,8 @@ export default function SkiaColoringCanvas({
 }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [canvasImage, setCanvasImage] = useState<any>(null);
+  const [svgXml, setSvgXml] = useState<string | null>(null);
+  const [colorOverlay, setColorOverlay] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   // Store the pixel data for flood-fill operations
@@ -44,9 +46,12 @@ export default function SkiaColoringCanvas({
         setError(null);
 
         console.log("[SkiaColoringCanvas] Step 1: Loading SVG file...");
-        const svgXml = await loadHybridXml(hybridKey);
+        const xml = await loadHybridXml(hybridKey);
 
         if (cancelled) return;
+
+        // Store SVG for display
+        setSvgXml(xml);
 
         console.log("[SkiaColoringCanvas] Step 2: Creating Skia Surface (bitmap canvas)...");
         // Create an offscreen surface for rasterization
@@ -68,7 +73,7 @@ export default function SkiaColoringCanvas({
 
         console.log("[SkiaColoringCanvas] Step 3: Drawing SVG onto surface (rasterizing)...");
         // Parse and draw the SVG
-        const svg = Skia.SVG.MakeFromString(svgXml);
+        const svg = Skia.SVG.MakeFromString(xml);
         if (!svg) {
           throw new Error("Failed to parse SVG");
         }
@@ -110,12 +115,8 @@ export default function SkiaColoringCanvas({
         // Store the pixel data for flood-fill operations
         pixelDataRef.current = pixels;
 
-        // Create initial Skia image from pixels
-        const initialImage = createSkiaImageFromPixels(pixels, TARGET_SIZE, TARGET_SIZE);
-        setCanvasImage(initialImage);
-
         console.log("[SkiaColoringCanvas] Initialization complete!");
-        console.log("[SkiaColoringCanvas] Canvas has black outlines and white interior, ready for coloring");
+        console.log("[SkiaColoringCanvas] Bitmap ready with", pixels.length / 4, "pixels for coloring");
         setLoading(false);
 
       } catch (err) {
@@ -202,10 +203,38 @@ export default function SkiaColoringCanvas({
 
     console.log("[SkiaColoringCanvas] Step 6: Creating new image from modified pixels...");
 
-    // Create new Skia image from the modified pixels
-    const newImage = createSkiaImageFromPixels(workingPixels, TARGET_SIZE, TARGET_SIZE);
-    setCanvasImage(newImage);
+    // Create a colored overlay PNG (only the colored pixels, rest transparent)
+    const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
+    for (let i = 0; i < overlayPixels.length; i += 4) {
+      // If this pixel was colored (matches fill color), show it
+      if (workingPixels[i] === fillColor[0] &&
+          workingPixels[i+1] === fillColor[1] &&
+          workingPixels[i+2] === fillColor[2] &&
+          workingPixels[i+3] === fillColor[3] &&
+          workingPixels[i] !== 255) { // Not white
+        overlayPixels[i] = workingPixels[i];
+        overlayPixels[i+1] = workingPixels[i+1];
+        overlayPixels[i+2] = workingPixels[i+2];
+        overlayPixels[i+3] = workingPixels[i+3];
+      } else {
+        // Transparent
+        overlayPixels[i+3] = 0;
+      }
+    }
 
+    // Encode overlay to data URI
+    const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
+    const overlayU8 = new Uint8Array(overlayPng);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < overlayU8.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, Array.from(overlayU8.subarray(i, i + chunkSize)));
+    }
+    // @ts-ignore - btoa is available in React Native
+    const base64 = btoa(binary);
+    const dataUri = `data:image/png;base64,${base64}`;
+
+    setColorOverlay(dataUri);
     console.log("[SkiaColoringCanvas] Flood-fill complete!");
 
   }, [selectedColor, containerSize]);
@@ -235,18 +264,26 @@ export default function SkiaColoringCanvas({
         setContainerSize({ width: w, height: h });
       }}
     >
-      <Canvas ref={canvasRef} style={{ flex: 1 }}>
-        {canvasImage && (
-          <SkiaImage
-            image={canvasImage}
-            x={0}
-            y={0}
-            width={containerSize.width}
-            height={containerSize.height}
-            fit="contain"
+      {/* Base SVG display (rendered by react-native-svg) */}
+      {svgXml && (
+        <SvgXml
+          xml={svgXml}
+          width="100%"
+          height="100%"
+          preserveAspectRatio="xMidYMid meet"
+        />
+      )}
+
+      {/* Color overlay (shows filled regions) */}
+      {colorOverlay && (
+        <View style={styles.overlayContainer} pointerEvents="none">
+          <Image
+            source={{ uri: colorOverlay }}
+            style={styles.overlayImage}
+            resizeMode="contain"
           />
-        )}
-      </Canvas>
+        </View>
+      )}
 
       {/* Touch overlay for handling taps */}
       <View
@@ -274,6 +311,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FF6B6B",
     fontFamily: "MadimiOne_400Regular",
+  },
+  overlayContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: "none",
+  },
+  overlayImage: {
+    width: "100%",
+    height: "100%",
   },
   touchOverlay: {
     position: "absolute",
