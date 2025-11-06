@@ -83,6 +83,7 @@ export default function SkiaColoringCanvas({
         // Debug: Check if we have any dark pixels (the outline)
         let darkPixelCount = 0;
         let whitePixelCount = 0;
+        let transparentPixelCount = 0;
         for (let i = 0; i < pixels.length; i += 4) {
           const r = pixels[i];
           const g = pixels[i + 1];
@@ -95,17 +96,23 @@ export default function SkiaColoringCanvas({
           if (a > 200 && r > 240 && g > 240 && b > 240) {
             whitePixelCount++;
           }
+          if (a < 50) {
+            transparentPixelCount++;
+          }
         }
 
         console.log("[PngColoringCanvas] Bitmap analysis:");
         console.log("  - Dark pixels (outline):", darkPixelCount);
         console.log("  - White pixels (interior):", whitePixelCount);
+        console.log("  - Transparent pixels (colorable):", transparentPixelCount);
         console.log("  - Total pixels:", pixels.length / 4);
 
         if (darkPixelCount === 0) {
           console.warn("[PngColoringCanvas] WARNING: No dark outline pixels found!");
         } else {
-          console.log("[PngColoringCanvas] ✓ PNG loaded successfully with", darkPixelCount, "outline pixels");
+          const colorablePixels = whitePixelCount + transparentPixelCount;
+          console.log("[PngColoringCanvas] ✓ PNG loaded successfully");
+          console.log(`[PngColoringCanvas] ✓ ${darkPixelCount} outline pixels, ${colorablePixels} colorable pixels`);
         }
 
         console.log("[PngColoringCanvas] Initialization complete!");
@@ -154,10 +161,18 @@ export default function SkiaColoringCanvas({
 
     console.log(`[PngColoringCanvas] Pixel color at tap: rgba(${r}, ${g}, ${b}, ${a})`);
 
-    // Don't fill if tapping on the black outline
-    if (r < 50 && g < 50 && b < 50) {
+    // Don't fill if tapping on the black outline (opaque black pixels)
+    // Black outline should have high alpha (> 200) and low RGB (< 50)
+    if (a > 200 && r < 50 && g < 50 && b < 50) {
       console.log("[PngColoringCanvas] Tapped on outline, ignoring");
       return;
+    }
+
+    // Log what type of pixel we're filling
+    if (a < 50) {
+      console.log("[PngColoringCanvas] Filling transparent/interior region");
+    } else {
+      console.log("[PngColoringCanvas] Filling colored/white region");
     }
 
     console.log("[PngColoringCanvas] Step 3: Applying flood-fill algorithm...");
@@ -194,8 +209,8 @@ export default function SkiaColoringCanvas({
       // Check if it's NOT white (white is r=255, g=255, b=255)
       const isNotWhite = !(r === 255 && g === 255 && b === 255);
 
-      // Check if it's NOT black (the outline)
-      const isNotBlack = !(r < 50 && g < 50 && b < 50);
+      // Check if it's NOT black outline (opaque black: a > 200 && r < 50 && g < 50 && b < 50)
+      const isNotBlack = !(a > 200 && r < 50 && g < 50 && b < 50);
 
       if (matchesFillColor && isNotWhite && isNotBlack) {
         overlayPixels[i] = r;
