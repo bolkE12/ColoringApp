@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { Canvas, Skia, useCanvasRef, useTouchHandler, Image as SkiaImage } from "@shopify/react-native-skia";
 import { getHybridPngUri } from "../src/utils/assetLoader.native";
 import { floodFill, hexToRgba } from "../src/utils/floodFill";
 
@@ -22,70 +23,32 @@ export default function SkiaColoringCanvas({
   height = "100%"
 }: Props) {
   const [error, setError] = useState<string | null>(null);
-  const [pngUri, setPngUri] = useState<string | null>(null);
-  const [colorOverlay, setColorOverlay] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [imageLayout, setImageLayout] = useState({ width: 0, height: 0, offsetX: 0, offsetY: 0 });
+  const canvasRef = useCanvasRef();
 
-  // Store the pixel data for flood-fill operations
+  // Store images and pixel data
+  const baseImageRef = useRef<any>(null);
+  const colorImageRef = useRef<any>(null);
   const pixelDataRef = useRef<Uint8ClampedArray | null>(null);
+  const [updateCounter, setUpdateCounter] = useState(0);
 
-  // Calculate actual image layout when container size changes
-  useEffect(() => {
-    if (containerSize.width > 0 && containerSize.height > 0) {
-      // PNG is 1024x1024 (square)
-      // With resizeMode="contain", it scales to fit while maintaining aspect ratio
-      const scale = Math.min(
-        containerSize.width / TARGET_SIZE,
-        containerSize.height / TARGET_SIZE
-      );
-
-      const displayWidth = TARGET_SIZE * scale;
-      const displayHeight = TARGET_SIZE * scale;
-
-      // Center the image in the container
-      const offsetX = (containerSize.width - displayWidth) / 2;
-      const offsetY = (containerSize.height - displayHeight) / 2;
-
-      setImageLayout({
-        width: displayWidth,
-        height: displayHeight,
-        offsetX,
-        offsetY
-      });
-
-      console.log(`[PngColoringCanvas] Image layout calculated:`);
-      console.log(`  Container: ${containerSize.width}x${containerSize.height}`);
-      console.log(`  Display: ${displayWidth.toFixed(1)}x${displayHeight.toFixed(1)}`);
-      console.log(`  Offset: (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
-      console.log(`  Scale: ${scale.toFixed(3)}`);
-    }
-  }, [containerSize]);
-
-  // Step 1: Load PNG file
-  // Step 2: Decode PNG to get pixel data
+  // Load PNG and initialize
   useEffect(() => {
     let cancelled = false;
 
-    async function initializeCanvas() {
+    async function initialize() {
       try {
         setError(null);
 
-        console.log("[PngColoringCanvas] Loading PNG...");
-
-        // Load the PNG asset using the asset loader
+        // Load the PNG asset
         const uri = await getHybridPngUri(hybridKey);
-
         if (cancelled) return;
 
-        // Store URI for display
-        setPngUri(uri);
-
-        // Fetch the PNG file as a blob
+        // Fetch the PNG file
         const response = await fetch(uri);
         const blob = await response.blob();
 
-        // Convert blob to ArrayBuffer
+        // Convert to ArrayBuffer
         const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as ArrayBuffer);
@@ -95,165 +58,124 @@ export default function SkiaColoringCanvas({
 
         if (cancelled) return;
 
-        // Decode PNG to RGBA pixels using UPNG
+        // Decode PNG to RGBA pixels
         const pngArray = new Uint8Array(arrayBuffer);
         const decoded = UPNG.decode(pngArray);
         const rgba = UPNG.toRGBA8(decoded);
         const pixels = new Uint8ClampedArray(rgba[0]);
 
-        console.log("[PngColoringCanvas] PNG loaded:", decoded.width, "x", decoded.height);
-
-        // Store the pixel data for flood-fill operations
+        // Store pixel data for flood-fill
         pixelDataRef.current = pixels;
 
-        // Debug: Check if we have the expected pixel distribution
-        let blackPixelCount = 0;
-        let whitePixelCount = 0;
-        let coloredPixelCount = 0;
-        for (let i = 0; i < pixels.length; i += 4) {
-          const r = pixels[i];
-          const g = pixels[i + 1];
-          const b = pixels[i + 2];
+        // Create Skia image from PNG data
+        const data = Skia.Data.fromBytes(pngArray);
+        const image = Skia.Image.MakeImageFromEncoded(data);
+        baseImageRef.current = image;
 
-          // Black outline pixels
-          if (r < 50 && g < 50 && b < 50) {
-            blackPixelCount++;
-          }
-          // White/colorable pixels
-          else if (r > 240 && g > 240 && b > 240) {
-            whitePixelCount++;
-          }
-          // Already colored pixels
-          else {
-            coloredPixelCount++;
-          }
-        }
+        // Create initial empty color overlay (all transparent)
+        const emptyPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
+        colorImageRef.current = null; // Start with no overlay
 
-        console.log("[PngColoringCanvas] Bitmap analysis:");
-        console.log("  - Black pixels (outline):", blackPixelCount);
-        console.log("  - White pixels (colorable):", whitePixelCount);
-        console.log("  - Colored pixels:", coloredPixelCount);
-        console.log("  - Total pixels:", pixels.length / 4);
-
-        if (blackPixelCount === 0) {
-          console.warn("[PngColoringCanvas] WARNING: No black outline pixels found!");
-        } else {
-          console.log("[PngColoringCanvas] ✓ Ready -", blackPixelCount, "outline,", whitePixelCount, "colorable");
-        }
+        setUpdateCounter(prev => prev + 1);
 
       } catch (err) {
         if (!cancelled) {
-          console.error("[PngColoringCanvas] Error:", err);
+          console.error("[SkiaColoringCanvas] Error:", err);
           setError(err instanceof Error ? err.message : "Failed to load PNG");
         }
       }
     }
 
-    initializeCanvas();
+    initialize();
 
     return () => {
       cancelled = true;
     };
   }, [hybridKey]);
 
-  // Step 3: Apply the flood fill algorithm
-  // Step 4: Create a new image from the modified pixels
-  const handleCanvasTap = useCallback((event: any) => {
-    if (!pixelDataRef.current) {
-      console.log("[PngColoringCanvas] Pixel data not ready");
-      return;
-    }
+  // Handle touch events
+  const touchHandler = useTouchHandler({
+    onEnd: (event) => {
+      if (!pixelDataRef.current || !canvasRef.current) return;
 
-    if (imageLayout.width === 0 || imageLayout.height === 0) {
-      console.log("[PngColoringCanvas] Image layout not calculated yet");
-      return;
-    }
+      const { x, y } = event;
 
-    const { locationX, locationY } = event.nativeEvent;
+      // Calculate scale and offset
+      const scale = Math.min(
+        containerSize.width / TARGET_SIZE,
+        containerSize.height / TARGET_SIZE
+      );
+      const displayWidth = TARGET_SIZE * scale;
+      const displayHeight = TARGET_SIZE * scale;
+      const offsetX = (containerSize.width - displayWidth) / 2;
+      const offsetY = (containerSize.height - displayHeight) / 2;
 
-    // Subtract offset to get position within the displayed image
-    const imageX = locationX - imageLayout.offsetX;
-    const imageY = locationY - imageLayout.offsetY;
+      // Convert touch to bitmap coordinates
+      const imageX = x - offsetX;
+      const imageY = y - offsetY;
 
-    // Check if tap is within image bounds
-    if (imageX < 0 || imageX >= imageLayout.width || imageY < 0 || imageY >= imageLayout.height) {
-      return;
-    }
-
-    // Scale from display coordinates to bitmap coordinates (1024x1024)
-    const bitmapX = Math.floor((imageX / imageLayout.width) * TARGET_SIZE);
-    const bitmapY = Math.floor((imageY / imageLayout.height) * TARGET_SIZE);
-
-    // Clamp to bitmap bounds
-    const clampedX = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapX));
-    const clampedY = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapY));
-
-    // Check the pixel color at tap location
-    const idx = (clampedY * TARGET_SIZE + clampedX) * 4;
-    const r = pixelDataRef.current[idx];
-    const g = pixelDataRef.current[idx + 1];
-    const b = pixelDataRef.current[idx + 2];
-    const a = pixelDataRef.current[idx + 3];
-
-    // Don't fill if tapping on the black outline
-    if (r < 50 && g < 50 && b < 50) {
-      return;
-    }
-
-    // Check if already filled with selected color
-    const fillColor = hexToRgba(selectedColor);
-    if (r === fillColor[0] && g === fillColor[1] && b === fillColor[2] && a === fillColor[3]) {
-      return;
-    }
-
-    // Make a copy of the pixel data for flood-fill
-    const workingPixels = new Uint8ClampedArray(pixelDataRef.current);
-
-    // Apply flood-fill with tolerance for anti-aliasing on edges
-    floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, clampedX, clampedY, fillColor, 20);
-
-    // Update the stored pixel data
-    pixelDataRef.current = workingPixels;
-
-    // Create overlay synchronously for instant feedback
-    const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
-
-    // Optimized single-pass loop
-    for (let i = 0; i < workingPixels.length; i += 4) {
-      const r = workingPixels[i];
-      const g = workingPixels[i+1];
-      const b = workingPixels[i+2];
-
-      // Skip white or black pixels (most common - ~95% of pixels)
-      if ((r > 240 && g > 240 && b > 240) || (r < 50 && g < 50 && b < 50)) {
-        continue;
+      if (imageX < 0 || imageX >= displayWidth || imageY < 0 || imageY >= displayHeight) {
+        return;
       }
 
-      // Copy colored pixel to overlay
-      overlayPixels[i] = r;
-      overlayPixels[i+1] = g;
-      overlayPixels[i+2] = b;
-      overlayPixels[i+3] = 255;
+      const bitmapX = Math.floor((imageX / displayWidth) * TARGET_SIZE);
+      const bitmapY = Math.floor((imageY / displayHeight) * TARGET_SIZE);
+      const clampedX = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapX));
+      const clampedY = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapY));
+
+      // Check pixel at tap location
+      const idx = (clampedY * TARGET_SIZE + clampedX) * 4;
+      const r = pixelDataRef.current[idx];
+      const g = pixelDataRef.current[idx + 1];
+      const b = pixelDataRef.current[idx + 2];
+
+      // Don't fill black outline or already-filled color
+      if (r < 50 && g < 50 && b < 50) return;
+
+      const fillColor = hexToRgba(selectedColor);
+      if (r === fillColor[0] && g === fillColor[1] && b === fillColor[2]) return;
+
+      // Perform flood-fill
+      const workingPixels = new Uint8ClampedArray(pixelDataRef.current);
+      floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, clampedX, clampedY, fillColor, 20);
+      pixelDataRef.current = workingPixels;
+
+      // Create color overlay pixels (only colored pixels)
+      const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
+      for (let i = 0; i < workingPixels.length; i += 4) {
+        const r = workingPixels[i];
+        const g = workingPixels[i+1];
+        const b = workingPixels[i+2];
+
+        // Skip white or black
+        if ((r > 240 && g > 240 && b > 240) || (r < 50 && g < 50 && b < 50)) {
+          continue;
+        }
+
+        overlayPixels[i] = r;
+        overlayPixels[i+1] = g;
+        overlayPixels[i+2] = b;
+        overlayPixels[i+3] = 255;
+      }
+
+      // Create Skia image directly from pixel data (no PNG encoding!)
+      const data = Skia.Data.fromBytes(overlayPixels);
+      const overlayImage = Skia.Image.MakeImage(
+        {
+          width: TARGET_SIZE,
+          height: TARGET_SIZE,
+          alphaType: Skia.AlphaType.Unpremul,
+          colorType: Skia.ColorType.RGBA_8888,
+        },
+        data,
+        TARGET_SIZE * 4
+      );
+      colorImageRef.current = overlayImage;
+
+      // Trigger re-render
+      setUpdateCounter(prev => prev + 1);
     }
-
-    // Encode to PNG with zero compression (fastest)
-    const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
-    const overlayU8 = new Uint8Array(overlayPng);
-
-    // Fast base64 conversion
-    const chunkSize = 32768;
-    let binary = "";
-    for (let i = 0; i < overlayU8.length; i += chunkSize) {
-      const chunk = overlayU8.subarray(i, Math.min(i + chunkSize, overlayU8.length));
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    // @ts-ignore
-    const base64 = btoa(binary);
-    const dataUri = `data:image/png;base64,${base64}`;
-
-    setColorOverlay(dataUri);
-
-  }, [selectedColor, imageLayout]);
+  });
 
   if (error) {
     return (
@@ -271,32 +193,48 @@ export default function SkiaColoringCanvas({
         setContainerSize({ width: w, height: h });
       }}
     >
-      {/* Base PNG display */}
-      {pngUri && (
-        <Image
-          source={{ uri: pngUri }}
-          style={styles.baseImage}
-          resizeMode="contain"
-        />
-      )}
+      <Canvas
+        ref={canvasRef}
+        style={{ flex: 1 }}
+        onTouch={touchHandler}
+      >
+        {baseImageRef.current && containerSize.width > 0 && (() => {
+          // Calculate scale to fit canvas
+          const scale = Math.min(
+            containerSize.width / TARGET_SIZE,
+            containerSize.height / TARGET_SIZE
+          );
+          const scaledWidth = TARGET_SIZE * scale;
+          const scaledHeight = TARGET_SIZE * scale;
+          const offsetX = (containerSize.width - scaledWidth) / 2;
+          const offsetY = (containerSize.height - scaledHeight) / 2;
 
-      {/* Color overlay (shows filled regions) */}
-      {colorOverlay && (
-        <View style={styles.overlayContainer} pointerEvents="none">
-          <Image
-            source={{ uri: colorOverlay }}
-            style={styles.overlayImage}
-            resizeMode="contain"
-          />
-        </View>
-      )}
-
-      {/* Touch overlay for handling taps */}
-      <View
-        style={styles.touchOverlay}
-        onStartShouldSetResponder={() => true}
-        onResponderRelease={handleCanvasTap}
-      />
+          return (
+            <>
+              {/* Draw base PNG */}
+              <SkiaImage
+                image={baseImageRef.current}
+                x={offsetX}
+                y={offsetY}
+                width={scaledWidth}
+                height={scaledHeight}
+                fit="cover"
+              />
+              {/* Draw color overlay */}
+              {colorImageRef.current && (
+                <SkiaImage
+                  image={colorImageRef.current}
+                  x={offsetX}
+                  y={offsetY}
+                  width={scaledWidth}
+                  height={scaledHeight}
+                  fit="cover"
+                />
+              )}
+            </>
+          );
+        })()}
+      </Canvas>
     </View>
   );
 }
@@ -311,29 +249,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FF6B6B",
     fontFamily: "MadimiOne_400Regular",
-  },
-  baseImage: {
-    width: "100%",
-    height: "100%",
-  },
-  overlayContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    pointerEvents: "none",
-  },
-  overlayImage: {
-    width: "100%",
-    height: "100%",
-  },
-  touchOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "transparent",
   },
 });
