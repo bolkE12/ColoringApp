@@ -30,10 +30,12 @@ export default function ColorableSvgDisplay({
   const [error, setError] = useState<string | null>(null);
   const [colorOverlay, setColorOverlay] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Store the rasterized base image for flood-fill operations
   const baseImageData = useRef<Uint8ClampedArray | null>(null);
   const coloredImageData = useRef<Uint8ClampedArray | null>(null);
+  const animalBounds = useRef<{ minX: number; minY: number; maxX: number; maxY: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,15 +127,66 @@ export default function ColorableSvgDisplay({
       baseImageData.current = new Uint8ClampedArray(rgba[0]);
       coloredImageData.current = new Uint8ClampedArray(rgba[0]); // Start with a copy
 
-      console.log("[ColorableSvgDisplay] Rasterization complete");
+      // Calculate bounds of the animal (non-white, non-transparent pixels)
+      animalBounds.current = calculateAnimalBounds(baseImageData.current, TARGET_SIZE, TARGET_SIZE);
+      console.log("[ColorableSvgDisplay] Rasterization complete, bounds:", animalBounds.current);
     } catch (err) {
       console.error("[ColorableSvgDisplay] Rasterization error:", err);
     }
   };
 
+  const calculateAnimalBounds = (
+    data: Uint8ClampedArray,
+    width: number,
+    height: number
+  ): { minX: number; minY: number; maxX: number; maxY: number } | null => {
+    let minX = width;
+    let minY = height;
+    let maxX = 0;
+    let maxY = 0;
+    let found = false;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const a = data[idx + 3];
+
+        // Look for dark pixels (the outline) or non-white colored pixels
+        const isDark = a > 200 && r < 220 && g < 220 && b < 220;
+
+        if (isDark) {
+          found = true;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (!found) return null;
+
+    // Add padding around the bounds
+    const padding = 20;
+    return {
+      minX: Math.max(0, minX - padding),
+      minY: Math.max(0, minY - padding),
+      maxX: Math.min(width - 1, maxX + padding),
+      maxY: Math.min(height - 1, maxY + padding),
+    };
+  };
+
   const handleTouch = useCallback(async (event: any) => {
     if (!baseImageData.current || !coloredImageData.current) {
       console.log("[ColorableSvgDisplay] Image data not ready");
+      return;
+    }
+
+    if (isProcessing) {
+      console.log("[ColorableSvgDisplay] Already processing, ignoring tap");
       return;
     }
 
@@ -147,9 +200,21 @@ export default function ColorableSvgDisplay({
     const imageY = Math.floor(locationY * scaleY);
 
     if (imageX < 0 || imageX >= TARGET_SIZE || imageY < 0 || imageY >= TARGET_SIZE) {
-      console.log("[ColorableSvgDisplay] Touch outside bounds");
+      console.log("[ColorableSvgDisplay] Touch outside canvas bounds");
       return;
     }
+
+    // Check if touch is within animal bounds
+    if (animalBounds.current) {
+      const bounds = animalBounds.current;
+      if (imageX < bounds.minX || imageX > bounds.maxX ||
+          imageY < bounds.minY || imageY > bounds.maxY) {
+        console.log("[ColorableSvgDisplay] Touch outside animal bounds");
+        return;
+      }
+    }
+
+    setIsProcessing(true);
 
     try {
       // Perform flood-fill
@@ -210,13 +275,15 @@ export default function ColorableSvgDisplay({
       const dataUri = `data:image/png;base64,${base64}`;
 
       setColorOverlay(dataUri);
+      setIsProcessing(false);
       onDidPaint?.();
       console.log("[ColorableSvgDisplay] Color overlay updated");
 
     } catch (err) {
       console.error("[ColorableSvgDisplay] Flood-fill error:", err);
+      setIsProcessing(false);
     }
-  }, [color, containerSize, onDidPaint]);
+  }, [color, containerSize, onDidPaint, isProcessing]);
 
   if (loading) {
     return (
@@ -277,6 +344,14 @@ export default function ColorableSvgDisplay({
         onStartShouldSetResponder={() => true}
         onResponderRelease={handleTouch}
       />
+
+      {/* Processing indicator */}
+      {isProcessing && (
+        <View style={styles.processingOverlay}>
+          <ActivityIndicator size="large" color="#A133F5" />
+          <Text style={styles.processingText}>Coloring...</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -323,5 +398,21 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "transparent",
+  },
+  processingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  processingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "MadimiOne_400Regular",
   },
 });
