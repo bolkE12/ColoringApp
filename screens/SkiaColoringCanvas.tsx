@@ -171,17 +171,12 @@ export default function SkiaColoringCanvas({
 
     const { locationX, locationY } = event.nativeEvent;
 
-    console.log(`[PngColoringCanvas] Touch at: (${locationX.toFixed(1)}, ${locationY.toFixed(1)})`);
-
     // Subtract offset to get position within the displayed image
     const imageX = locationX - imageLayout.offsetX;
     const imageY = locationY - imageLayout.offsetY;
 
-    console.log(`[PngColoringCanvas] Image coords: (${imageX.toFixed(1)}, ${imageY.toFixed(1)})`);
-
     // Check if tap is within image bounds
     if (imageX < 0 || imageX >= imageLayout.width || imageY < 0 || imageY >= imageLayout.height) {
-      console.log("[PngColoringCanvas] Tap outside image bounds, ignoring");
       return;
     }
 
@@ -193,8 +188,6 @@ export default function SkiaColoringCanvas({
     const clampedX = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapX));
     const clampedY = Math.max(0, Math.min(TARGET_SIZE - 1, bitmapY));
 
-    console.log(`[PngColoringCanvas] Bitmap coords: (${clampedX}, ${clampedY})`);
-
     // Check the pixel color at tap location
     const idx = (clampedY * TARGET_SIZE + clampedX) * 4;
     const r = pixelDataRef.current[idx];
@@ -202,34 +195,19 @@ export default function SkiaColoringCanvas({
     const b = pixelDataRef.current[idx + 2];
     const a = pixelDataRef.current[idx + 3];
 
-    console.log(`[PngColoringCanvas] Pixel color at tap: rgba(${r}, ${g}, ${b}, ${a})`);
-
     // Don't fill if tapping on the black outline
     if (r < 50 && g < 50 && b < 50) {
-      console.log("[PngColoringCanvas] Tapped on black outline, ignoring");
       return;
     }
 
     // Check if already filled with selected color
     const fillColor = hexToRgba(selectedColor);
     if (r === fillColor[0] && g === fillColor[1] && b === fillColor[2] && a === fillColor[3]) {
-      console.log("[PngColoringCanvas] Region already filled with this color");
       return;
     }
 
-    // Log what type of pixel we're filling
-    if (r > 240 && g > 240 && b > 240) {
-      console.log("[PngColoringCanvas] Filling white region");
-    } else {
-      console.log("[PngColoringCanvas] Filling already-colored region (re-coloring)");
-    }
-
-    console.log("[PngColoringCanvas] Step 3: Applying flood-fill algorithm...");
-
     // Make a copy of the pixel data for flood-fill
     const workingPixels = new Uint8ClampedArray(pixelDataRef.current);
-
-    console.log(`[PngColoringCanvas] Filling with color: rgba(${fillColor.join(", ")})`);
 
     // Apply flood-fill with tolerance for anti-aliasing on edges
     floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, clampedX, clampedY, fillColor, 20);
@@ -237,54 +215,43 @@ export default function SkiaColoringCanvas({
     // Update the stored pixel data
     pixelDataRef.current = workingPixels;
 
-    console.log("[PngColoringCanvas] Step 4: Creating overlay...");
+    // Create overlay synchronously for instant feedback
+    const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
 
-    // Use setTimeout to make UI feel more responsive
-    setTimeout(() => {
-      // Create a colored overlay PNG (only the colored pixels, rest transparent)
-      const overlayPixels = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
-      let overlayPixelCount = 0;
+    // Optimized single-pass loop
+    for (let i = 0; i < workingPixels.length; i += 4) {
+      const r = workingPixels[i];
+      const g = workingPixels[i+1];
+      const b = workingPixels[i+2];
 
-      // Optimized loop - check conditions in order of likelihood
-      for (let i = 0; i < overlayPixels.length; i += 4) {
-        const r = workingPixels[i];
-        const g = workingPixels[i+1];
-        const b = workingPixels[i+2];
-
-        // Quick checks: white (most common) or black (second most common)
-        if ((r > 240 && g > 240 && b > 240) || (r < 50 && g < 50 && b < 50)) {
-          // Transparent - no need to set (already zeros)
-          continue;
-        }
-
-        // This is a colored pixel - include it in the overlay
-        overlayPixels[i] = r;
-        overlayPixels[i+1] = g;
-        overlayPixels[i+2] = b;
-        overlayPixels[i+3] = 255;
-        overlayPixelCount++;
+      // Skip white or black pixels (most common - ~95% of pixels)
+      if ((r > 240 && g > 240 && b > 240) || (r < 50 && g < 50 && b < 50)) {
+        continue;
       }
 
-      console.log("[PngColoringCanvas] Overlay:", overlayPixelCount, "pixels");
+      // Copy colored pixel to overlay
+      overlayPixels[i] = r;
+      overlayPixels[i+1] = g;
+      overlayPixels[i+2] = b;
+      overlayPixels[i+3] = 255;
+    }
 
-      // Encode overlay to PNG with compression level 0 (fastest)
-      const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
-      const overlayU8 = new Uint8Array(overlayPng);
+    // Encode to PNG with zero compression (fastest)
+    const overlayPng = UPNG.encode([overlayPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
+    const overlayU8 = new Uint8Array(overlayPng);
 
-      // Fast base64 conversion with chunking (avoids stack overflow)
-      const chunkSize = 32768; // 32KB chunks
-      let binary = "";
-      for (let i = 0; i < overlayU8.length; i += chunkSize) {
-        const chunk = overlayU8.subarray(i, Math.min(i + chunkSize, overlayU8.length));
-        binary += String.fromCharCode.apply(null, Array.from(chunk));
-      }
-      // @ts-ignore - btoa is available in React Native
-      const base64 = btoa(binary);
-      const dataUri = `data:image/png;base64,${base64}`;
+    // Fast base64 conversion
+    const chunkSize = 32768;
+    let binary = "";
+    for (let i = 0; i < overlayU8.length; i += chunkSize) {
+      const chunk = overlayU8.subarray(i, Math.min(i + chunkSize, overlayU8.length));
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    // @ts-ignore
+    const base64 = btoa(binary);
+    const dataUri = `data:image/png;base64,${base64}`;
 
-      setColorOverlay(dataUri);
-      console.log("[PngColoringCanvas] ✓ Done!");
-    }, 0);
+    setColorOverlay(dataUri);
 
   }, [selectedColor, imageLayout]);
 
