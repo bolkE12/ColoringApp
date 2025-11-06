@@ -90,6 +90,12 @@ const RAW: Record<string, number> = {
   turtle_zebra: require("./turtle_zebra.svg"),
 };
 
+// PNG versions (for coloring functionality)
+const RAW_PNG: Record<string, number> = {
+  monkey_zebra: require("./monkey_zebra.png"),
+  // Add more PNG files here as they're created
+};
+
 // Normalize keys so lookups are order-insensitive & lowercase.
 function normalizeKey(k: string) {
   const parts = k.split("_").map((s) => s.toLowerCase()).sort();
@@ -100,11 +106,20 @@ const normEntries = Object.entries(RAW).map(
   ([k, v]) => [normalizeKey(k), v] as const
 );
 
+const normPngEntries = Object.entries(RAW_PNG).map(
+  ([k, v]) => [normalizeKey(k), v] as const
+);
+
 export const HYBRID_SOURCES: Record<string, number> =
   Object.fromEntries(normEntries);
 
+export const HYBRID_PNG_SOURCES: Record<string, number> =
+  Object.fromEntries(normPngEntries);
+
 // Also export the raw mapping in case callers pass filename-ish keys
 export const RAW_HYBRID_LOOKUP: Record<string, number> = RAW;
+export const RAW_PNG_LOOKUP: Record<string, number> = RAW_PNG;
 
 // Optional convenience
 export const HYBRID_KEYS = Object.keys(HYBRID_SOURCES);
+export const HYBRID_PNG_KEYS = Object.keys(HYBRID_PNG_SOURCES);

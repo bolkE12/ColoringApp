@@ -1,6 +1,11 @@
 import { Asset } from "expo-asset";
 // Uses fetch() on the local asset URI to avoid deprecated FileSystem APIs
-import { HYBRID_SOURCES, RAW_HYBRID_LOOKUP } from "../../assets/hybrid";
+import {
+  HYBRID_SOURCES,
+  RAW_HYBRID_LOOKUP,
+  HYBRID_PNG_SOURCES,
+  RAW_PNG_LOOKUP
+} from "../../assets/hybrid";
 import * as BASE from "../../assets/base";
 
 // Some projects export different names from assets/base. Normalize them here.
@@ -109,4 +114,50 @@ export async function loadHybridXml(key: string): Promise<string> {
   }
   const xml = await res.text();
   return xml;
+}
+
+/** Check if a PNG version exists for a given hybrid key. */
+export function hasHybridPng(key: string): boolean {
+  const norm = normalizeHybridKey(key);
+  return Boolean(HYBRID_PNG_SOURCES[norm]);
+}
+
+/** Get a local file URI for a given hybrid PNG key (downloads asset if needed). */
+export async function getHybridPngUri(key: string): Promise<string> {
+  const norm = normalizeHybridKey(key);
+
+  // Preferred: normalized map
+  let mod = HYBRID_PNG_SOURCES[norm];
+
+  // Fallback: raw lookup in case someone passed an unsorted filename-like key
+  if (!mod) {
+    mod = RAW_PNG_LOOKUP[key as keyof typeof RAW_PNG_LOOKUP];
+  }
+
+  if (!mod) {
+    throw new Error(`[assetLoader] No hybrid PNG found for key "${key}"`);
+  }
+
+  const asset = Asset.fromModule(mod);
+  await asset.downloadAsync();
+  return asset.localUri ?? asset.uri;
+}
+
+/** Get the module ID for a given hybrid PNG key (for direct require usage). */
+export function getHybridPngModule(key: string): number {
+  const norm = normalizeHybridKey(key);
+
+  // Preferred: normalized map
+  let mod = HYBRID_PNG_SOURCES[norm];
+
+  // Fallback: raw lookup
+  if (!mod) {
+    mod = RAW_PNG_LOOKUP[key as keyof typeof RAW_PNG_LOOKUP];
+  }
+
+  if (!mod) {
+    throw new Error(`[assetLoader] No hybrid PNG found for key "${key}"`);
+  }
+
+  return mod;
 }
