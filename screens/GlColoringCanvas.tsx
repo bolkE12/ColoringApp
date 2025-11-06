@@ -290,8 +290,8 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       updateOverlayFromPixelData();
     },
     save: async () => {
-      const gl = glRef.current as ExpoWebGLRenderingContext | null;
-      if (!gl) throw new Error("WebGL context not available");
+      const gl = glRef.current;
+      if (!gl || !pixelDataRef.current) throw new Error("Canvas not ready");
 
       // Request media library permissions
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -299,20 +299,29 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         throw new Error("Media library permission not granted");
       }
 
-      // Take snapshot of the WebGL canvas
-      const snapshot = await gl.takeSnapshotAsync({
-        format: 'png',
-        compress: 1,
-        rect: {
-          x: 0,
-          y: 0,
-          width: gl.drawingBufferWidth,
-          height: gl.drawingBufferHeight
-        }
+      // Create final composite image by merging base and colored pixels
+      const finalPixels = new Uint8ClampedArray(pixelDataRef.current);
+
+      // Encode to PNG
+      const pngData = UPNG.encode([finalPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
+      const pngArray = new Uint8Array(pngData);
+
+      // Convert to base64
+      let binary = '';
+      for (let i = 0; i < pngArray.length; i++) {
+        binary += String.fromCharCode(pngArray[i]);
+      }
+      const base64 = btoa(binary);
+
+      // Save to file system
+      const filename = `colored_animal_${Date.now()}.png`;
+      const fileUri = FileSystem.documentDirectory + filename;
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
       });
 
       // Save to media library
-      const asset = await MediaLibrary.createAssetAsync(snapshot.uri);
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
 
       return asset.uri;
     }
