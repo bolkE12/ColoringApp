@@ -66,12 +66,24 @@ export default function SkiaColoringCanvas({
         // Store pixel data for flood-fill
         pixelDataRef.current = pixels;
 
-        // Create Skia image from PNG data
-        const data = Skia.Data.fromBytes(pngArray);
-        const image = Skia.Image.MakeImageFromEncoded(data);
+        // Create Skia image directly from RGBA pixels (not encoded PNG)
+        const data = Skia.Data.fromBytes(pixels);
+        const image = Skia.Image.MakeImage(
+          {
+            width: decoded.width,
+            height: decoded.height,
+            alphaType: Skia.AlphaType.Unpremul,
+            colorType: Skia.ColorType.RGBA_8888,
+          },
+          data,
+          decoded.width * 4
+        );
 
-        console.log("[SkiaCanvas] Setting base image, dimensions:", image?.width?.(), "x", image?.height?.());
-        setBaseImage(image);
+        if (image) {
+          setBaseImage(image);
+        } else {
+          throw new Error("Failed to create Skia image from pixels");
+        }
 
       } catch (err) {
         if (!cancelled) {
@@ -197,7 +209,7 @@ export default function SkiaColoringCanvas({
       {baseImage && containerSize.width > 0 ? (
         <Canvas
           ref={canvasRef}
-          style={{ flex: 1 }}
+          style={{ width: containerSize.width, height: containerSize.height }}
         >
           <SkiaImage
             image={baseImage}
@@ -205,7 +217,6 @@ export default function SkiaColoringCanvas({
             y={offsetY}
             width={scaledWidth}
             height={scaledHeight}
-            fit="contain"
           />
           {colorImage && (
             <SkiaImage
@@ -214,7 +225,6 @@ export default function SkiaColoringCanvas({
               y={offsetY}
               width={scaledWidth}
               height={scaledHeight}
-              fit="contain"
             />
           )}
         </Canvas>
