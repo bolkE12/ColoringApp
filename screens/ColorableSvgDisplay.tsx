@@ -217,48 +217,94 @@ export default function ColorableSvgDisplay({
     setIsProcessing(true);
 
     try {
-      // Perform flood-fill
+      // Check the pixel at the tap location
+      const tapIdx = (imageY * TARGET_SIZE + imageX) * 4;
+      const tapR = coloredImageData.current[tapIdx];
+      const tapG = coloredImageData.current[tapIdx + 1];
+      const tapB = coloredImageData.current[tapIdx + 2];
+      const tapA = coloredImageData.current[tapIdx + 3];
+
+      console.log("[ColorableSvgDisplay] Tap pixel color:", { r: tapR, g: tapG, b: tapB, a: tapA });
+
+      // Don't fill transparent pixels
+      if (tapA < 200) {
+        console.log("[ColorableSvgDisplay] Tapped on transparent pixel, ignoring");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Don't fill dark pixels (the outline)
+      const isDark = tapR < 50 && tapG < 50 && tapB < 50;
+      if (isDark) {
+        console.log("[ColorableSvgDisplay] Tapped on outline, ignoring");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Perform flood-fill with lower tolerance
       const rgba = hexToRgba(color);
       const workingCopy = new Uint8ClampedArray(coloredImageData.current);
 
-      console.log("[ColorableSvgDisplay] Running flood-fill at", imageX, imageY);
-      floodFill(workingCopy, TARGET_SIZE, TARGET_SIZE, imageX, imageY, rgba, 24);
+      console.log("[ColorableSvgDisplay] Running flood-fill at", imageX, imageY, "with color", rgba);
+      floodFill(workingCopy, TARGET_SIZE, TARGET_SIZE, imageX, imageY, rgba, 16);
 
-      // Check if anything changed
-      let changed = false;
-      for (let i = 0; i < workingCopy.length; i++) {
-        if (workingCopy[i] !== coloredImageData.current[i]) {
-          changed = true;
-          break;
+      // Count changed pixels
+      let changed = 0;
+      for (let i = 0; i < workingCopy.length; i += 4) {
+        if (workingCopy[i] !== coloredImageData.current[i] ||
+            workingCopy[i+1] !== coloredImageData.current[i+1] ||
+            workingCopy[i+2] !== coloredImageData.current[i+2] ||
+            workingCopy[i+3] !== coloredImageData.current[i+3]) {
+          changed++;
         }
       }
 
-      if (!changed) {
+      console.log("[ColorableSvgDisplay] Pixels changed:", changed, "out of", TARGET_SIZE * TARGET_SIZE);
+
+      if (changed === 0) {
         console.log("[ColorableSvgDisplay] No pixels changed");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Reject fills that are too large (likely leaked to background)
+      const MAX_FILL_PERCENT = 15; // Max 15% of the canvas
+      const maxPixels = (TARGET_SIZE * TARGET_SIZE * MAX_FILL_PERCENT) / 100;
+      if (changed > maxPixels) {
+        console.log("[ColorableSvgDisplay] Fill too large (", changed, " > ", maxPixels, "), rejecting");
+        setIsProcessing(false);
         return;
       }
 
       // Update the colored image data
       coloredImageData.current = workingCopy;
 
-      // Create an overlay with only the colored pixels (transparent elsewhere)
+      // Create an overlay with only the newly colored pixels (transparent elsewhere)
       const overlayData = new Uint8ClampedArray(TARGET_SIZE * TARGET_SIZE * 4);
+      let overlayPixelCount = 0;
+
       for (let i = 0; i < overlayData.length; i += 4) {
         const base = baseImageData.current;
         const colored = coloredImageData.current;
 
-        // If the pixel changed from the original, show it in the overlay
-        if (colored[i] !== base[i] || colored[i+1] !== base[i+1] ||
-            colored[i+2] !== base[i+2] || colored[i+3] !== base[i+3]) {
+        // Check if this pixel was white in the base and is now colored
+        const wasWhite = base[i] > 240 && base[i+1] > 240 && base[i+2] > 240 && base[i+3] > 200;
+        const isNowColored = colored[i] === rgba[0] && colored[i+1] === rgba[1] &&
+                            colored[i+2] === rgba[2] && colored[i+3] === rgba[3];
+
+        if (wasWhite && isNowColored) {
           overlayData[i] = colored[i];
           overlayData[i+1] = colored[i+1];
           overlayData[i+2] = colored[i+2];
           overlayData[i+3] = colored[i+3];
+          overlayPixelCount++;
         } else {
           // Transparent
           overlayData[i] = overlayData[i+1] = overlayData[i+2] = overlayData[i+3] = 0;
         }
       }
+
+      console.log("[ColorableSvgDisplay] Overlay pixels:", overlayPixelCount);
 
       // Encode overlay to PNG and create data URI
       const pngBuffer = UPNG.encode([overlayData.buffer], TARGET_SIZE, TARGET_SIZE, 0);
