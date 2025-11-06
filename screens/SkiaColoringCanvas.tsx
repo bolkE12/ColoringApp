@@ -176,6 +176,16 @@ export default function SkiaColoringCanvas({
     );
   }
 
+  // Calculate layout for rendering
+  const scale = containerSize.width > 0 ? Math.min(
+    containerSize.width / TARGET_SIZE,
+    containerSize.height / TARGET_SIZE
+  ) : 1;
+  const scaledWidth = TARGET_SIZE * scale;
+  const scaledHeight = TARGET_SIZE * scale;
+  const offsetX = (containerSize.width - scaledWidth) / 2;
+  const offsetY = (containerSize.height - scaledHeight) / 2;
+
   return (
     <View
       style={[styles.container, { width, height }]}
@@ -184,51 +194,35 @@ export default function SkiaColoringCanvas({
         setContainerSize({ width: w, height: h });
       }}
     >
-      <Canvas
-        ref={canvasRef}
-        style={{ flex: 1 }}
-      >
-        {baseImage && containerSize.width > 0 && (() => {
-          console.log("[SkiaCanvas] Rendering - baseImage exists:", !!baseImage);
-
-          // Calculate scale to fit canvas
-          const scale = Math.min(
-            containerSize.width / TARGET_SIZE,
-            containerSize.height / TARGET_SIZE
-          );
-          const scaledWidth = TARGET_SIZE * scale;
-          const scaledHeight = TARGET_SIZE * scale;
-          const offsetX = (containerSize.width - scaledWidth) / 2;
-          const offsetY = (containerSize.height - scaledHeight) / 2;
-
-          console.log("[SkiaCanvas] Drawing at:", offsetX, offsetY, scaledWidth, scaledHeight);
-
-          return (
-            <>
-              {/* Draw base PNG */}
-              <SkiaImage
-                image={baseImage}
-                x={offsetX}
-                y={offsetY}
-                width={scaledWidth}
-                height={scaledHeight}
-                fit="contain"
-              />
-              {/* Draw color overlay */}
-              {colorImage && (
-                <SkiaImage
-                  image={colorImage}
-                  x={offsetX}
-                  y={offsetY}
-                  width={scaledWidth}
-                  height={scaledHeight}
-                  fit="contain"
-                />
-              )}
-            </>
-          );
-        })()}
-      </Canvas>
+      {baseImage && containerSize.width > 0 ? (
+        <Canvas
+          ref={canvasRef}
+          style={{ flex: 1 }}
+        >
+          <SkiaImage
+            image={baseImage}
+            x={offsetX}
+            y={offsetY}
+            width={scaledWidth}
+            height={scaledHeight}
+            fit="contain"
+          />
+          {colorImage && (
+            <SkiaImage
+              image={colorImage}
+              x={offsetX}
+              y={offsetY}
+              width={scaledWidth}
+              height={scaledHeight}
+              fit="contain"
+            />
+          )}
+        </Canvas>
+      ) : (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text>Loading...</Text>
+        </View>
+      )}
 
       {/* Touch overlay */}
       <View
