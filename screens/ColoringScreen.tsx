@@ -16,7 +16,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
-import SimpleSvgDisplay from "./SimpleSvgDisplay";
+import ColorableSvgDisplay from "./ColorableSvgDisplay";
 
 // Types for route params (adjust to your navigator's typing as needed)
 type ColoringParams = {
@@ -83,10 +83,14 @@ export default function ColoringScreen() {
               }}
             >
               {hybridKey ? (
-                <SimpleSvgDisplay
+                <ColorableSvgDisplay
                   hybridKey={hybridKey}
+                  color={activeColor}
                   width="100%"
                   height="100%"
+                  onDidPaint={() => {
+                    console.log("Paint applied!");
+                  }}
                 />
               ) : (
                 <Text style={styles.canvasPlaceholder}>Your animal will appear here</Text>
