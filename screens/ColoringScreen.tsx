@@ -43,6 +43,7 @@ const DEFAULT_COLORS = [
 
 
 export default function ColoringScreen() {
+  console.log('[ColoringScreen] Rendering...');
   const navigation = useNavigation();
   const route = useRoute<RouteProp<Record<string, ColoringParams>, string>>();
   const { animalName = "Lion", hybridKey } = route.params ?? {};
@@ -160,8 +161,15 @@ export default function ColoringScreen() {
                 <Pressable
                   key={c}
                   onPress={() => {
+                    console.log('[ColorSelect] Pressed, starting...');
+                    const t0 = Date.now();
                     setActiveColor(c);
+                    const t1 = Date.now();
+                    console.log('[ColorSelect] setActiveColor took:', t1 - t0, 'ms');
                     canvasRef.current?.setColor(c);
+                    const t2 = Date.now();
+                    console.log('[ColorSelect] setColor took:', t2 - t1, 'ms');
+                    console.log('[ColorSelect] Total onPress:', t2 - t0, 'ms');
                   }}
                   style={[
                     styles.swatch,
