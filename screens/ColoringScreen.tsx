@@ -50,6 +50,7 @@ export default function ColoringScreen() {
   const [activeColor, setActiveColor] = useState<string>(DEFAULT_COLORS[0]);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
 
@@ -187,6 +188,7 @@ export default function ColoringScreen() {
                     const imageUri = await canvasRef.current?.save();
                     if (imageUri && hybridKey) {
                       await saveAnimal(hybridKey, generatedName, imageUri);
+                      setHasSaved(true);
                       setShowSuccessModal(true);
                     }
                   } catch (error) {
@@ -200,18 +202,20 @@ export default function ColoringScreen() {
               </Pressable>
             </LinearGradient>
 
-            {/* View Animal Pen */}
-            <View style={styles.row}>
-              <Pressable
-                onPress={() => {
-                  navigation.navigate("Pen" as never);
-                }}
-                style={styles.ghostBtn}
-              >
-                <PawPrint size={16} color="#333" />
-                <Text style={styles.ghostText}>View My Animal Pen</Text>
-              </Pressable>
-            </View>
+            {/* View Animal Pen - Only show after saving */}
+            {hasSaved && (
+              <View style={styles.row}>
+                <Pressable
+                  onPress={() => {
+                    navigation.navigate("Pen" as never);
+                  }}
+                  style={styles.ghostBtn}
+                >
+                  <PawPrint size={16} color="#333" />
+                  <Text style={styles.ghostText}>View My Animal Pen</Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         </View>
       </SafeAreaView>
