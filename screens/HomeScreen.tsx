@@ -358,7 +358,7 @@ function cyclePair() {
     >
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-        {/* Music Toggle Button */}
+        {/* Music Toggle - top left to match other screens */}
         <View style={styles.musicToggle}>
           <MusicToggle />
         </View>
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   musicToggle: {
     position: 'absolute',
     top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 16 : 16,
-    right: 16,
+    left: 16,
     zIndex: 1000,
   },
   container: {

@@ -159,11 +159,6 @@ export default function ColoringScreen() {
     >
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-        {/* Music Toggle Button */}
-        <View style={styles.musicToggle}>
-          <MusicToggle />
-        </View>
-
         {/* Top Bar */}
         <View style={styles.topBar}>
           <Pressable
@@ -186,7 +181,7 @@ export default function ColoringScreen() {
             </Pressable>
           </View>
 
-          <View style={{ width: 72 }} />{/* spacer to balance back button */}
+          <MusicToggle />
         </View>
 
         {/* Main layout */}
@@ -427,12 +422,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight ?? 0 : 0,
-  },
-  musicToggle: {
-    position: 'absolute',
-    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 16 : 16,
-    right: 16,
-    zIndex: 1000,
   },
   topBar: {
     flexDirection: "row",

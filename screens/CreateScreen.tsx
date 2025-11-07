@@ -160,11 +160,6 @@ export default function CreateScreen() {
     >
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-        {/* Music Toggle Button */}
-        <View style={styles.musicToggle}>
-          <MusicToggle />
-        </View>
-
         {/* Top bar */}
         <View style={styles.topBar}>
           <Pressable
@@ -175,6 +170,8 @@ export default function CreateScreen() {
             <ArrowLeft color="#111" size={18} />
             <Text style={styles.backText}>Back</Text>
           </Pressable>
+
+          <MusicToggle />
         </View>
 
         <View style={styles.container}>
@@ -292,13 +289,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight ?? 0 : 0,
   },
-  musicToggle: {
-    position: 'absolute',
-    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 16 : 16,
-    right: 16,
-    zIndex: 1000,
-  },
   topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 4,
   },
