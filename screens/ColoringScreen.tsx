@@ -196,24 +196,31 @@ export default function ColoringScreen() {
                 style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
                 onPress={async () => {
                   try {
-                    // Pass existing URI to overwrite the same file when updating
+                    const isUpdate = !!savedAnimalId;
+
+                    // Trigger confetti immediately for instant feedback
+                    if (isUpdate) {
+                      // Subsequent save - just confetti
+                      if (confettiRef.current) {
+                        confettiRef.current.start();
+                      }
+                    } else {
+                      // First save - show modal (which triggers confetti via useEffect)
+                      setShowSuccessModal(true);
+                    }
+
+                    // Then do the save in background
                     const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
                     if (imageUri && hybridKey) {
-                      if (savedAnimalId) {
+                      if (isUpdate) {
                         // Update existing save (file already overwritten)
                         await updateAnimal(savedAnimalId, imageUri);
-                        // Just show confetti, no modal
-                        if (confettiRef.current) {
-                          confettiRef.current.start();
-                        }
                       } else {
                         // First save - create new and store ID and URI
                         const id = await saveAnimal(hybridKey, generatedName, imageUri);
                         setSavedAnimalId(id);
                         setSavedImageUri(imageUri);
                         setHasSaved(true);
-                        // Show modal (which also triggers confetti)
-                        setShowSuccessModal(true);
                       }
                     }
                   } catch (error) {
