@@ -21,6 +21,7 @@ import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import * as MediaLibrary from "expo-media-library";
 import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAnimals";
 import type { RootStackParamList } from "../navigation/AppNavigator";
+import { MusicToggle } from "../src/components/MusicToggle";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ITEM_SIZE = (SCREEN_WIDTH - 64) / 3; // 3 columns with padding
@@ -157,6 +158,11 @@ export default function PenScreen() {
     >
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+        {/* Music Toggle Button */}
+        <View style={styles.musicToggle}>
+          <MusicToggle />
+        </View>
+
         {/* Top Bar */}
         <View style={styles.topBar}>
           <Pressable
@@ -197,6 +203,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight ?? 0 : 0,
+  },
+  musicToggle: {
+    position: 'absolute',
+    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 16 : 16,
+    right: 16,
+    zIndex: 1000,
   },
   topBar: {
     flexDirection: "row",

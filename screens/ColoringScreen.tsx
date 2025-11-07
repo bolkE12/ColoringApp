@@ -24,6 +24,7 @@ import * as Speech from 'expo-speech';
 import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
 import { saveAnimal, updateAnimal } from "../src/utils/savedAnimals";
 import { generateSillyName } from "../src/utils/nameGenerator";
+import { MusicToggle } from "../src/components/MusicToggle";
 
 // Import the correct navigation types
 import type { RootStackParamList } from "../navigation/AppNavigator";
@@ -158,6 +159,11 @@ export default function ColoringScreen() {
     >
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+        {/* Music Toggle Button */}
+        <View style={styles.musicToggle}>
+          <MusicToggle />
+        </View>
+
         {/* Top Bar */}
         <View style={styles.topBar}>
           <Pressable
@@ -421,6 +427,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight ?? 0 : 0,
+  },
+  musicToggle: {
+    position: 'absolute',
+    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 16 : 16,
+    right: 16,
+    zIndex: 1000,
   },
   topBar: {
     flexDirection: "row",

@@ -21,6 +21,7 @@ import type { NavigationProp } from "@react-navigation/native";
 import { getBaseRequire } from "../assets/base";
 import { HYBRID_SOURCES } from "../assets/hybrid";
 import type { RootStackParamList } from "../navigation/AppNavigator";
+import { MusicToggle } from "../src/components/MusicToggle";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
 type Animal = typeof ANIMALS[number];
@@ -357,6 +358,11 @@ function cyclePair() {
     >
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+        {/* Music Toggle Button */}
+        <View style={styles.musicToggle}>
+          <MusicToggle />
+        </View>
+
         <View style={styles.container}>
           {/* Headline */}
           <Text style={styles.title}>Create &amp; Color Your Own Animal</Text>
@@ -448,6 +454,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) : 0,
+  },
+  musicToggle: {
+    position: 'absolute',
+    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 16 : 16,
+    right: 16,
+    zIndex: 1000,
   },
   container: {
     flex: 1,
