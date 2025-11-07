@@ -15,8 +15,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { ArrowLeft, Trash2 } from "lucide-react-native";
+import { ArrowLeft, Trash2, Download } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
+import * as MediaLibrary from "expo-media-library";
 import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAnimals";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -71,6 +72,27 @@ export default function PenScreen() {
     );
   };
 
+  const handleDownload = async (animal: SavedAnimal) => {
+    try {
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          "Permission Required",
+          "Please grant permission to save images to your photo gallery."
+        );
+        return;
+      }
+
+      // Save to media library
+      await MediaLibrary.createAssetAsync(animal.imageUri);
+      Alert.alert("Success!", `${animal.animalName} has been saved to your photo gallery!`);
+    } catch (error) {
+      console.error("Error downloading animal:", error);
+      Alert.alert("Download Failed", "Could not save image to gallery. This feature requires a development build.");
+    }
+  };
+
   const renderAnimal = ({ item }: { item: SavedAnimal }) => (
     <View style={styles.gridItem}>
       <Pressable
@@ -78,12 +100,20 @@ export default function PenScreen() {
         onLongPress={() => handleDelete(item)}
       >
         <Image source={{ uri: item.imageUri }} style={styles.image} resizeMode="cover" />
-        <Pressable
-          style={styles.deleteBtn}
-          onPress={() => handleDelete(item)}
-        >
-          <Trash2 size={16} color="#fff" />
-        </Pressable>
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={styles.downloadBtn}
+            onPress={() => handleDownload(item)}
+          >
+            <Download size={16} color="#fff" />
+          </Pressable>
+          <Pressable
+            style={styles.deleteBtn}
+            onPress={() => handleDelete(item)}
+          >
+            <Trash2 size={16} color="#fff" />
+          </Pressable>
+        </View>
       </Pressable>
       <Text style={styles.animalName} numberOfLines={1}>
         {item.animalName}
@@ -216,10 +246,22 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  deleteBtn: {
+  buttonRow: {
     position: "absolute",
     top: 8,
     right: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
+  downloadBtn: {
+    backgroundColor: "rgba(0, 200, 80, 0.9)",
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteBtn: {
     backgroundColor: "rgba(255, 0, 0, 0.8)",
     borderRadius: 16,
     width: 32,

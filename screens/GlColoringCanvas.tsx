@@ -301,11 +301,9 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         const pngData = UPNG.encode([finalPixels.buffer], TARGET_SIZE, TARGET_SIZE, 0);
         const pngArray = new Uint8Array(pngData);
 
-        // Save to file system using legacy FileSystem API
+        // Save to app's local storage only
         const filename = `colored_animal_${Date.now()}.png`;
         const fileUri = FileSystem.documentDirectory + filename;
-
-        console.log('[Save] Creating file at:', fileUri);
 
         // Convert Uint8Array to base64
         let binary = '';
@@ -318,23 +316,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
           encoding: FileSystem.EncodingType.Base64,
         });
 
-        console.log('[Save] File saved successfully');
-
-        // Try to save to media library (will fail gracefully in Expo Go)
-        try {
-          const { status } = await MediaLibrary.requestPermissionsAsync();
-          if (status === 'granted') {
-            console.log('[Save] Attempting to save to media library...');
-            await MediaLibrary.createAssetAsync(fileUri);
-            console.log('[Save] Media library save successful');
-          } else {
-            console.log('[Save] Media library permission not granted');
-          }
-        } catch (mediaError) {
-          console.log('[Save] Media library save skipped (Expo Go limitation):', mediaError);
-        }
-
-        // Return the file URI (works in both Expo Go and production)
+        // Return the file URI for local storage
         return fileUri;
       } catch (error) {
         console.error('[Save] Error during save:', error);
