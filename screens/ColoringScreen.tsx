@@ -240,12 +240,12 @@ export default function ColoringScreen() {
           {/* Confetti Animation */}
           <ConfettiCannon
             ref={confettiRef}
-            count={200}
+            count={500}
             origin={{ x: SCREEN_WIDTH / 2, y: 0 }}
             autoStart={false}
             fadeOut={true}
-            explosionSpeed={350}
-            fallSpeed={3000}
+            explosionSpeed={400}
+            fallSpeed={2500}
             colors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#FFD93D', '#6BCF7F', '#B388FF', '#FF80AB', '#FFB74D', '#9575CD']}
           />
           <View style={styles.modalContent}>
