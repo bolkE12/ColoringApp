@@ -34,7 +34,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DEFAULT_COLORS = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
   '#FFD93D', '#6BCF7F', '#B388FF', '#FF80AB', '#A5D6A7',
-  '#FFB74D', '#64B5F6', '#F06292', '#81C784', '#FFD54F',
+  '#FFB74D', '#64B5F6', '#F06292', '#81C784', '#A98052',
   '#9575CD', '#4DB6AC', '#FF8A65', '#BA68C8', '#7986CB',
 ];
 
