@@ -10,11 +10,13 @@ import {
   StatusBar as RNStatusBar,
   LayoutChangeEvent,
   Alert,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette } from "lucide-react-native";
+import type { NavigationProp } from "@react-navigation/native";
+import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
@@ -46,6 +48,7 @@ export default function ColoringScreen() {
   const [activeTool, setActiveTool] = useState<"fill" | "brush">("fill");
   const [activeColor, setActiveColor] = useState<string>(DEFAULT_COLORS[0]);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const canvasRef = useRef<GlColoringCanvasRef>(null);
 
   if (!fontsLoaded) return null;
@@ -182,11 +185,11 @@ export default function ColoringScreen() {
                     const imageUri = await canvasRef.current?.save();
                     if (imageUri && hybridKey) {
                       await saveAnimal(hybridKey, animalName, imageUri);
-                      Alert.alert("Success!", "Your artwork has been saved to your Animal Pen!");
+                      setShowSuccessModal(true);
                     }
                   } catch (error) {
                     console.error("Save error:", error);
-                    Alert.alert("Error", "Failed to save image. Please try again.");
+                    Alert.alert("Oops!", "Something went wrong. Please try again.");
                   }
                 }}
               >
@@ -194,9 +197,46 @@ export default function ColoringScreen() {
                 <Text style={styles.saveText}>Save to Pen</Text>
               </Pressable>
             </LinearGradient>
+
+            {/* View Animal Pen */}
+            <View style={styles.row}>
+              <Pressable
+                onPress={() => {
+                  navigation.navigate("Pen" as never);
+                }}
+                style={styles.ghostBtn}
+              >
+                <PawPrint size={16} color="#333" />
+                <Text style={styles.ghostText}>View My Animal Pen</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Custom Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Sparkles size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
+            <Text style={styles.modalTitle}>Amazing Work!</Text>
+            <Text style={styles.modalMessage}>
+              Your {animalName} has been saved to your Animal Pen! 🎨
+            </Text>
+            <Pressable
+              style={styles.modalButton}
+              onPress={() => setShowSuccessModal(false)}
+            >
+              <Text style={styles.modalButtonText}>Awesome!</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
@@ -406,5 +446,54 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 32,
+    alignItems: "center",
+    width: 320,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontFamily: "MadimiOne_400Regular",
+    fontSize: 32,
+    color: "#FF3E9E",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalMessage: {
+    fontFamily: "MadimiOne_400Regular",
+    fontSize: 18,
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  modalButton: {
+    backgroundColor: "#FF3E9E",
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  modalButtonText: {
+    fontFamily: "MadimiOne_400Regular",
+    fontSize: 18,
+    color: "#fff",
   },
 });
