@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
-import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles } from "lucide-react-native";
+import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
@@ -238,6 +238,7 @@ export default function ColoringScreen() {
               style={styles.modalButton}
               onPress={() => setShowSuccessModal(false)}
             >
+              <ThumbsUp size={20} color="#fff" style={{ marginRight: 8 }} />
               <Text style={styles.modalButtonText}>Awesome!</Text>
             </Pressable>
           </View>
@@ -487,6 +488,9 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   modalButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#FF3E9E",
     paddingVertical: 14,
     paddingHorizontal: 40,
