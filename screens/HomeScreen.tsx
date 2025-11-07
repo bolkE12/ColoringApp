@@ -10,6 +10,7 @@ import {
   Animated,
   Easing,
   ViewStyle,
+  Image,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
@@ -17,9 +18,7 @@ import { Plus, PawPrint } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
-import { SvgXml, SvgUri } from "react-native-svg";
-import { loadHybridXml } from "../src/utils/assetLoader.native";
-import { getBaseUri, getBaseXmlAsync } from "../assets/base";
+import { getBaseRequire } from "../assets/base";
 import { HYBRID_SOURCES } from "../assets/hybrid";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
@@ -63,10 +62,6 @@ export default function App() {
   const [leftAnimal, setLeftAnimal] = useState<Animal>(initialPair[0]);
   const [rightAnimal, setRightAnimal] = useState<Animal>(initialPair[1]);
   const hk = hybridKey(leftAnimal, rightAnimal);
-  const [xml, setXml] = useState<string | null>(null);
-
-  const [leftXml, setLeftXml] = useState<string | null>(null);
-  const [rightXml, setRightXml] = useState<string | null>(null);
 
   const [fontsLoaded] = useFonts({
     MadimiOne_400Regular,
@@ -217,52 +212,6 @@ function cyclePair() {
   }, [fontsLoaded, leftAnim, centerAnim, rightAnim, rock, breath]);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const raw = await loadHybridXml(hk);
-        if (mounted) setXml(raw ?? null);
-      } catch (e) {
-        console.warn("[home] hybrid load failed", e);
-        if (mounted) setXml(null);
-      }
-    })();
-    return () => { mounted = false };
-  }, [hk]);
-
-useEffect(() => {
-  let mounted = true;
-  void (async () => {
-    try {
-      const raw = await getBaseXmlAsync(leftAnimal);
-      if (mounted) setLeftXml(raw ?? null);
-    } catch (err: unknown) {
-      console.warn("[home] base load failed (left)", err);
-      if (mounted) setLeftXml(null);
-    }
-  })();
-  return () => {
-    mounted = false;
-  };
-}, [leftAnimal]);
-
-useEffect(() => {
-  let mounted = true;
-  void (async () => {
-    try {
-      const raw = await getBaseXmlAsync(rightAnimal);
-      if (mounted) setRightXml(raw ?? null);
-    } catch (err: unknown) {
-      console.warn("[home] base load failed (right)", err);
-      if (mounted) setRightXml(null);
-    }
-  })();
-  return () => {
-    mounted = false;
-  };
-}, [rightAnimal]);
-
-useEffect(() => {
   if (!fontsLoaded) return;
 
   const id = setInterval(() => {
@@ -274,14 +223,15 @@ useEffect(() => {
 
   const HybridPreview = ({ size = 160 }: { size?: number }) => {
     const boxStyle: ViewStyle = { width: size, height: size };
-    const [doc, setDoc] = useState<string | null>(xml);
-    useEffect(() => {
-      setDoc(xml);
-    }, [xml]);
+    const hybridSource = HYBRID_SOURCES[hk];
     return (
       <View style={[boxStyle]}>
-        {doc ? (
-          <SvgXml xml={doc} width="100%" height="100%" />
+        {hybridSource ? (
+          <Image
+            source={hybridSource}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="contain"
+          />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" }}>
             <Text style={{ color: "#333" }}>Loading…</Text>
@@ -299,11 +249,15 @@ useEffect(() => {
     size?: number;
   }) => {
     const boxStyle: ViewStyle = { width: size, height: size };
-    const uri = getBaseUri(animal);
+    const source = getBaseRequire(animal);
     return (
       <View style={boxStyle}>
-        {uri ? (
-          <SvgUri width="100%" height="100%" uri={uri} preserveAspectRatio="xMidYMid meet" />
+        {source ? (
+          <Image
+            source={source}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="contain"
+          />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: "#fff" }}>{animal.toUpperCase()}</Text>
