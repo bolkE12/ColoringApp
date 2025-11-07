@@ -17,7 +17,6 @@ import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import type { NavigationProp } from "@react-navigation/native";
 import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
@@ -403,7 +402,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontFamily: "MadimiOne_400Regular",
     color: "#fff",
-    fontSize: 24,
+    fontSize: 42,
     textShadowColor: "rgba(0,0,0,0.25)",
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 6,

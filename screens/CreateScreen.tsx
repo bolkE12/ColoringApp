@@ -40,7 +40,6 @@ const GIRAFFE = require("../assets/base/giraffe.png");
 const ELEPHANT = require("../assets/base/elephant.png");
 
 // tweak these if you want bigger/smaller tiles
-const TILE_SIZE = 132;
 const TILE_RADIUS = 20;
 const GRID_GAP = 18;
 
@@ -85,7 +84,7 @@ function AnimalImage({
   return (
     <Image
       source={source}
-      style={{ width: "85%", height: "85%" }}
+      style={{ width: "85%", height: "85%", borderRadius: 12 }}
       resizeMode="contain"
       testID={testID}
     />
@@ -365,7 +364,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 3,
     borderColor: "#fff",
-    backgroundColor: "rgba(255,255,255,0.85)",
+    backgroundColor: "rgba(255,255,255,1)",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",

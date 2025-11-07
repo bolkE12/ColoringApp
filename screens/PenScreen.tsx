@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontFamily: "MadimiOne_400Regular",
     color: "#fff",
-    fontSize: 28,
+    fontSize: 42,
     textShadowColor: "rgba(0,0,0,0.25)",
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 6,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   downloadBtn: {
-    backgroundColor: "rgba(0, 200, 80, 0.9)",
+    backgroundColor: "#6BCF7F",
     borderRadius: 16,
     width: 32,
     height: 32,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   deleteBtn: {
-    backgroundColor: "rgba(255, 0, 0, 0.8)",
+    backgroundColor: "#FF6B6B",
     borderRadius: 16,
     width: 32,
     height: 32,
