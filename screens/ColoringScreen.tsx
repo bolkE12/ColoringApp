@@ -94,6 +94,7 @@ export default function ColoringScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
+  const hasSpokenRef = useRef(false); // Track if name has been spoken before
 
   // Defer confetti to next frame to avoid blocking UI updates
   useEffect(() => {
@@ -132,13 +133,24 @@ export default function ColoringScreen() {
     }
   }, []); // Empty deps - only run on mount
 
-  // Speak the full sentence with animal name
+  // Speak introduction first time, then just the name
   const speakName = useCallback(() => {
-    Speech.speak(`Your animal's name is ${generatedName}!`, {
-      language: 'en-US',
-      pitch: 1.1, // Slightly higher pitch for kid-friendly voice
-      rate: 0.85, // Slightly slower for clarity
-    });
+    if (!hasSpokenRef.current) {
+      // First time: say the introduction
+      Speech.speak("Choose your animal's name:", {
+        language: 'en-US',
+        pitch: 1.1, // Slightly higher pitch for kid-friendly voice
+        rate: 0.85, // Slightly slower for clarity
+      });
+      hasSpokenRef.current = true;
+    } else {
+      // Subsequent times: just say the name
+      Speech.speak(generatedName, {
+        language: 'en-US',
+        pitch: 1.1, // Slightly higher pitch for kid-friendly voice
+        rate: 0.85, // Slightly slower for clarity
+      });
+    }
   }, [generatedName]);
 
   // Navigate to the next name (generates a new one if at the end)
