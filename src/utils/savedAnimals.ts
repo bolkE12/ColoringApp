@@ -24,7 +24,7 @@ export async function saveAnimal(
   hybridKey: string,
   animalName: string,
   imageUri: string
-): Promise<void> {
+): Promise<string> {
   try {
     const animals = await getSavedAnimals();
     const newAnimal: SavedAnimal = {
@@ -37,8 +37,28 @@ export async function saveAnimal(
     animals.push(newAnimal);
     const jsonValue = JSON.stringify(animals);
     await AsyncStorage.setItem(SAVED_ANIMALS_KEY, jsonValue);
+    return newAnimal.id;
   } catch (error) {
     console.error('Error saving animal:', error);
+    throw error;
+  }
+}
+
+export async function updateAnimal(
+  id: string,
+  imageUri: string
+): Promise<void> {
+  try {
+    const animals = await getSavedAnimals();
+    const animalIndex = animals.findIndex(animal => animal.id === id);
+    if (animalIndex !== -1) {
+      animals[animalIndex].imageUri = imageUri;
+      animals[animalIndex].timestamp = Date.now();
+      const jsonValue = JSON.stringify(animals);
+      await AsyncStorage.setItem(SAVED_ANIMALS_KEY, jsonValue);
+    }
+  } catch (error) {
+    console.error('Error updating animal:', error);
     throw error;
   }
 }

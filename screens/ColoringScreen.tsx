@@ -21,7 +21,7 @@ import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, 
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
-import { saveAnimal } from "../src/utils/savedAnimals";
+import { saveAnimal, updateAnimal } from "../src/utils/savedAnimals";
 import { generateSillyName } from "../src/utils/nameGenerator";
 
 // Types for route params (adjust to your navigator's typing as needed)
@@ -52,6 +52,7 @@ export default function ColoringScreen() {
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
+  const [savedAnimalId, setSavedAnimalId] = useState<string | null>(null);
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
@@ -196,8 +197,16 @@ export default function ColoringScreen() {
                   try {
                     const imageUri = await canvasRef.current?.save();
                     if (imageUri && hybridKey) {
-                      await saveAnimal(hybridKey, generatedName, imageUri);
-                      setHasSaved(true);
+                      if (savedAnimalId) {
+                        // Update existing save
+                        await updateAnimal(savedAnimalId, imageUri);
+                      } else {
+                        // First save - create new and store ID
+                        const id = await saveAnimal(hybridKey, generatedName, imageUri);
+                        setSavedAnimalId(id);
+                        setHasSaved(true);
+                      }
+                      // Always show modal/confetti on save or update
                       setShowSuccessModal(true);
                     }
                   } catch (error) {
