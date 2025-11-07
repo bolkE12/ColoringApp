@@ -13,7 +13,6 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -85,7 +84,6 @@ export default function ColoringScreen() {
   const [savedImageUri, setSavedImageUri] = useState<string | null>(null);
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
-  const confettiRef = useRef<any>(null);
 
   // Stable color select handler
   const handleColorSelect = useCallback((color: string) => {
@@ -99,13 +97,6 @@ export default function ColoringScreen() {
     console.log('[ColorSelect] setColor took:', t2 - t1, 'ms');
     console.log('[ColorSelect] Total onPress:', t2 - t0, 'ms');
   }, []);
-
-  // Trigger confetti when modal opens
-  useEffect(() => {
-    if (showSuccessModal && confettiRef.current) {
-      confettiRef.current.start();
-    }
-  }, [showSuccessModal]);
 
   // Set initial color when canvas is ready (runs once)
   useEffect(() => {
@@ -256,18 +247,12 @@ export default function ColoringScreen() {
                   try {
                     const isUpdate = !!savedAnimalId;
 
-                    // Trigger confetti immediately for instant feedback
-                    if (isUpdate) {
-                      // Subsequent save - just confetti
-                      if (confettiRef.current) {
-                        confettiRef.current.start();
-                      }
-                    } else {
-                      // First save - show modal (which triggers confetti via useEffect)
+                    // Show modal only on first save
+                    if (!isUpdate) {
                       setShowSuccessModal(true);
                     }
 
-                    // Then do the save in background
+                    // Save the image
                     const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
                     if (imageUri && hybridKey) {
                       if (isUpdate) {
@@ -309,18 +294,6 @@ export default function ColoringScreen() {
           </View>
         </View>
       </SafeAreaView>
-
-      {/* Confetti Animation - Outside modal so it can trigger independently */}
-      <ConfettiCannon
-        ref={confettiRef}
-        count={500}
-        origin={{ x: SCREEN_WIDTH / 2, y: 0 }}
-        autoStart={false}
-        fadeOut={true}
-        explosionSpeed={400}
-        fallSpeed={2500}
-        colors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#FFD93D', '#6BCF7F', '#B388FF', '#FF80AB', '#FFB74D', '#9575CD']}
-      />
 
       {/* Custom Success Modal */}
       <Modal
