@@ -477,7 +477,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
 
 GlColoringCanvas.displayName = 'GlColoringCanvas';
 
-export default GlColoringCanvas;
+export default React.memo(GlColoringCanvas);
 
 const styles = StyleSheet.create({
   container: {

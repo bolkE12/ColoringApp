@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, memo } from "react";
+import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from "react";
 import {
   View,
   Text,
@@ -55,16 +55,18 @@ const ColorSwatch = memo(({
     onPress(color);
   }, [color, onPress]);
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      style={[
-        styles.swatch,
-        { backgroundColor: color },
-        isSelected && styles.swatchActive
-      ]}
-    />
-  );
+  // Memoize the style to prevent object recreation
+  const swatchStyle = useMemo(() => [
+    styles.swatch,
+    { backgroundColor: color },
+    isSelected && styles.swatchActive
+  ], [color, isSelected]);
+
+  return <Pressable onPress={handlePress} style={swatchStyle} />;
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if color or selection state changes
+  return prevProps.color === nextProps.color &&
+         prevProps.isSelected === nextProps.isSelected;
 });
 
 export default function ColoringScreen() {
