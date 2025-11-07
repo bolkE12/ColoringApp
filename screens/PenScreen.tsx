@@ -97,9 +97,12 @@ export default function PenScreen() {
   };
 
   const handleEdit = (animal: SavedAnimal) => {
+    // Determine if this is a hybrid (contains "_") or base animal (no "_")
+    const isHybrid = animal.hybridKey.includes("_");
+
     navigation.navigate("Coloring", {
       animalName: animal.animalName,
-      hybridKey: animal.hybridKey,
+      ...(isHybrid ? { hybridKey: animal.hybridKey } : { baseAnimalKey: animal.hybridKey }),
       savedAnimalId: animal.id,
       existingImageUri: animal.imageUri,
     });

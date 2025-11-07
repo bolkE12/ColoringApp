@@ -158,3 +158,8 @@ export function getHybridPngModule(key: string): number {
 
   return mod;
 }
+
+/** Get a local file URI for a given base animal PNG key (downloads asset if needed). */
+export async function getBasePngUri(key: string): Promise<string> {
+  return getBaseUri(key);
+}

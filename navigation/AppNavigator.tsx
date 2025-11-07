@@ -12,7 +12,8 @@ export type RootStackParamList = {
   Create: undefined;
   Coloring: {
     animalName: string;
-    hybridKey: string;
+    hybridKey?: string;
+    baseAnimalKey?: string;
     // Optional params for editing existing saved animals
     savedAnimalId?: string;
     existingImageUri?: string;

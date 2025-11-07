@@ -72,6 +72,7 @@ export default function ColoringScreen() {
   const {
     animalName = "Lion",
     hybridKey,
+    baseAnimalKey,
     savedAnimalId: initialSavedAnimalId,
     existingImageUri: initialExistingImageUri
   } = route.params ?? {};
@@ -236,10 +237,11 @@ export default function ColoringScreen() {
                 setCanvasSize({ width, height });
               }}
             >
-              {hybridKey ? (
+              {(hybridKey || baseAnimalKey) ? (
                 <GlColoringCanvas
                   ref={canvasRef}
                   hybridKey={hybridKey}
+                  baseAnimalKey={baseAnimalKey}
                   existingImageUri={initialExistingImageUri}
                   activeTool={activeTool}
                   brushWidth={brushWidth}
@@ -369,13 +371,14 @@ export default function ColoringScreen() {
                     try {
                       // Save the image
                       const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
-                      if (imageUri && hybridKey) {
+                      const animalKey = hybridKey || baseAnimalKey;
+                      if (imageUri && animalKey) {
                         if (isUpdate) {
                           // Update existing save (file already overwritten, update name too)
                           await updateAnimal(savedAnimalId, imageUri, generatedName);
                         } else {
                           // First save - create new and store ID and URI
-                          const id = await saveAnimal(hybridKey, generatedName, imageUri);
+                          const id = await saveAnimal(animalKey, generatedName, imageUri);
                           setSavedAnimalId(id);
                           setSavedImageUri(imageUri);
                           setHasSaved(true);

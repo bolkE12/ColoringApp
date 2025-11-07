@@ -218,19 +218,28 @@ export default function CreateScreen() {
           <View style={styles.primarySpacer}>
             {PrimaryEnabled && (
               <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
-                {/* Build a deterministic key (alphabetical) like "bear_fox" so it matches /assets/hybrid/bear_fox.svg */}
                 <Pressable
-                  style={[styles.primaryBtn, !TwoSelected && { opacity: 0.6 }]}
-                  disabled={!TwoSelected}
+                  style={styles.primaryBtn}
                   onPress={() => {
-                    const key = makeHybridKey(selected[0], selected[1]);
-                    const displayName = selected.map((s) => s[0].toUpperCase() + s.slice(1)).join(" + ");
-                    // @ts-ignore
-                    navigation.navigate("Coloring", { animalName: displayName, hybridKey: key });
+                    if (TwoSelected) {
+                      // Hybrid: two animals selected
+                      const key = makeHybridKey(selected[0], selected[1]);
+                      const displayName = selected.map((s) => s[0].toUpperCase() + s.slice(1)).join(" + ");
+                      // @ts-ignore
+                      navigation.navigate("Coloring", { animalName: displayName, hybridKey: key });
+                    } else {
+                      // Single animal: only one selected
+                      const animalKey = selected[0];
+                      const displayName = animalKey[0].toUpperCase() + animalKey.slice(1);
+                      // @ts-ignore
+                      navigation.navigate("Coloring", { animalName: displayName, baseAnimalKey: animalKey });
+                    }
                   }}
                 >
                   <Plus color="#fff" size={18} style={{ marginRight: 8 }} />
-                  <Text style={styles.primaryText}>Create My Animal!</Text>
+                  <Text style={styles.primaryText}>
+                    {TwoSelected ? "Create My Hybrid!" : "Color My Animal!"}
+                  </Text>
                 </Pressable>
               </Animated.View>
             )}

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { GLView, ExpoWebGLRenderingContext } from "expo-gl";
 import * as FileSystem from "expo-file-system/legacy";
 import * as MediaLibrary from "expo-media-library";
-import { getHybridPngUri } from "../src/utils/assetLoader.native";
+import { getHybridPngUri, getBasePngUri } from "../src/utils/assetLoader.native";
 import { floodFill, hexToRgba } from "../src/utils/floodFill";
 
 // @ts-ignore - UPNG has no types
@@ -12,7 +12,8 @@ const UPNG = require("upng-js");
 const TARGET_SIZE = 1024;
 
 interface GlColoringCanvasProps {
-  hybridKey: string;
+  hybridKey?: string;
+  baseAnimalKey?: string;
   existingImageUri?: string;
   activeTool: "fill" | "brush";
   brushWidth: number;
@@ -68,6 +69,7 @@ const overlayFragmentShaderSource = `
 
 const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(({
   hybridKey,
+  baseAnimalKey,
   existingImageUri,
   activeTool,
   brushWidth,
@@ -373,8 +375,17 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       programRef.current = program;
       overlayProgramRef.current = overlayProgram;
 
-      // Load PNG - use existing colored image if provided, otherwise load fresh from hybrid key
-      const uri = existingImageUri || await getHybridPngUri(hybridKey);
+      // Load PNG - use existing colored image if provided, otherwise load fresh from hybrid or base key
+      let uri: string;
+      if (existingImageUri) {
+        uri = existingImageUri;
+      } else if (hybridKey) {
+        uri = await getHybridPngUri(hybridKey);
+      } else if (baseAnimalKey) {
+        uri = await getBasePngUri(baseAnimalKey);
+      } else {
+        throw new Error("Either hybridKey or baseAnimalKey must be provided");
+      }
       const response = await fetch(uri);
       const blob = await response.blob();
       const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
@@ -395,7 +406,9 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       // Instead, fetch the fresh uncolored version for the original
       if (existingImageUri) {
         // Load the fresh uncolored version for originalPixelDataRef
-        const freshUri = await getHybridPngUri(hybridKey);
+        const freshUri = hybridKey
+          ? await getHybridPngUri(hybridKey)
+          : await getBasePngUri(baseAnimalKey!);
         const freshResponse = await fetch(freshUri);
         const freshBlob = await freshResponse.blob();
         const freshArrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
@@ -438,7 +451,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       console.error("[GlColoringCanvas] Error:", err);
       setError(err instanceof Error ? err.message : String(err));
     }
-  }, [hybridKey, existingImageUri, render]);
+  }, [hybridKey, baseAnimalKey, existingImageUri, render]);
 
   // Handle touch
   // Draw a circle at a point (for brush tool)
