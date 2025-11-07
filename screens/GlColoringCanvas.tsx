@@ -467,10 +467,18 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         const b = pixels[idx + 2];
         if (r < 50 && g < 50 && b < 50) continue;
 
-        // Don't draw on transparent areas in the original image (outside the animal borders)
+        // Don't draw on transparent areas OR pure white background in the original image
         if (originalPixelDataRef.current) {
-          const originalAlpha = originalPixelDataRef.current[idx + 3];
-          if (originalAlpha < 10) continue;
+          const origR = originalPixelDataRef.current[idx];
+          const origG = originalPixelDataRef.current[idx + 1];
+          const origB = originalPixelDataRef.current[idx + 2];
+          const origA = originalPixelDataRef.current[idx + 3];
+
+          // Don't allow drawing on transparent areas
+          if (origA < 10) continue;
+
+          // Don't allow drawing on pure white background areas (outside the animal)
+          if (origR > 250 && origG > 250 && origB > 250 && origA > 250) continue;
         }
 
         // color is an array [r, g, b, a], not an object
@@ -578,18 +586,27 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     const bitmapX = Math.floor((imageX / layout.displayWidth) * TARGET_SIZE);
     const bitmapY = Math.floor((imageY / layout.displayHeight) * TARGET_SIZE);
 
-    // Check if clicking on outline
+    // Check if clicking on outline or outside borders
     const idx = (bitmapY * TARGET_SIZE + bitmapX) * 4;
     const r = pixelDataRef.current[idx];
     const g = pixelDataRef.current[idx + 1];
     const b = pixelDataRef.current[idx + 2];
+    const a = pixelDataRef.current[idx + 3];
 
     if (r < 50 && g < 50 && b < 50) return; // Black outline
 
-    // Check if clicking on transparent area in the original image (outside the animal borders)
+    // Check if clicking on transparent area OR pure white background in the original image
     if (originalPixelDataRef.current) {
-      const originalAlpha = originalPixelDataRef.current[idx + 3];
-      if (originalAlpha < 10) return; // Transparent area - don't allow coloring
+      const origR = originalPixelDataRef.current[idx];
+      const origG = originalPixelDataRef.current[idx + 1];
+      const origB = originalPixelDataRef.current[idx + 2];
+      const origA = originalPixelDataRef.current[idx + 3];
+
+      // Don't allow coloring on transparent areas
+      if (origA < 10) return;
+
+      // Don't allow coloring on pure white background areas (outside the animal)
+      if (origR > 250 && origG > 250 && origB > 250 && origA > 250) return;
     }
 
     // Save current state to history before making changes

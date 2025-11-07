@@ -17,7 +17,7 @@ import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp, Volume2, RefreshCw } from "lucide-react-native";
+import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp, Volume2, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Speech from 'expo-speech';
@@ -86,7 +86,10 @@ export default function ColoringScreen() {
   const [savedAnimalId, setSavedAnimalId] = useState<string | null>(initialSavedAnimalId || null);
   const [savedImageUri, setSavedImageUri] = useState<string | null>(initialExistingImageUri || null);
   // Generate silly name for new animals, use saved name for editing existing animals
-  const [generatedName, setGeneratedName] = useState(() => initialSavedAnimalId ? animalName : generateSillyName());
+  // Keep a list of generated names so users can cycle through them
+  const nameListRef = useRef<string[]>([initialSavedAnimalId ? animalName : generateSillyName()]);
+  const [currentNameIndex, setCurrentNameIndex] = useState(0);
+  const generatedName = nameListRef.current[currentNameIndex];
   const [showConfetti, setShowConfetti] = useState(false);
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
@@ -137,11 +140,25 @@ export default function ColoringScreen() {
     });
   }, [generatedName]);
 
-  // Generate a new random name
-  const refreshName = useCallback(() => {
-    const newName = generateSillyName();
-    setGeneratedName(newName);
-  }, []);
+  // Navigate to the next name (generates a new one if at the end)
+  const nextName = useCallback(() => {
+    if (currentNameIndex < nameListRef.current.length - 1) {
+      // Move to next existing name
+      setCurrentNameIndex(currentNameIndex + 1);
+    } else {
+      // Generate a new name and add to list
+      const newName = generateSillyName();
+      nameListRef.current.push(newName);
+      setCurrentNameIndex(nameListRef.current.length - 1);
+    }
+  }, [currentNameIndex]);
+
+  // Navigate to the previous name
+  const previousName = useCallback(() => {
+    if (currentNameIndex > 0) {
+      setCurrentNameIndex(currentNameIndex - 1);
+    }
+  }, [currentNameIndex]);
 
   // Measure when layout is committed
   useLayoutEffect(() => {
@@ -177,14 +194,22 @@ export default function ColoringScreen() {
           </Pressable>
 
           <View style={styles.titleContainer}>
+            <Pressable
+              onPress={previousName}
+              style={[styles.speakerBtn, currentNameIndex === 0 && styles.disabledBtn]}
+              accessibilityLabel="Previous name"
+              disabled={currentNameIndex === 0}
+            >
+              <ChevronLeft size={28} color={currentNameIndex === 0 ? "#999" : "#FFD93D"} />
+            </Pressable>
             <Text style={styles.screenTitle}>Meet {generatedName}!</Text>
             <View style={styles.titleButtons}>
               <Pressable
-                onPress={refreshName}
+                onPress={nextName}
                 style={styles.speakerBtn}
-                accessibilityLabel="Generate new name"
+                accessibilityLabel="Next name"
               >
-                <RefreshCw size={28} color="#FFD93D" />
+                <ChevronRight size={28} color="#FFD93D" />
               </Pressable>
               <Pressable
                 onPress={speakName}
@@ -485,6 +510,9 @@ const styles = StyleSheet.create({
   speakerBtn: {
     padding: 4,
     marginTop: 4,
+  },
+  disabledBtn: {
+    opacity: 0.5,
   },
   main: {
     flex: 1,
