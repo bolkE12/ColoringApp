@@ -427,6 +427,8 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     const color = hexToRgba(selectedColorRef.current);
     const radius = brushWidthRef.current / 2;
 
+    console.log('[GlColoringCanvas] drawBrushStroke - color:', color, 'radius:', radius);
+
     // Draw a filled circle
     for (let dy = -radius; dy <= radius; dy++) {
       for (let dx = -radius; dx <= radius; dx++) {
@@ -446,10 +448,11 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         const b = pixels[idx + 2];
         if (r < 50 && g < 50 && b < 50) continue;
 
-        pixels[idx] = color.r;
-        pixels[idx + 1] = color.g;
-        pixels[idx + 2] = color.b;
-        pixels[idx + 3] = 255;
+        // color is an array [r, g, b, a], not an object
+        pixels[idx] = color[0];
+        pixels[idx + 1] = color[1];
+        pixels[idx + 2] = color[2];
+        pixels[idx + 3] = color[3];
       }
     }
   }, []);
