@@ -467,6 +467,12 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         const b = pixels[idx + 2];
         if (r < 50 && g < 50 && b < 50) continue;
 
+        // Don't draw on transparent areas in the original image (outside the animal borders)
+        if (originalPixelDataRef.current) {
+          const originalAlpha = originalPixelDataRef.current[idx + 3];
+          if (originalAlpha < 10) continue;
+        }
+
         // color is an array [r, g, b, a], not an object
         pixels[idx] = color[0];
         pixels[idx + 1] = color[1];
@@ -579,6 +585,12 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     const b = pixelDataRef.current[idx + 2];
 
     if (r < 50 && g < 50 && b < 50) return; // Black outline
+
+    // Check if clicking on transparent area in the original image (outside the animal borders)
+    if (originalPixelDataRef.current) {
+      const originalAlpha = originalPixelDataRef.current[idx + 3];
+      if (originalAlpha < 10) return; // Transparent area - don't allow coloring
+    }
 
     // Save current state to history before making changes
     historyRef.current.push(new Uint8ClampedArray(pixelDataRef.current));
