@@ -245,6 +245,18 @@ export default function ColoringScreen() {
         </View>
       </SafeAreaView>
 
+      {/* Confetti Animation - Outside modal so it can trigger independently */}
+      <ConfettiCannon
+        ref={confettiRef}
+        count={500}
+        origin={{ x: SCREEN_WIDTH / 2, y: 0 }}
+        autoStart={false}
+        fadeOut={true}
+        explosionSpeed={400}
+        fallSpeed={2500}
+        colors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#FFD93D', '#6BCF7F', '#B388FF', '#FF80AB', '#FFB74D', '#9575CD']}
+      />
+
       {/* Custom Success Modal */}
       <Modal
         visible={showSuccessModal}
@@ -253,17 +265,6 @@ export default function ColoringScreen() {
         onRequestClose={() => setShowSuccessModal(false)}
       >
         <View style={styles.modalOverlay}>
-          {/* Confetti Animation */}
-          <ConfettiCannon
-            ref={confettiRef}
-            count={500}
-            origin={{ x: SCREEN_WIDTH / 2, y: 0 }}
-            autoStart={false}
-            fadeOut={true}
-            explosionSpeed={400}
-            fallSpeed={2500}
-            colors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#FFD93D', '#6BCF7F', '#B388FF', '#FF80AB', '#FFB74D', '#9575CD']}
-          />
           <View style={styles.modalContent}>
             <Sparkles size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Amazing Work!</Text>
