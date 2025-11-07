@@ -77,6 +77,7 @@ export default function ColoringScreen() {
   const [fontsLoaded] = useFonts({ MadimiOne_400Regular });
   const [activeTool, setActiveTool] = useState<"fill" | "brush">("fill");
   const [activeColor, setActiveColor] = useState<string>(DEFAULT_COLORS[0]);
+  const [brushWidth, setBrushWidth] = useState<number>(8); // Brush width in pixels
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [hasSaved, setHasSaved] = useState(!!initialSavedAnimalId); // Already saved if editing
@@ -178,6 +179,8 @@ export default function ColoringScreen() {
                   ref={canvasRef}
                   hybridKey={hybridKey}
                   existingImageUri={initialExistingImageUri}
+                  activeTool={activeTool}
+                  brushWidth={brushWidth}
                   width="100%"
                   height="100%"
                 />
@@ -217,6 +220,30 @@ export default function ColoringScreen() {
                 </Text>
               </Pressable>
             </View>
+
+            {/* Brush Width Selector - Only visible when brush tool is active */}
+            {activeTool === "brush" && (
+              <View style={styles.brushWidthRow}>
+                {[4, 8, 16, 24].map((width) => (
+                  <Pressable
+                    key={width}
+                    onPress={() => setBrushWidth(width)}
+                    style={[
+                      styles.brushWidthBtn,
+                      brushWidth === width && styles.brushWidthBtnActive
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.brushWidthDot,
+                        { width: width / 2, height: width / 2, borderRadius: width / 4 },
+                        brushWidth === width && styles.brushWidthDotActive
+                      ]}
+                    />
+                  </Pressable>
+                ))}
+              </View>
+            )}
 
             {/* Palette */}
             <View style={styles.palette}>
@@ -497,6 +524,31 @@ const styles = StyleSheet.create({
   },
   toolTextDark: {
     color: "#111",
+  },
+  brushWidthRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignSelf: "stretch",
+    width: "100%",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  brushWidthBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#eee",
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  brushWidthBtnActive: {
+    backgroundColor: "#A133F5",
+  },
+  brushWidthDot: {
+    backgroundColor: "#666",
+  },
+  brushWidthDotActive: {
+    backgroundColor: "#fff",
   },
   palette: {
     flexDirection: "row",

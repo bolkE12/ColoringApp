@@ -14,6 +14,8 @@ const TARGET_SIZE = 1024;
 interface GlColoringCanvasProps {
   hybridKey: string;
   existingImageUri?: string;
+  activeTool: "fill" | "brush";
+  brushWidth: number;
   width?: string | number;
   height?: string | number;
 }
@@ -67,6 +69,8 @@ const overlayFragmentShaderSource = `
 const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(({
   hybridKey,
   existingImageUri,
+  activeTool,
+  brushWidth,
   width = "100%",
   height = "100%"
 }, ref) => {
@@ -81,11 +85,14 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   const baseTextureRef = useRef<WebGLTexture | null>(null);
   const overlayTextureRef = useRef<WebGLTexture | null>(null);
   const selectedColorRef = useRef<string>('#FF6B6B'); // Default color
+  const activeToolRef = useRef<"fill" | "brush">(activeTool);
+  const brushWidthRef = useRef<number>(brushWidth);
   const overlayPixelsRef = useRef<Uint8ClampedArray | null>(null);
   const programRef = useRef<WebGLProgram | null>(null);
   const overlayProgramRef = useRef<WebGLProgram | null>(null);
   const layoutRef = useRef({ offsetX: 0, offsetY: 0, scale: 1, displayWidth: 0, displayHeight: 0 });
   const historyRef = useRef<Uint8ClampedArray[]>([]);
+  const lastBrushPointRef = useRef<{ x: number; y: number } | null>(null);
 
   // Compile shader
   const compileShader = (gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null => {
@@ -415,7 +422,111 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   }, [hybridKey, existingImageUri, render]);
 
   // Handle touch
+  // Draw a circle at a point (for brush tool)
+  const drawBrushStroke = useCallback((x: number, y: number, pixels: Uint8ClampedArray) => {
+    const color = hexToRgba(selectedColorRef.current);
+    const radius = brushWidthRef.current / 2;
+
+    // Draw a filled circle
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance > radius) continue;
+
+        const px = Math.floor(x + dx);
+        const py = Math.floor(y + dy);
+
+        if (px < 0 || px >= TARGET_SIZE || py < 0 || py >= TARGET_SIZE) continue;
+
+        const idx = (py * TARGET_SIZE + px) * 4;
+
+        // Don't draw on black outline
+        const r = pixels[idx];
+        const g = pixels[idx + 1];
+        const b = pixels[idx + 2];
+        if (r < 50 && g < 50 && b < 50) continue;
+
+        pixels[idx] = color.r;
+        pixels[idx + 1] = color.g;
+        pixels[idx + 2] = color.b;
+        pixels[idx + 3] = 255;
+      }
+    }
+  }, []);
+
+  // Draw a line between two points (for smooth brush strokes)
+  const drawBrushLine = useCallback((x0: number, y0: number, x1: number, y1: number, pixels: Uint8ClampedArray) => {
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const steps = Math.max(dx, dy, 1);
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = Math.floor(x0 + (x1 - x0) * t);
+      const y = Math.floor(y0 + (y1 - y0) * t);
+      drawBrushStroke(x, y, pixels);
+    }
+  }, [drawBrushStroke]);
+
+  const handleTouchStart = useCallback((event: any) => {
+    if (activeToolRef.current !== "brush") return;
+    if (!pixelDataRef.current) return;
+
+    const { locationX, locationY } = event.nativeEvent;
+    const layout = layoutRef.current;
+
+    // Convert touch to bitmap coordinates
+    const imageX = locationX - layout.offsetX;
+    const imageY = locationY - layout.offsetY;
+
+    if (imageX < 0 || imageX >= layout.displayWidth || imageY < 0 || imageY >= layout.displayHeight) return;
+
+    const bitmapX = Math.floor((imageX / layout.displayWidth) * TARGET_SIZE);
+    const bitmapY = Math.floor((imageY / layout.displayHeight) * TARGET_SIZE);
+
+    // Save current state to history before making changes
+    historyRef.current.push(new Uint8ClampedArray(pixelDataRef.current));
+
+    // Draw initial brush stroke
+    drawBrushStroke(bitmapX, bitmapY, pixelDataRef.current);
+    lastBrushPointRef.current = { x: bitmapX, y: bitmapY };
+
+    // Update overlay and render
+    updateOverlayFromPixelData();
+  }, [drawBrushStroke, updateOverlayFromPixelData]);
+
+  const handleTouchMove = useCallback((event: any) => {
+    if (activeToolRef.current !== "brush") return;
+    if (!pixelDataRef.current || !lastBrushPointRef.current) return;
+
+    const { locationX, locationY } = event.nativeEvent;
+    const layout = layoutRef.current;
+
+    // Convert touch to bitmap coordinates
+    const imageX = locationX - layout.offsetX;
+    const imageY = locationY - layout.offsetY;
+
+    if (imageX < 0 || imageX >= layout.displayWidth || imageY < 0 || imageY >= layout.displayHeight) return;
+
+    const bitmapX = Math.floor((imageX / layout.displayWidth) * TARGET_SIZE);
+    const bitmapY = Math.floor((imageY / layout.displayHeight) * TARGET_SIZE);
+
+    // Draw line from last point to current point
+    drawBrushLine(lastBrushPointRef.current.x, lastBrushPointRef.current.y, bitmapX, bitmapY, pixelDataRef.current);
+    lastBrushPointRef.current = { x: bitmapX, y: bitmapY };
+
+    // Update overlay and render
+    updateOverlayFromPixelData();
+  }, [drawBrushLine, updateOverlayFromPixelData]);
+
+  const handleTouchEnd = useCallback(() => {
+    // Reset last brush point when touch ends
+    lastBrushPointRef.current = null;
+  }, []);
+
   const handleTouch = useCallback((event: any) => {
+    // Only handle fill tool here (brush is handled by touch start/move)
+    if (activeToolRef.current !== "fill") return;
     if (!pixelDataRef.current || !glRef.current || !overlayTextureRef.current || !overlayPixelsRef.current) return;
 
     const { locationX, locationY } = event.nativeEvent;
@@ -450,6 +561,14 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     // Update overlay and render
     updateOverlayFromPixelData();
   }, [updateOverlayFromPixelData]);
+
+  // Update refs when props change
+  useEffect(() => {
+    activeToolRef.current = activeTool;
+    brushWidthRef.current = brushWidth;
+    // Reset last brush point when switching tools or changing brush width
+    lastBrushPointRef.current = null;
+  }, [activeTool, brushWidth]);
 
   // Update layout when container size changes
   useEffect(() => {
@@ -489,7 +608,9 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
           <View
             style={styles.touchOverlay}
             onStartShouldSetResponder={() => true}
-            onResponderRelease={handleTouch}
+            onResponderGrant={handleTouchStart}
+            onResponderMove={handleTouchMove}
+            onResponderRelease={activeToolRef.current === "brush" ? handleTouchEnd : handleTouch}
           />
         </>
       ) : (
