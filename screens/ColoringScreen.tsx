@@ -24,13 +24,8 @@ import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
 import { saveAnimal, updateAnimal } from "../src/utils/savedAnimals";
 import { generateSillyName } from "../src/utils/nameGenerator";
 
-// Types for route params (adjust to your navigator's typing as needed)
-type ColoringParams = {
-  animalName?: string; // e.g., "Lion"
-  hybridKey?: string;  // e.g., "bear_fox"
-  // You can also pass a React component (SVG) for the drawing:
-  // Icon?: React.ComponentType<any>;
-};
+// Import the correct navigation types
+import type { RootStackParamList } from "../navigation/AppNavigator";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -71,18 +66,23 @@ const ColorSwatch = React.memo(({
 export default function ColoringScreen() {
   console.log('[ColoringScreen] Rendering...');
   const navigation = useNavigation();
-  const route = useRoute<RouteProp<Record<string, ColoringParams>, string>>();
-  const { animalName = "Lion", hybridKey } = route.params ?? {};
+  const route = useRoute<RouteProp<RootStackParamList, "Coloring">>();
+  const {
+    animalName = "Lion",
+    hybridKey,
+    savedAnimalId: initialSavedAnimalId,
+    existingImageUri: initialExistingImageUri
+  } = route.params ?? {};
 
   const [fontsLoaded] = useFonts({ MadimiOne_400Regular });
   const [activeTool, setActiveTool] = useState<"fill" | "brush">("fill");
   const [activeColor, setActiveColor] = useState<string>(DEFAULT_COLORS[0]);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [hasSaved, setHasSaved] = useState(false);
-  const [savedAnimalId, setSavedAnimalId] = useState<string | null>(null);
-  const [savedImageUri, setSavedImageUri] = useState<string | null>(null);
-  const [generatedName] = useState(() => generateSillyName());
+  const [hasSaved, setHasSaved] = useState(!!initialSavedAnimalId); // Already saved if editing
+  const [savedAnimalId, setSavedAnimalId] = useState<string | null>(initialSavedAnimalId || null);
+  const [savedImageUri, setSavedImageUri] = useState<string | null>(initialExistingImageUri || null);
+  const [generatedName] = useState(() => animalName); // Use actual animal name instead of generating
   const [showConfetti, setShowConfetti] = useState(false);
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
@@ -177,6 +177,7 @@ export default function ColoringScreen() {
                 <GlColoringCanvas
                   ref={canvasRef}
                   hybridKey={hybridKey}
+                  existingImageUri={initialExistingImageUri}
                   width="100%"
                   height="100%"
                 />

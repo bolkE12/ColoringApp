@@ -13,6 +13,7 @@ const TARGET_SIZE = 1024;
 
 interface GlColoringCanvasProps {
   hybridKey: string;
+  existingImageUri?: string;
   width?: string | number;
   height?: string | number;
 }
@@ -65,6 +66,7 @@ const overlayFragmentShaderSource = `
 
 const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(({
   hybridKey,
+  existingImageUri,
   width = "100%",
   height = "100%"
 }, ref) => {
@@ -345,8 +347,8 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       programRef.current = program;
       overlayProgramRef.current = overlayProgram;
 
-      // Load PNG
-      const uri = await getHybridPngUri(hybridKey);
+      // Load PNG - use existing colored image if provided, otherwise load fresh from hybrid key
+      const uri = existingImageUri || await getHybridPngUri(hybridKey);
       const response = await fetch(uri);
       const blob = await response.blob();
       const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
@@ -363,7 +365,27 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       const pixels = new Uint8ClampedArray(rgba[0]);
 
       // Save original and current pixel data
-      originalPixelDataRef.current = new Uint8ClampedArray(pixels);
+      // If loading an existing colored image, don't save it as "original" (for clear functionality)
+      // Instead, fetch the fresh uncolored version for the original
+      if (existingImageUri) {
+        // Load the fresh uncolored version for originalPixelDataRef
+        const freshUri = await getHybridPngUri(hybridKey);
+        const freshResponse = await fetch(freshUri);
+        const freshBlob = await freshResponse.blob();
+        const freshArrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as ArrayBuffer);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(freshBlob);
+        });
+        const freshPngArray = new Uint8Array(freshArrayBuffer);
+        const freshDecoded = UPNG.decode(freshPngArray);
+        const freshRgba = UPNG.toRGBA8(freshDecoded);
+        const freshPixels = new Uint8ClampedArray(freshRgba[0]);
+        originalPixelDataRef.current = freshPixels;
+      } else {
+        originalPixelDataRef.current = new Uint8ClampedArray(pixels);
+      }
       pixelDataRef.current = pixels;
 
       // Create base texture
@@ -390,7 +412,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       console.error("[GlColoringCanvas] Error:", err);
       setError(err instanceof Error ? err.message : String(err));
     }
-  }, [hybridKey, render]);
+  }, [hybridKey, existingImageUri, render]);
 
   // Handle touch
   const handleTouch = useCallback((event: any) => {

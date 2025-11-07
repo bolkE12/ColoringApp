@@ -10,7 +10,13 @@ import PenScreen from "../screens/PenScreen";
 export type RootStackParamList = {
   Home: undefined;
   Create: undefined;
-  Coloring: { animalName: string; hybridKey: string };
+  Coloring: {
+    animalName: string;
+    hybridKey: string;
+    // Optional params for editing existing saved animals
+    savedAnimalId?: string;
+    existingImageUri?: string;
+  };
   Pen: undefined;
 };
 

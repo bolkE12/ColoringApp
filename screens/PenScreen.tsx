@@ -15,16 +15,18 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import type { NavigationProp } from "@react-navigation/native";
 import { ArrowLeft, Trash2, Download } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import * as MediaLibrary from "expo-media-library";
 import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAnimals";
+import type { RootStackParamList } from "../navigation/AppNavigator";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ITEM_SIZE = (SCREEN_WIDTH - 64) / 3; // 3 columns with padding
 
 export default function PenScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [fontsLoaded] = useFonts({ MadimiOne_400Regular });
   const [savedAnimals, setSavedAnimals] = useState<SavedAnimal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,10 +95,20 @@ export default function PenScreen() {
     }
   };
 
+  const handleEdit = (animal: SavedAnimal) => {
+    navigation.navigate("Coloring", {
+      animalName: animal.animalName,
+      hybridKey: animal.hybridKey,
+      savedAnimalId: animal.id,
+      existingImageUri: animal.imageUri,
+    });
+  };
+
   const renderAnimal = ({ item }: { item: SavedAnimal }) => (
     <View style={styles.gridItem}>
       <Pressable
         style={styles.imageContainer}
+        onPress={() => handleEdit(item)}
         onLongPress={() => handleDelete(item)}
       >
         <Image
