@@ -131,9 +131,9 @@ export default function ColoringScreen() {
     }
   }, []); // Empty deps - only run on mount
 
-  // Speak the animal name aloud
+  // Speak the animal name aloud with introduction
   const speakName = useCallback(() => {
-    Speech.speak(generatedName, {
+    Speech.speak(`Meet ${generatedName}!`, {
       language: 'en-US',
       pitch: 1.1, // Slightly higher pitch for kid-friendly voice
       rate: 0.85, // Slightly slower for clarity
