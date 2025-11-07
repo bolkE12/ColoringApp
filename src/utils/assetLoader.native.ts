@@ -2,9 +2,7 @@ import { Asset } from "expo-asset";
 // Uses fetch() on the local asset URI to avoid deprecated FileSystem APIs
 import {
   HYBRID_SOURCES,
-  RAW_HYBRID_LOOKUP,
-  HYBRID_PNG_SOURCES,
-  RAW_PNG_LOOKUP
+  RAW_HYBRID_LOOKUP
 } from "../../assets/hybrid";
 import * as BASE from "../../assets/base";
 
@@ -63,7 +61,7 @@ export async function getBaseUri(key: string): Promise<string> {
   }
 
   if (!mod) {
-    throw new Error(`[assetLoader] No base SVG found for key "${key}"`);
+    throw new Error(`[assetLoader] No base PNG found for key "${key}"`);
   }
 
   const asset = Asset.fromModule(mod as number);
@@ -71,12 +69,12 @@ export async function getBaseUri(key: string): Promise<string> {
   return asset.localUri ?? asset.uri;
 }
 
-/** Load raw SVG XML text for a given base animal. */
+/** Load raw XML text for a given base animal (legacy - no longer used for PNG). */
 export async function loadBaseXml(key: string): Promise<string> {
   const uri = await getBaseUri(key);
   const res = await fetch(uri);
   if (!res.ok) {
-    throw new Error(`[assetLoader] Failed to read base SVG at ${uri} (status ${res.status})`);
+    throw new Error(`[assetLoader] Failed to read base asset at ${uri} (status ${res.status})`);
   }
   return await res.text();
 }
@@ -94,7 +92,7 @@ export async function getHybridUri(key: string): Promise<string> {
   }
 
   if (!mod) {
-    throw new Error(`[assetLoader] No hybrid SVG found for key "${key}"`);
+    throw new Error(`[assetLoader] No hybrid PNG found for key "${key}"`);
   }
 
   const asset = Asset.fromModule(mod);
@@ -102,7 +100,7 @@ export async function getHybridUri(key: string): Promise<string> {
   return asset.localUri ?? asset.uri;
 }
 
-/** Load raw SVG XML text for a given hybrid key. */
+/** Load raw XML text for a given hybrid key (legacy - no longer used for PNG). */
 export async function loadHybridXml(key: string): Promise<string> {
   const uri = await getHybridUri(key);
 
@@ -110,28 +108,27 @@ export async function loadHybridXml(key: string): Promise<string> {
   // expo-file-system string APIs and works with file:// / content:// URIs.
   const res = await fetch(uri);
   if (!res.ok) {
-    throw new Error(`[assetLoader] Failed to read SVG at ${uri} (status ${res.status})`);
+    throw new Error(`[assetLoader] Failed to read asset at ${uri} (status ${res.status})`);
   }
   const xml = await res.text();
   return xml;
 }
 
-/** Check if a PNG version exists for a given hybrid key. */
+/** Check if a PNG version exists for a given hybrid key (all hybrids are now PNG). */
 export function hasHybridPng(key: string): boolean {
-  const norm = normalizeHybridKey(key);
-  return Boolean(HYBRID_PNG_SOURCES[norm]);
+  return hasHybrid(key);
 }
 
 /** Get a local file URI for a given hybrid PNG key (downloads asset if needed). */
 export async function getHybridPngUri(key: string): Promise<string> {
   const norm = normalizeHybridKey(key);
 
-  // Preferred: normalized map
-  let mod = HYBRID_PNG_SOURCES[norm];
+  // All hybrids are now PNG, use HYBRID_SOURCES
+  let mod = HYBRID_SOURCES[norm];
 
   // Fallback: raw lookup in case someone passed an unsorted filename-like key
   if (!mod) {
-    mod = RAW_PNG_LOOKUP[key as keyof typeof RAW_PNG_LOOKUP];
+    mod = RAW_HYBRID_LOOKUP[key as keyof typeof RAW_HYBRID_LOOKUP];
   }
 
   if (!mod) {
@@ -147,12 +144,12 @@ export async function getHybridPngUri(key: string): Promise<string> {
 export function getHybridPngModule(key: string): number {
   const norm = normalizeHybridKey(key);
 
-  // Preferred: normalized map
-  let mod = HYBRID_PNG_SOURCES[norm];
+  // All hybrids are now PNG, use HYBRID_SOURCES
+  let mod = HYBRID_SOURCES[norm];
 
   // Fallback: raw lookup
   if (!mod) {
-    mod = RAW_PNG_LOOKUP[key as keyof typeof RAW_PNG_LOOKUP];
+    mod = RAW_HYBRID_LOOKUP[key as keyof typeof RAW_HYBRID_LOOKUP];
   }
 
   if (!mod) {

@@ -16,6 +16,12 @@ const BASE_REQUIRE: Record<string, number> = {
   zebra: require("./zebra.png"),
 };
 
+// Export BASE_REQUIRE as BASE_SOURCES for compatibility with assetLoader
+export const BASE_SOURCES = BASE_REQUIRE;
+
+// Also export raw lookup map for filename-based access
+export const RAW_BASE_LOOKUP = BASE_REQUIRE;
+
 export const getBaseRequire = (animal: string) => BASE_REQUIRE[animal.toLowerCase()];
 
 export const getBaseUri = (animal: string): string | undefined => {
