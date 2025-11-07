@@ -20,6 +20,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
 import { getBaseRequire } from "../assets/base";
 import { HYBRID_SOURCES } from "../assets/hybrid";
+import type { RootStackParamList } from "../navigation/AppNavigator";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
 type Animal = typeof ANIMALS[number];
@@ -42,12 +43,6 @@ const NEXT = (a: Animal, step: number = 1) =>
 
 const fade = (val: Animated.Value, to: number, duration = 220) =>
   Animated.timing(val, { toValue: to, duration, easing: Easing.inOut(Easing.quad), useNativeDriver: true });
-
-type RootStackParamList = {
-  Home: undefined;
-  Create: undefined;
-  Coloring?: { hybridKey: string; animalName: string };
-};
 
 function hybridKey(a: Animal, b: Animal) {
   const [x, y] = [a, b].sort();
