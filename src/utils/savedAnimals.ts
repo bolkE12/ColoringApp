@@ -46,7 +46,8 @@ export async function saveAnimal(
 
 export async function updateAnimal(
   id: string,
-  imageUri: string
+  imageUri: string,
+  animalName?: string
 ): Promise<void> {
   try {
     const animals = await getSavedAnimals();
@@ -54,6 +55,9 @@ export async function updateAnimal(
     if (animalIndex !== -1) {
       animals[animalIndex].imageUri = imageUri;
       animals[animalIndex].timestamp = Date.now();
+      if (animalName) {
+        animals[animalIndex].animalName = animalName;
+      }
       const jsonValue = JSON.stringify(animals);
       await AsyncStorage.setItem(SAVED_ANIMALS_KEY, jsonValue);
     }

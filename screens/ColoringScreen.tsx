@@ -371,8 +371,8 @@ export default function ColoringScreen() {
                     const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
                     if (imageUri && hybridKey) {
                       if (isUpdate) {
-                        // Update existing save (file already overwritten)
-                        await updateAnimal(savedAnimalId, imageUri);
+                        // Update existing save (file already overwritten, update name too)
+                        await updateAnimal(savedAnimalId, imageUri, generatedName);
                       } else {
                         // First save - create new and store ID and URI
                         const id = await saveAnimal(hybridKey, generatedName, imageUri);
