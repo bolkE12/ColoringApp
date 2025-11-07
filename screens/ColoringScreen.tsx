@@ -202,15 +202,19 @@ export default function ColoringScreen() {
                       if (savedAnimalId) {
                         // Update existing save (file already overwritten)
                         await updateAnimal(savedAnimalId, imageUri);
+                        // Just show confetti, no modal
+                        if (confettiRef.current) {
+                          confettiRef.current.start();
+                        }
                       } else {
                         // First save - create new and store ID and URI
                         const id = await saveAnimal(hybridKey, generatedName, imageUri);
                         setSavedAnimalId(id);
                         setSavedImageUri(imageUri);
                         setHasSaved(true);
+                        // Show modal (which also triggers confetti)
+                        setShowSuccessModal(true);
                       }
-                      // Always show modal/confetti on save or update
-                      setShowSuccessModal(true);
                     }
                   } catch (error) {
                     console.error("Save error:", error);
