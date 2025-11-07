@@ -31,7 +31,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           {
             shouldPlay: true,
             isLooping: true,
-            volume: 0.5, // Set volume to 50%
+            volume: 0.25, // Set volume to 25%
           }
         );
 
