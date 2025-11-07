@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -42,6 +42,32 @@ const DEFAULT_COLORS = [
   '#9575CD', '#4DB6AC', '#FF8A65', '#BA68C8', '#7986CB',
 ];
 
+// Memoized color swatch - only re-renders when its own selection state changes
+const ColorSwatch = React.memo(({
+  color,
+  isSelected,
+  onSelect
+}: {
+  color: string;
+  isSelected: boolean;
+  onSelect: () => void;
+}) => {
+  console.log('[ColorSwatch] Rendering:', color, 'selected:', isSelected);
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onSelect}
+      style={[
+        styles.swatch,
+        { backgroundColor: color },
+        isSelected && styles.swatchActive
+      ]}
+    />
+  );
+}, (prev, next) => {
+  // Only re-render if selection state changes for this specific swatch
+  return prev.isSelected === next.isSelected && prev.color === next.color;
+});
 
 export default function ColoringScreen() {
   console.log('[ColoringScreen] Rendering...');
@@ -60,6 +86,19 @@ export default function ColoringScreen() {
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
+
+  // Stable color select handler
+  const handleColorSelect = useCallback((color: string) => {
+    console.log('[ColorSelect] Pressed, starting...');
+    const t0 = Date.now();
+    setActiveColor(color);
+    const t1 = Date.now();
+    console.log('[ColorSelect] setActiveColor took:', t1 - t0, 'ms');
+    canvasRef.current?.setColor(color);
+    const t2 = Date.now();
+    console.log('[ColorSelect] setColor took:', t2 - t1, 'ms');
+    console.log('[ColorSelect] Total onPress:', t2 - t0, 'ms');
+  }, []);
 
   // Trigger confetti when modal opens
   useEffect(() => {
@@ -171,25 +210,11 @@ export default function ColoringScreen() {
             {/* Palette */}
             <View style={styles.palette}>
               {DEFAULT_COLORS.map((c) => (
-                <TouchableOpacity
+                <ColorSwatch
                   key={c}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    console.log('[ColorSelect] Pressed, starting...');
-                    const t0 = Date.now();
-                    setActiveColor(c);
-                    const t1 = Date.now();
-                    console.log('[ColorSelect] setActiveColor took:', t1 - t0, 'ms');
-                    canvasRef.current?.setColor(c);
-                    const t2 = Date.now();
-                    console.log('[ColorSelect] setColor took:', t2 - t1, 'ms');
-                    console.log('[ColorSelect] Total onPress:', t2 - t0, 'ms');
-                  }}
-                  style={[
-                    styles.swatch,
-                    { backgroundColor: c },
-                    c === activeColor && styles.swatchActive
-                  ]}
+                  color={c}
+                  isSelected={c === activeColor}
+                  onSelect={() => handleColorSelect(c)}
                 />
               ))}
             </View>
