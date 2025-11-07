@@ -83,7 +83,8 @@ export default function ColoringScreen() {
   const [hasSaved, setHasSaved] = useState(!!initialSavedAnimalId); // Already saved if editing
   const [savedAnimalId, setSavedAnimalId] = useState<string | null>(initialSavedAnimalId || null);
   const [savedImageUri, setSavedImageUri] = useState<string | null>(initialExistingImageUri || null);
-  const [generatedName] = useState(() => animalName); // Use actual animal name instead of generating
+  // Generate silly name for new animals, use saved name for editing existing animals
+  const [generatedName] = useState(() => initialSavedAnimalId ? animalName : generateSillyName());
   const [showConfetti, setShowConfetti] = useState(false);
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
