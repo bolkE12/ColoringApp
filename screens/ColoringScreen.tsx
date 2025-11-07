@@ -219,7 +219,6 @@ export default function ColoringScreen() {
             >
               <Volume2 size={32} color="#FFD93D" />
             </Pressable>
-            <Text style={styles.screenTitle}>!</Text>
           </View>
 
           <MusicToggle />
