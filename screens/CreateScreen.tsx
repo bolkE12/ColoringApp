@@ -21,54 +21,50 @@ import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
 import { ArrowLeft, HelpCircle, Plus, Check } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
-import type { SvgProps } from "react-native-svg";
-
 import { LinearGradient } from "expo-linear-gradient";
 
-import { SvgUri } from "react-native-svg";
-import { Asset } from "expo-asset";
-
-import Lion from "../assets/base/lion.svg";
-import Tiger from "../assets/base/tiger.svg";
-import Monkey from "../assets/base/monkey.svg";
-import Zebra from "../assets/base/zebra.svg";
-import Fox from "../assets/base/fox.svg";
-import Penguin from "../assets/base/penguin.svg";
-import Hippo from "../assets/base/hippo.svg";
-import Turtle from "../assets/base/turtle.svg";
-import Bear from "../assets/base/bear.svg";
-import Bunny from "../assets/base/bunny.svg";
-import Giraffe from "../assets/base/giraffe.svg";
-import Elephant from "../assets/base/elephant.svg";
-
 const { width } = Dimensions.get("window");
+
+// PNG requires for base animals
+const LION = require("../assets/base/lion.png");
+const TIGER = require("../assets/base/tiger.png");
+const MONKEY = require("../assets/base/monkey.png");
+const ZEBRA = require("../assets/base/zebra.png");
+const FOX = require("../assets/base/fox.png");
+const PENGUIN = require("../assets/base/penguin.png");
+const HIPPO = require("../assets/base/hippo.png");
+const TURTLE = require("../assets/base/turtle.png");
+const BEAR = require("../assets/base/bear.png");
+const BUNNY = require("../assets/base/bunny.png");
+const GIRAFFE = require("../assets/base/giraffe.png");
+const ELEPHANT = require("../assets/base/elephant.png");
 
 // tweak these if you want bigger/smaller tiles
 const TILE_SIZE = 132;
 const TILE_RADIUS = 20;
 const GRID_GAP = 18;
 
-type IconType = React.ComponentType<SvgProps>;
+type ImageSourceType = number;
 
-const ANIMALS: { id: string; Icon: IconType }[] = [
-  { id: "lion", Icon: Lion },
-  { id: "tiger", Icon: Tiger },
-  { id: "monkey", Icon: Monkey },
-  { id: "zebra", Icon: Zebra },
-  { id: "fox", Icon: Fox },
-  { id: "penguin", Icon: Penguin },
-  { id: "hippo", Icon: Hippo },
-  { id: "turtle", Icon: Turtle },
-  { id: "bear", Icon: Bear },
-  { id: "bunny", Icon: Bunny },
-  { id: "giraffe", Icon: Giraffe },
-  { id: "elephant", Icon: Elephant },
+const ANIMALS: { id: string; source: ImageSourceType }[] = [
+  { id: "lion", source: LION },
+  { id: "tiger", source: TIGER },
+  { id: "monkey", source: MONKEY },
+  { id: "zebra", source: ZEBRA },
+  { id: "fox", source: FOX },
+  { id: "penguin", source: PENGUIN },
+  { id: "hippo", source: HIPPO },
+  { id: "turtle", source: TURTLE },
+  { id: "bear", source: BEAR },
+  { id: "bunny", source: BUNNY },
+  { id: "giraffe", source: GIRAFFE },
+  { id: "elephant", source: ELEPHANT },
 ];
 
-const ICON_BY_ID: Record<string, IconType> = ANIMALS.reduce((acc, a) => {
-  acc[a.id] = a.Icon as any;
+const IMAGE_BY_ID: Record<string, ImageSourceType> = ANIMALS.reduce((acc, a) => {
+  acc[a.id] = a.source;
   return acc;
-}, {} as Record<string, IconType>);
+}, {} as Record<string, ImageSourceType>);
 
 
 // Build a deterministic hybrid key from two base animals (alphabetized)
@@ -78,48 +74,22 @@ function makeHybridKey(a?: string, b?: string): string {
   return `${x}_${y}`;
 }
 
-// Some environments may return a numeric module ID instead of a React component
-// if the svg transformer isn't engaged. Guard against that at runtime so we don't
-// try to render a number as a component (which crashes FlatList's CellRenderer).
-function isValidIcon(x: any): x is IconType {
-  return typeof x === "function" || (typeof x === "object" && x != null && "render" in x);
-}
-
-function MaybeSvg({
+// Render PNG image
+function AnimalImage({
   source,
-  sizePct = "85%",
   testID,
 }: {
-  source: any;
-  sizePct?: string;
+  source: ImageSourceType;
   testID?: string;
 }) {
-  // Case 1: Valid React component from svg-transformer
-  if (isValidIcon(source)) {
-    const Cmp = source as IconType;
-    return <Cmp width={sizePct} height={sizePct} preserveAspectRatio="xMidYMid meet" testID={testID} />;
-  }
-
-  // Case 2: Metro returned a numeric module id; resolve to a URI and render via SvgUri
-  if (typeof source === "number") {
-    try {
-      const asset = Asset.fromModule(source);
-      // Ensure the asset is available (in dev it may need downloading)
-      if (!asset.downloaded) {
-        // Fire-and-forget; SvgUri will update when uri is ready because asset.uri is stable after resolve
-        asset.downloadAsync?.().catch(() => {});
-      }
-      const uri = asset.localUri ?? asset.uri;
-      if (uri) {
-        return <SvgUri width={sizePct} height={sizePct} uri={uri} />;
-      }
-    } catch {
-      // fall through to empty render
-    }
-  }
-
-  // Unknown/unsupported shape — render nothing to avoid crashes
-  return null;
+  return (
+    <Image
+      source={source}
+      style={{ width: "85%", height: "85%" }}
+      resizeMode="contain"
+      testID={testID}
+    />
+  );
 }
 
 
@@ -174,10 +144,10 @@ export default function CreateScreen() {
   };
   const PrimaryEnabled = selected.length >= 1;
   const TwoSelected = selected.length === 2;
-  const renderAnimalIcon = (id?: string, sizePct: string = "78%") => {
+  const renderAnimalIcon = (id?: string) => {
     if (!id) return null;
-    const src = ICON_BY_ID[id] as any;
-    return <MaybeSvg source={src} sizePct={sizePct} />;
+    const src = IMAGE_BY_ID[id];
+    return <AnimalImage source={src} />;
   };
 
   if (!fontsLoaded) return null;
@@ -273,7 +243,6 @@ export default function CreateScreen() {
             keyExtractor={(item) => item.id}
             extraData={selected}
             renderItem={({ item }) => {
-              const Icon: IconType | undefined = item.Icon as IconType | undefined;
               const isSelected = selected.includes(item.id);
               return (
                 <View style={styles.tileShell}>
@@ -291,7 +260,7 @@ export default function CreateScreen() {
                     android_ripple={{ color: "rgba(0,0,0,0.06)" }}
                   >
                     <View style={styles.tileInner}>
-                      <MaybeSvg source={ICON_BY_ID[item.id]} sizePct="85%" />
+                      <AnimalImage source={item.source} />
                     </View>
                     {isSelected && (
                       <View style={styles.checkBadge}>
