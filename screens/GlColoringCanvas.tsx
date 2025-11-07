@@ -289,7 +289,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       historyRef.current = [];
       updateOverlayFromPixelData();
     },
-    save: async () => {
+    save: async (existingUri?: string) => {
       const gl = glRef.current;
       if (!gl || !pixelDataRef.current) throw new Error("Canvas not ready");
 
@@ -302,8 +302,8 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         const pngArray = new Uint8Array(pngData);
 
         // Save to app's local storage only
-        const filename = `colored_animal_${Date.now()}.png`;
-        const fileUri = FileSystem.documentDirectory + filename;
+        // If updating existing, reuse the same file to overwrite it
+        const fileUri = existingUri || (FileSystem.documentDirectory + `colored_animal_${Date.now()}.png`);
 
         // Convert Uint8Array to base64
         let binary = '';

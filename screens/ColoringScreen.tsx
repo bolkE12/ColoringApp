@@ -53,6 +53,7 @@ export default function ColoringScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [savedAnimalId, setSavedAnimalId] = useState<string | null>(null);
+  const [savedImageUri, setSavedImageUri] = useState<string | null>(null);
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
@@ -195,15 +196,17 @@ export default function ColoringScreen() {
                 style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
                 onPress={async () => {
                   try {
-                    const imageUri = await canvasRef.current?.save();
+                    // Pass existing URI to overwrite the same file when updating
+                    const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
                     if (imageUri && hybridKey) {
                       if (savedAnimalId) {
-                        // Update existing save
+                        // Update existing save (file already overwritten)
                         await updateAnimal(savedAnimalId, imageUri);
                       } else {
-                        // First save - create new and store ID
+                        // First save - create new and store ID and URI
                         const id = await saveAnimal(hybridKey, generatedName, imageUri);
                         setSavedAnimalId(id);
+                        setSavedImageUri(imageUri);
                         setHasSaved(true);
                       }
                       // Always show modal/confetti on save or update

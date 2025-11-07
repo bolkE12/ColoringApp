@@ -99,7 +99,12 @@ export default function PenScreen() {
         style={styles.imageContainer}
         onLongPress={() => handleDelete(item)}
       >
-        <Image source={{ uri: item.imageUri }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={{ uri: `${item.imageUri}?t=${item.timestamp}` }}
+          style={styles.image}
+          resizeMode="cover"
+          key={`${item.id}-${item.timestamp}`}
+        />
         <View style={styles.buttonRow}>
           <Pressable
             style={styles.downloadBtn}
