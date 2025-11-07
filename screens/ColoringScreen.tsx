@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ImageBackground,
   Pressable,
+  TouchableOpacity,
   Dimensions,
   Platform,
   StatusBar as RNStatusBar,
@@ -170,8 +171,9 @@ export default function ColoringScreen() {
             {/* Palette */}
             <View style={styles.palette}>
               {DEFAULT_COLORS.map((c) => (
-                <Pressable
+                <TouchableOpacity
                   key={c}
+                  activeOpacity={0.7}
                   onPress={() => {
                     console.log('[ColorSelect] Pressed, starting...');
                     const t0 = Date.now();
