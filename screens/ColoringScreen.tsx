@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -41,33 +41,6 @@ const DEFAULT_COLORS = [
   '#9575CD', '#4DB6AC', '#FF8A65', '#BA68C8', '#7986CB',
 ];
 
-// Memoized color swatch component to prevent unnecessary re-renders
-const ColorSwatch = memo(({
-  color,
-  isSelected,
-  onPress
-}: {
-  color: string;
-  isSelected: boolean;
-  onPress: (color: string) => void;
-}) => {
-  const handlePress = useCallback(() => {
-    onPress(color);
-  }, [color, onPress]);
-
-  // Memoize the style to prevent object recreation
-  const swatchStyle = useMemo(() => [
-    styles.swatch,
-    { backgroundColor: color },
-    isSelected && styles.swatchActive
-  ], [color, isSelected]);
-
-  return <Pressable onPress={handlePress} style={swatchStyle} />;
-}, (prevProps, nextProps) => {
-  // Custom comparison: only re-render if color or selection state changes
-  return prevProps.color === nextProps.color &&
-         prevProps.isSelected === nextProps.isSelected;
-});
 
 export default function ColoringScreen() {
   const navigation = useNavigation();
@@ -85,12 +58,6 @@ export default function ColoringScreen() {
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
-
-  // Memoized color selection handler
-  const handleColorSelect = useCallback((color: string) => {
-    setActiveColor(color);
-    canvasRef.current?.setColor(color);
-  }, []);
 
   // Trigger confetti when modal opens
   useEffect(() => {
@@ -190,11 +157,17 @@ export default function ColoringScreen() {
             {/* Palette */}
             <View style={styles.palette}>
               {DEFAULT_COLORS.map((c) => (
-                <ColorSwatch
+                <Pressable
                   key={c}
-                  color={c}
-                  isSelected={c === activeColor}
-                  onPress={handleColorSelect}
+                  onPress={() => {
+                    setActiveColor(c);
+                    canvasRef.current?.setColor(c);
+                  }}
+                  style={[
+                    styles.swatch,
+                    { backgroundColor: c },
+                    c === activeColor && styles.swatchActive
+                  ]}
                 />
               ))}
             </View>
@@ -479,10 +452,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    borderWidth: 3,
+    borderColor: "transparent", // Always have border to prevent layout shift
   },
   swatchActive: {
-    borderWidth: 3,
-    borderColor: "#111",
+    borderColor: "#111", // Just change color, not width
   },
   row: {
     marginTop: 2,
