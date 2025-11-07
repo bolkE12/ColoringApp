@@ -17,7 +17,7 @@ import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp, Volume2 } from "lucide-react-native";
+import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp, Volume2, RefreshCw } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Speech from 'expo-speech';
@@ -86,7 +86,7 @@ export default function ColoringScreen() {
   const [savedAnimalId, setSavedAnimalId] = useState<string | null>(initialSavedAnimalId || null);
   const [savedImageUri, setSavedImageUri] = useState<string | null>(initialExistingImageUri || null);
   // Generate silly name for new animals, use saved name for editing existing animals
-  const [generatedName] = useState(() => initialSavedAnimalId ? animalName : generateSillyName());
+  const [generatedName, setGeneratedName] = useState(() => initialSavedAnimalId ? animalName : generateSillyName());
   const [showConfetti, setShowConfetti] = useState(false);
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
@@ -137,6 +137,12 @@ export default function ColoringScreen() {
     });
   }, [generatedName]);
 
+  // Generate a new random name
+  const refreshName = useCallback(() => {
+    const newName = generateSillyName();
+    setGeneratedName(newName);
+  }, []);
+
   // Measure when layout is committed
   useLayoutEffect(() => {
     console.log('[ColoringScreen] useLayoutEffect - layout committed for color:', activeColor);
@@ -172,13 +178,22 @@ export default function ColoringScreen() {
 
           <View style={styles.titleContainer}>
             <Text style={styles.screenTitle}>Meet {generatedName}!</Text>
-            <Pressable
-              onPress={speakName}
-              style={styles.speakerBtn}
-              accessibilityLabel="Hear name spoken aloud"
-            >
-              <Volume2 size={32} color="#FFD93D" />
-            </Pressable>
+            <View style={styles.titleButtons}>
+              <Pressable
+                onPress={refreshName}
+                style={styles.speakerBtn}
+                accessibilityLabel="Generate new name"
+              >
+                <RefreshCw size={28} color="#FFD93D" />
+              </Pressable>
+              <Pressable
+                onPress={speakName}
+                style={styles.speakerBtn}
+                accessibilityLabel="Hear name spoken aloud"
+              >
+                <Volume2 size={32} color="#FFD93D" />
+              </Pressable>
+            </View>
           </View>
 
           <MusicToggle />
@@ -453,6 +468,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  titleButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   screenTitle: {
     fontFamily: "MadimiOne_400Regular",
