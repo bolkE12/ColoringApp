@@ -89,6 +89,7 @@ export default function ColoringScreen() {
   // Memoized color selection handler
   const handleColorSelect = useCallback((color: string) => {
     setActiveColor(color);
+    canvasRef.current?.setColor(color);
   }, []);
 
   // Trigger confetti when modal opens
@@ -97,6 +98,13 @@ export default function ColoringScreen() {
       confettiRef.current.start();
     }
   }, [showSuccessModal]);
+
+  // Set initial color when canvas is ready (runs once)
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasRef.current.setColor(activeColor);
+    }
+  }, []); // Empty deps - only run on mount
 
   if (!fontsLoaded) return null;
 
@@ -139,7 +147,6 @@ export default function ColoringScreen() {
                 <GlColoringCanvas
                   ref={canvasRef}
                   hybridKey={hybridKey}
-                  selectedColor={activeColor}
                   width="100%"
                   height="100%"
                 />

@@ -13,7 +13,6 @@ const TARGET_SIZE = 1024;
 
 interface GlColoringCanvasProps {
   hybridKey: string;
-  selectedColor: string;
   width?: string | number;
   height?: string | number;
 }
@@ -21,7 +20,8 @@ interface GlColoringCanvasProps {
 export interface GlColoringCanvasRef {
   undo: () => void;
   clear: () => void;
-  save: () => Promise<string>;
+  save: (existingUri?: string) => Promise<string>;
+  setColor: (color: string) => void;
 }
 
 // Vertex shader - passes through positions and texture coordinates
@@ -65,7 +65,6 @@ const overlayFragmentShaderSource = `
 
 const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(({
   hybridKey,
-  selectedColor,
   width = "100%",
   height = "100%"
 }, ref) => {
@@ -78,6 +77,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   const originalPixelDataRef = useRef<Uint8ClampedArray | null>(null);
   const baseTextureRef = useRef<WebGLTexture | null>(null);
   const overlayTextureRef = useRef<WebGLTexture | null>(null);
+  const selectedColorRef = useRef<string>('#FF6B6B'); // Default color
   const overlayPixelsRef = useRef<Uint8ClampedArray | null>(null);
   const programRef = useRef<WebGLProgram | null>(null);
   const overlayProgramRef = useRef<WebGLProgram | null>(null);
@@ -322,6 +322,9 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         console.error('[Save] Error during save:', error);
         throw error;
       }
+    },
+    setColor: (color: string) => {
+      selectedColorRef.current = color;
     }
   }), [updateOverlayFromPixelData]);
 
@@ -416,14 +419,14 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     historyRef.current.push(new Uint8ClampedArray(pixelDataRef.current));
 
     // Perform flood-fill
-    const fillColor = hexToRgba(selectedColor);
+    const fillColor = hexToRgba(selectedColorRef.current);
     const workingPixels = new Uint8ClampedArray(pixelDataRef.current);
     floodFill(workingPixels, TARGET_SIZE, TARGET_SIZE, bitmapX, bitmapY, fillColor, 20);
     pixelDataRef.current = workingPixels;
 
     // Update overlay and render
     updateOverlayFromPixelData();
-  }, [selectedColor, updateOverlayFromPixelData]);
+  }, [updateOverlayFromPixelData]);
 
   // Update layout when container size changes
   useEffect(() => {
