@@ -132,9 +132,9 @@ export default function ColoringScreen() {
     }
   }, []); // Empty deps - only run on mount
 
-  // Speak the animal name aloud with introduction
+  // Speak the full sentence with animal name
   const speakName = useCallback(() => {
-    Speech.speak(`Meet ${generatedName}!`, {
+    Speech.speak(`Your animal's name is ${generatedName}!`, {
       language: 'en-US',
       pitch: 1.1, // Slightly higher pitch for kid-friendly voice
       rate: 0.85, // Slightly slower for clarity
@@ -195,6 +195,7 @@ export default function ColoringScreen() {
           </Pressable>
 
           <View style={styles.titleContainer}>
+            <Text style={styles.screenTitle}>Your animal's name is</Text>
             <Pressable
               onPress={previousName}
               style={[styles.speakerBtn, currentNameIndex === 0 && styles.disabledBtn]}
@@ -203,23 +204,22 @@ export default function ColoringScreen() {
             >
               <ChevronLeft size={28} color={currentNameIndex === 0 ? "#999" : "#FFD93D"} />
             </Pressable>
-            <Text style={styles.screenTitle}>Meet {generatedName}!</Text>
-            <View style={styles.titleButtons}>
-              <Pressable
-                onPress={nextName}
-                style={styles.speakerBtn}
-                accessibilityLabel="Next name"
-              >
-                <ChevronRight size={28} color="#FFD93D" />
-              </Pressable>
-              <Pressable
-                onPress={speakName}
-                style={styles.speakerBtn}
-                accessibilityLabel="Hear name spoken aloud"
-              >
-                <Volume2 size={32} color="#FFD93D" />
-              </Pressable>
-            </View>
+            <Text style={styles.screenTitle}>{generatedName}</Text>
+            <Pressable
+              onPress={nextName}
+              style={styles.speakerBtn}
+              accessibilityLabel="Next name"
+            >
+              <ChevronRight size={28} color="#FFD93D" />
+            </Pressable>
+            <Pressable
+              onPress={speakName}
+              style={styles.speakerBtn}
+              accessibilityLabel="Hear name spoken aloud"
+            >
+              <Volume2 size={32} color="#FFD93D" />
+            </Pressable>
+            <Text style={styles.screenTitle}>!</Text>
           </View>
 
           <MusicToggle />
@@ -500,11 +500,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-  },
-  titleButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
   },
   screenTitle: {
     fontFamily: "MadimiOne_400Regular",
