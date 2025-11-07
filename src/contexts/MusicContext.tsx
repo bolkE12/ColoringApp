@@ -25,9 +25,9 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           shouldDuckAndroid: true,
         });
 
-        // Load the MIDI file
+        // Load the MP3 file
         const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/music.mid'),
+          require('../../assets/music.mp3'),
           {
             shouldPlay: true,
             isLooping: true,
