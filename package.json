@@ -22,6 +22,7 @@
     "expo-linear-gradient": "~15.0.7",
     "expo-media-library": "^18.2.0",
     "expo-sharing": "^14.0.7",
+    "expo-speech": "^14.0.7",
     "expo-status-bar": "~3.0.8",
     "fast-png": "^7.0.1",
     "lucide-react-native": "^0.552.0",

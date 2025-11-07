@@ -17,9 +17,10 @@ import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp } from "lucide-react-native";
+import { ArrowLeft, Droplet, Brush, RotateCcw, Trash2, Save, Palette, PawPrint, Sparkles, ThumbsUp, Volume2 } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Speech from 'expo-speech';
 import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
 import { saveAnimal, updateAnimal } from "../src/utils/savedAnimals";
 import { generateSillyName } from "../src/utils/nameGenerator";
@@ -126,6 +127,15 @@ export default function ColoringScreen() {
     }
   }, []); // Empty deps - only run on mount
 
+  // Speak the animal name aloud
+  const speakName = useCallback(() => {
+    Speech.speak(generatedName, {
+      language: 'en-US',
+      pitch: 1.1, // Slightly higher pitch for kid-friendly voice
+      rate: 0.85, // Slightly slower for clarity
+    });
+  }, [generatedName]);
+
   // Measure when layout is committed
   useLayoutEffect(() => {
     console.log('[ColoringScreen] useLayoutEffect - layout committed for color:', activeColor);
@@ -159,7 +169,17 @@ export default function ColoringScreen() {
             <Text style={styles.backText}>Back</Text>
           </Pressable>
 
-          <Text style={styles.screenTitle}>Meet {generatedName}!</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.screenTitle}>Meet {generatedName}!</Text>
+            <Pressable
+              onPress={speakName}
+              style={styles.speakerBtn}
+              accessibilityLabel="Hear name spoken aloud"
+            >
+              <Volume2 size={32} color="#FFD93D" />
+            </Pressable>
+          </View>
+
           <View style={{ width: 72 }} />{/* spacer to balance back button */}
         </View>
 
@@ -428,6 +448,11 @@ const styles = StyleSheet.create({
     color: "#111",
     fontSize: 16,
   },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   screenTitle: {
     fontFamily: "MadimiOne_400Regular",
     color: "#fff",
@@ -435,6 +460,10 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.25)",
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 6,
+  },
+  speakerBtn: {
+    padding: 4,
+    marginTop: 4,
   },
   main: {
     flex: 1,
