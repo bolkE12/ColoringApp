@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback, memo } from "react";
 import {
   View,
   Text,
@@ -41,6 +41,32 @@ const DEFAULT_COLORS = [
   '#9575CD', '#4DB6AC', '#FF8A65', '#BA68C8', '#7986CB',
 ];
 
+// Memoized color swatch component to prevent unnecessary re-renders
+const ColorSwatch = memo(({
+  color,
+  isSelected,
+  onPress
+}: {
+  color: string;
+  isSelected: boolean;
+  onPress: (color: string) => void;
+}) => {
+  const handlePress = useCallback(() => {
+    onPress(color);
+  }, [color, onPress]);
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={[
+        styles.swatch,
+        { backgroundColor: color },
+        isSelected && styles.swatchActive
+      ]}
+    />
+  );
+});
+
 export default function ColoringScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<Record<string, ColoringParams>, string>>();
@@ -57,6 +83,11 @@ export default function ColoringScreen() {
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
   const confettiRef = useRef<any>(null);
+
+  // Memoized color selection handler
+  const handleColorSelect = useCallback((color: string) => {
+    setActiveColor(color);
+  }, []);
 
   // Trigger confetti when modal opens
   useEffect(() => {
@@ -149,16 +180,14 @@ export default function ColoringScreen() {
 
             {/* Palette */}
             <View style={styles.palette}>
-              {DEFAULT_COLORS.map((c) => {
-                const selected = c === activeColor;
-                return (
-                  <Pressable
-                    key={c}
-                    onPress={() => setActiveColor(c)}
-                    style={[styles.swatch, { backgroundColor: c }, selected && styles.swatchActive]}
-                  />
-                );
-              })}
+              {DEFAULT_COLORS.map((c) => (
+                <ColorSwatch
+                  key={c}
+                  color={c}
+                  isSelected={c === activeColor}
+                  onPress={handleColorSelect}
+                />
+              ))}
             </View>
 
             {/* Actions */}
