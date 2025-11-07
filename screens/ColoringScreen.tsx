@@ -352,39 +352,43 @@ export default function ColoringScreen() {
             >
               <Pressable
                 style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
-                onPress={async () => {
-                  try {
-                    const isUpdate = !!savedAnimalId;
+                onPress={() => {
+                  const isUpdate = !!savedAnimalId;
 
-                    // Show modal and trigger confetti on first save
-                    if (!isUpdate) {
-                      setShowSuccessModal(true);
-                      // Defer confetti to avoid blocking
-                      setTimeout(() => setShowConfetti(true), 100);
-                    } else {
-                      // On update, just trigger confetti briefly
-                      setShowConfetti(true);
-                      setTimeout(() => setShowConfetti(false), 3000);
-                    }
-
-                    // Save the image
-                    const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
-                    if (imageUri && hybridKey) {
-                      if (isUpdate) {
-                        // Update existing save (file already overwritten, update name too)
-                        await updateAnimal(savedAnimalId, imageUri, generatedName);
-                      } else {
-                        // First save - create new and store ID and URI
-                        const id = await saveAnimal(hybridKey, generatedName, imageUri);
-                        setSavedAnimalId(id);
-                        setSavedImageUri(imageUri);
-                        setHasSaved(true);
-                      }
-                    }
-                  } catch (error) {
-                    console.error("Save error:", error);
-                    Alert.alert("Oops!", "Something went wrong. Please try again.");
+                  // Show modal and trigger confetti immediately for instant feedback
+                  if (!isUpdate) {
+                    setShowSuccessModal(true);
+                    setShowConfetti(true);
+                  } else {
+                    setShowConfetti(true);
+                    setTimeout(() => setShowConfetti(false), 3000);
                   }
+
+                  // Defer the save operation to next tick so UI updates immediately
+                  setTimeout(async () => {
+                    try {
+                      // Save the image
+                      const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
+                      if (imageUri && hybridKey) {
+                        if (isUpdate) {
+                          // Update existing save (file already overwritten, update name too)
+                          await updateAnimal(savedAnimalId, imageUri, generatedName);
+                        } else {
+                          // First save - create new and store ID and URI
+                          const id = await saveAnimal(hybridKey, generatedName, imageUri);
+                          setSavedAnimalId(id);
+                          setSavedImageUri(imageUri);
+                          setHasSaved(true);
+                        }
+                      }
+                    } catch (error) {
+                      console.error("Save error:", error);
+                      // Hide confetti on error
+                      setShowConfetti(false);
+                      setShowSuccessModal(false);
+                      Alert.alert("Oops!", "Something went wrong. Please try again.");
+                    }
+                  }, 0);
                 }}
               >
                 <Save size={18} color="#fff" />
