@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { Music, MusicOff } from 'lucide-react-native';
+import { Volume2, VolumeX } from 'lucide-react-native';
 import { useMusic } from '../contexts/MusicContext';
 
 export function MusicToggle() {
@@ -13,9 +13,9 @@ export function MusicToggle() {
       accessibilityLabel={isMusicPlaying ? "Turn music off" : "Turn music on"}
     >
       {isMusicPlaying ? (
-        <Music size={24} color="#fff" />
+        <Volume2 size={24} color="#fff" />
       ) : (
-        <MusicOff size={24} color="#fff" />
+        <VolumeX size={24} color="#fff" />
       )}
     </Pressable>
   );
