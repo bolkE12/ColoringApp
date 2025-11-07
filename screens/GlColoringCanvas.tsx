@@ -469,20 +469,29 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   }, [drawBrushStroke]);
 
   const handleTouchStart = useCallback((event: any) => {
+    console.log('[GlColoringCanvas] handleTouchStart - tool:', activeToolRef.current);
+
     if (activeToolRef.current !== "brush") return;
     if (!pixelDataRef.current) return;
 
     const { locationX, locationY } = event.nativeEvent;
     const layout = layoutRef.current;
 
+    console.log('[GlColoringCanvas] Brush touch start at:', locationX, locationY);
+
     // Convert touch to bitmap coordinates
     const imageX = locationX - layout.offsetX;
     const imageY = locationY - layout.offsetY;
 
-    if (imageX < 0 || imageX >= layout.displayWidth || imageY < 0 || imageY >= layout.displayHeight) return;
+    if (imageX < 0 || imageX >= layout.displayWidth || imageY < 0 || imageY >= layout.displayHeight) {
+      console.log('[GlColoringCanvas] Touch outside canvas bounds');
+      return;
+    }
 
     const bitmapX = Math.floor((imageX / layout.displayWidth) * TARGET_SIZE);
     const bitmapY = Math.floor((imageY / layout.displayHeight) * TARGET_SIZE);
+
+    console.log('[GlColoringCanvas] Drawing brush at bitmap coords:', bitmapX, bitmapY);
 
     // Save current state to history before making changes
     historyRef.current.push(new Uint8ClampedArray(pixelDataRef.current));
@@ -616,11 +625,27 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
           />
           <View
             style={styles.touchOverlay}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-            onResponderGrant={handleTouchStart}
-            onResponderMove={handleTouchMove}
-            onResponderRelease={handleTouchRelease}
+            onStartShouldSetResponder={() => {
+              console.log('[GlColoringCanvas] onStartShouldSetResponder - returning true');
+              return true;
+            }}
+            onMoveShouldSetResponder={() => {
+              console.log('[GlColoringCanvas] onMoveShouldSetResponder - tool:', activeToolRef.current);
+              return activeToolRef.current === "brush";
+            }}
+            onResponderTerminationRequest={() => false}
+            onResponderGrant={(event) => {
+              console.log('[GlColoringCanvas] onResponderGrant fired');
+              handleTouchStart(event);
+            }}
+            onResponderMove={(event) => {
+              console.log('[GlColoringCanvas] onResponderMove fired');
+              handleTouchMove(event);
+            }}
+            onResponderRelease={(event) => {
+              console.log('[GlColoringCanvas] onResponderRelease fired');
+              handleTouchRelease(event);
+            }}
           />
         </>
       ) : (
