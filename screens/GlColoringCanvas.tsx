@@ -68,6 +68,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   width = "100%",
   height = "100%"
 }, ref) => {
+  console.log('[GlColoringCanvas] RENDERING - this should NOT happen on color change!');
   const [error, setError] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 

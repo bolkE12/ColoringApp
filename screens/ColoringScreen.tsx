@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -73,6 +73,18 @@ export default function ColoringScreen() {
       canvasRef.current.setColor(activeColor);
     }
   }, []); // Empty deps - only run on mount
+
+  // Measure when layout is committed
+  useLayoutEffect(() => {
+    console.log('[ColoringScreen] useLayoutEffect - layout committed for color:', activeColor);
+  }, [activeColor]);
+
+  // Measure when effects run (after paint)
+  useEffect(() => {
+    console.log('[ColoringScreen] useEffect - paint complete for color:', activeColor);
+  }, [activeColor]);
+
+  console.log('[ColoringScreen] About to render JSX, activeColor:', activeColor);
 
   if (!fontsLoaded) return null;
 
