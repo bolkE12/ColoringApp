@@ -292,11 +292,30 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       }
     },
     clear: () => {
-      if (!originalPixelDataRef.current) return;
+      if (!originalPixelDataRef.current || !glRef.current || !baseTextureRef.current) return;
+
+      console.log('[GlColoringCanvas] Clearing to original state');
 
       // Reset to original state
       pixelDataRef.current = new Uint8ClampedArray(originalPixelDataRef.current);
       historyRef.current = [];
+
+      // Update the base texture to show the original uncolored image
+      const gl = glRef.current;
+      gl.bindTexture(gl.TEXTURE_2D, baseTextureRef.current);
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        0,
+        0,
+        TARGET_SIZE,
+        TARGET_SIZE,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        originalPixelDataRef.current
+      );
+
+      // Clear overlay and re-render
       updateOverlayFromPixelData();
     },
     save: async (existingUri?: string) => {
