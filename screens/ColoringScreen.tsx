@@ -21,6 +21,7 @@ import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
 import { saveAnimal } from "../src/utils/savedAnimals";
+import { generateSillyName } from "../src/utils/nameGenerator";
 
 // Types for route params (adjust to your navigator's typing as needed)
 type ColoringParams = {
@@ -49,6 +50,7 @@ export default function ColoringScreen() {
   const [activeColor, setActiveColor] = useState<string>(DEFAULT_COLORS[0]);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
 
   if (!fontsLoaded) return null;
@@ -72,7 +74,7 @@ export default function ColoringScreen() {
             <Text style={styles.backText}>Back</Text>
           </Pressable>
 
-          <Text style={styles.screenTitle}>Introducing {animalName}!</Text>
+          <Text style={styles.screenTitle}>Meet {generatedName}!</Text>
           <View style={{ width: 72 }} />{/* spacer to balance back button */}
         </View>
 
@@ -184,7 +186,7 @@ export default function ColoringScreen() {
                   try {
                     const imageUri = await canvasRef.current?.save();
                     if (imageUri && hybridKey) {
-                      await saveAnimal(hybridKey, animalName, imageUri);
+                      await saveAnimal(hybridKey, generatedName, imageUri);
                       setShowSuccessModal(true);
                     }
                   } catch (error) {
@@ -226,7 +228,7 @@ export default function ColoringScreen() {
             <Sparkles size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Amazing Work!</Text>
             <Text style={styles.modalMessage}>
-              Your {animalName} has been saved to your Animal Pen! 🎨
+              {generatedName} has been saved to your Animal Pen! 🎨
             </Text>
             <Pressable
               style={styles.modalButton}
