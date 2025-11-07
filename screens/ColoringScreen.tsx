@@ -13,6 +13,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
+import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -83,7 +84,26 @@ export default function ColoringScreen() {
   const [savedAnimalId, setSavedAnimalId] = useState<string | null>(null);
   const [savedImageUri, setSavedImageUri] = useState<string | null>(null);
   const [generatedName] = useState(() => generateSillyName());
+  const [showConfetti, setShowConfetti] = useState(false);
   const canvasRef = useRef<GlColoringCanvasRef>(null);
+  const confettiRef = useRef<any>(null);
+
+  // Defer confetti to next frame to avoid blocking UI updates
+  useEffect(() => {
+    if (showConfetti && confettiRef.current) {
+      // Wait for next frame after modal renders
+      requestAnimationFrame(() => {
+        confettiRef.current?.start();
+      });
+    }
+  }, [showConfetti]);
+
+  // Reset confetti state when modal closes
+  useEffect(() => {
+    if (!showSuccessModal) {
+      setShowConfetti(false);
+    }
+  }, [showSuccessModal]);
 
   // Stable color select handler
   const handleColorSelect = useCallback((color: string) => {
@@ -247,9 +267,15 @@ export default function ColoringScreen() {
                   try {
                     const isUpdate = !!savedAnimalId;
 
-                    // Show modal only on first save
+                    // Show modal and trigger confetti on first save
                     if (!isUpdate) {
                       setShowSuccessModal(true);
+                      // Defer confetti to avoid blocking
+                      setTimeout(() => setShowConfetti(true), 100);
+                    } else {
+                      // On update, just trigger confetti briefly
+                      setShowConfetti(true);
+                      setTimeout(() => setShowConfetti(false), 3000);
                     }
 
                     // Save the image
@@ -294,6 +320,20 @@ export default function ColoringScreen() {
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Performance-optimized confetti - only render when needed */}
+      {showConfetti && (
+        <ConfettiCannon
+          ref={confettiRef}
+          count={75}
+          origin={{ x: SCREEN_WIDTH / 2, y: 0 }}
+          autoStart={false}
+          fadeOut={true}
+          explosionSpeed={350}
+          fallSpeed={2000}
+          colors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#FFD93D', '#6BCF7F']}
+        />
+      )}
 
       {/* Custom Success Modal */}
       <Modal
