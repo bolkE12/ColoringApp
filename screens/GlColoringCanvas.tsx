@@ -562,6 +562,15 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     updateOverlayFromPixelData();
   }, [updateOverlayFromPixelData]);
 
+  // Unified handler for touch release that checks tool state at event time
+  const handleTouchRelease = useCallback((event: any) => {
+    if (activeToolRef.current === "brush") {
+      handleTouchEnd();
+    } else {
+      handleTouch(event);
+    }
+  }, [handleTouchEnd, handleTouch]);
+
   // Update refs when props change
   useEffect(() => {
     activeToolRef.current = activeTool;
@@ -608,9 +617,10 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
           <View
             style={styles.touchOverlay}
             onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
             onResponderGrant={handleTouchStart}
             onResponderMove={handleTouchMove}
-            onResponderRelease={activeToolRef.current === "brush" ? handleTouchEnd : handleTouch}
+            onResponderRelease={handleTouchRelease}
           />
         </>
       ) : (
