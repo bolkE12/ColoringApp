@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
+import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -53,6 +54,14 @@ export default function ColoringScreen() {
   const [hasSaved, setHasSaved] = useState(false);
   const [generatedName] = useState(() => generateSillyName());
   const canvasRef = useRef<GlColoringCanvasRef>(null);
+  const confettiRef = useRef<any>(null);
+
+  // Trigger confetti when modal opens
+  useEffect(() => {
+    if (showSuccessModal && confettiRef.current) {
+      confettiRef.current.start();
+    }
+  }, [showSuccessModal]);
 
   if (!fontsLoaded) return null;
 
@@ -228,6 +237,17 @@ export default function ColoringScreen() {
         onRequestClose={() => setShowSuccessModal(false)}
       >
         <View style={styles.modalOverlay}>
+          {/* Confetti Animation */}
+          <ConfettiCannon
+            ref={confettiRef}
+            count={200}
+            origin={{ x: SCREEN_WIDTH / 2, y: 0 }}
+            autoStart={false}
+            fadeOut={true}
+            explosionSpeed={350}
+            fallSpeed={3000}
+            colors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#FFD93D', '#6BCF7F', '#B388FF', '#FF80AB', '#FFB74D', '#9575CD']}
+          />
           <View style={styles.modalContent}>
             <Sparkles size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Amazing Work!</Text>
