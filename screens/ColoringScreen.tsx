@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   palettePortrait: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 9,
     alignItems: "flex-start",
     marginBlock: 8,
     alignSelf: "stretch",
@@ -685,15 +685,15 @@ const styles = StyleSheet.create({
   paletteLandscape: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 10,
     alignItems: "flex-start",
     marginBlock: 8,
     alignSelf: "stretch",
   },
   swatch: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     borderWidth: 3,
     borderColor: "transparent", // Always have border to prevent layout shift
   },
