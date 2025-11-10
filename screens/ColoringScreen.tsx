@@ -287,7 +287,7 @@ export default function ColoringScreen() {
             !isPortrait && canvasSize ? { height: canvasSize.height } : null
           ]}>
             {!isPortrait ? (
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12, flexGrow: 1 }}>
                 <View style={[styles.panelHeaderContainer]}>
                   <View style={styles.panelHeader}>
                     <Palette size={24} color="#111" />
@@ -353,6 +353,9 @@ export default function ColoringScreen() {
                 />
               ))}
             </View>
+
+            {/* Spacer for landscape mode to push buttons to bottom */}
+            {!isPortrait && <View style={{ flex: 1 }} />}
 
             {/* Action Buttons Layout */}
             {isPortrait ? (
