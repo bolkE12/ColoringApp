@@ -137,7 +137,7 @@ export default function ColoringScreen() {
   const speakName = useCallback(() => {
     if (!hasSpokenRef.current) {
       // First time: say the introduction
-      Speech.speak("Choose your animal's name:", {
+      Speech.speak(`Choose your animal's name: ${generatedName}`, {
         language: 'en-US',
         pitch: 1.1, // Slightly higher pitch for kid-friendly voice
         rate: 0.85, // Slightly slower for clarity
@@ -207,7 +207,6 @@ export default function ColoringScreen() {
           </Pressable>
 
           <View style={styles.titleContainer}>
-            <Text style={styles.screenTitle}>Your animal's name is</Text>
             <Pressable
               onPress={previousName}
               style={[styles.speakerBtn, currentNameIndex === 0 && styles.disabledBtn]}
