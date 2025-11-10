@@ -349,7 +349,7 @@ export default function ColoringScreen() {
                 style={styles.ghostBtn}
               >
                 <Trash2 size={16} color="#333" />
-                <Text style={styles.ghostText}>Clear All</Text>
+                <Text style={styles.ghostText}>Clear</Text>
               </Pressable>
             </View>
 
