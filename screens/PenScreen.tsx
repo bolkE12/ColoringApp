@@ -23,14 +23,31 @@ import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAn
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { MusicToggle } from "../src/components/MusicToggle";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const ITEM_SIZE = (SCREEN_WIDTH - 64) / 3; // 3 columns with padding
-
 export default function PenScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [fontsLoaded] = useFonts({ MadimiOne_400Regular });
   const [savedAnimals, setSavedAnimals] = useState<SavedAnimal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  const isPortrait = dimensions.height > dimensions.width;
+
+  // Calculate tile size based on orientation
+  // Portrait: 25% smaller tiles (0.75 of landscape size)
+  // Landscape: standard size
+  const baseTileSize = (dimensions.width - 64) / 3;
+  const tileSize = isPortrait ? baseTileSize * 0.75 : baseTileSize;
+
+  // Calculate number of columns that fit
+  const numColumns = Math.floor((dimensions.width - 32) / (tileSize + 8));
+
+  // Update dimensions on screen rotation
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   const loadAnimals = async () => {
     try {
@@ -109,9 +126,9 @@ export default function PenScreen() {
   };
 
   const renderAnimal = ({ item }: { item: SavedAnimal }) => (
-    <View style={styles.gridItem}>
+    <View style={[styles.gridItem, { width: tileSize }]}>
       <Pressable
-        style={styles.imageContainer}
+        style={[styles.imageContainer, { width: tileSize - 8, height: tileSize - 8 }]}
         onPress={() => handleEdit(item)}
         onLongPress={() => handleDelete(item)}
       >
@@ -182,7 +199,8 @@ export default function PenScreen() {
             data={savedAnimals}
             renderItem={renderAnimal}
             keyExtractor={(item) => item.id}
-            numColumns={3}
+            numColumns={numColumns}
+            key={numColumns}
             contentContainerStyle={styles.grid}
             ListEmptyComponent={loading ? null : renderEmpty}
             showsVerticalScrollIndicator={false}
@@ -245,14 +263,11 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   gridItem: {
-    width: ITEM_SIZE,
     marginBottom: 16,
     marginHorizontal: 4,
     alignItems: "center",
   },
   imageContainer: {
-    width: ITEM_SIZE - 8,
-    height: ITEM_SIZE - 8,
     borderRadius: 16,
     backgroundColor: "#fff",
     shadowColor: "#000",
