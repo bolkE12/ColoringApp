@@ -182,7 +182,9 @@ export default function CreateScreen() {
             <Text style={styles.backText}>Back</Text>
           </Pressable>
 
-          <MusicToggle />
+          <View style={{ marginTop: 4 }}>
+            <MusicToggle />
+          </View>
         </View>
 
         <View style={styles.container}>

@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   musicToggle: {
     position: 'absolute',
-    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 32 : 32,
+    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 36 : 36,
     right: 16,
     zIndex: 1000,
   },

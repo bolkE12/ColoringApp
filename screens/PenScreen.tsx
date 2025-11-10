@@ -190,7 +190,9 @@ export default function PenScreen() {
           </Pressable>
 
           <Text style={styles.screenTitle}>My Animal Pen</Text>
-          <MusicToggle />
+          <View style={{ marginTop: 4 }}>
+            <MusicToggle />
+          </View>
         </View>
 
         {/* Gallery */}

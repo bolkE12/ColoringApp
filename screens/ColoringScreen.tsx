@@ -248,7 +248,9 @@ export default function ColoringScreen() {
             </Pressable>
           </View>
 
-          <MusicToggle />
+          <View style={{ marginTop: 4 }}>
+            <MusicToggle />
+          </View>
         </View>
 
         {/* Main layout - vertical for portrait, horizontal for landscape */}
