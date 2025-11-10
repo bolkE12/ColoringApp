@@ -96,6 +96,18 @@ export default function ColoringScreen() {
   const confettiRef = useRef<any>(null);
   const hasSpokenRef = useRef(false); // Track if name has been spoken before
 
+  // Track dimensions for responsive layout
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const isPortrait = dimensions.height > dimensions.width;
+
+  // Update dimensions on screen rotation
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
+
   // Defer confetti to next frame to avoid blocking UI updates
   useEffect(() => {
     if (showConfetti && confettiRef.current) {
@@ -236,7 +248,7 @@ export default function ColoringScreen() {
         </View>
 
         {/* Main layout */}
-        <View style={styles.main}>
+        <View style={[styles.main, isPortrait && styles.mainPortrait]}>
           {/* Canvas - Displays the hybrid PNG chosen from CreateScreen
               The hybridKey is passed via navigation params and loaded by GlColoringCanvas */}
           <View style={styles.canvasWrap}>
@@ -265,7 +277,7 @@ export default function ColoringScreen() {
           </View>
 
           {/* Right Panel */}
-          <View style={[styles.panel, canvasSize?.height ? { height: canvasSize.height } : null]}>
+          <View style={[styles.panel, isPortrait && styles.panelPortrait, canvasSize?.height && !isPortrait ? { height: canvasSize.height } : null]}>
             <View style={[styles.panelHeaderContainer]}>
               <View style={styles.panelHeader}>
                 <Palette size={24} color="#111" />
@@ -273,8 +285,10 @@ export default function ColoringScreen() {
               </View>
             </View>
 
-            {/* Tool Switch */}
-            <View style={styles.toolRow}>
+            {/* Main content area - layout changes based on orientation */}
+            <View style={[isPortrait && styles.panelContentPortrait]}>
+              {/* Tool Switch */}
+              <View style={[styles.toolRow, isPortrait && styles.toolColumn]}>
               <Pressable
                 onPress={() => setActiveTool("fill")}
                 style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
@@ -293,11 +307,13 @@ export default function ColoringScreen() {
                   Brush
                 </Text>
               </Pressable>
-            </View>
+              </View>
 
-            {/* Brush Width Selector - Only visible when brush tool is active */}
-            {activeTool === "brush" && (
-              <View style={styles.brushWidthRow}>
+              {/* Right side content in portrait: palette, actions, save */}
+              <View style={[isPortrait && styles.panelRightContent]}>
+                {/* Brush Width Selector - Only visible when brush tool is active */}
+                {activeTool === "brush" && (
+                  <View style={styles.brushWidthRow}>
                 {[4, 8, 16, 24].map((width) => (
                   <Pressable
                     key={width}
@@ -315,97 +331,99 @@ export default function ColoringScreen() {
                       ]}
                     />
                   </Pressable>
-                ))}
-              </View>
-            )}
+                    ))}
+                  </View>
+                )}
 
-            {/* Palette */}
-            <View style={styles.palette}>
-              {DEFAULT_COLORS.map((c) => (
-                <ColorSwatch
-                  key={c}
-                  color={c}
-                  isSelected={c === activeColor}
-                  onSelect={() => handleColorSelect(c)}
-                />
-              ))}
-            </View>
+                {/* Palette */}
+                <View style={styles.palette}>
+                  {DEFAULT_COLORS.map((c) => (
+                    <ColorSwatch
+                      key={c}
+                      color={c}
+                      isSelected={c === activeColor}
+                      onSelect={() => handleColorSelect(c)}
+                    />
+                  ))}
+                </View>
 
-            {/* Actions */}
-            <View style={styles.row}>
-              <Pressable
-                onPress={() => {
-                  canvasRef.current?.undo();
-                }}
-                style={styles.ghostBtn}
-              >
-                <RotateCcw size={16} color="#333" />
-                <Text style={styles.ghostText}>Undo</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  canvasRef.current?.clear();
-                }}
-                style={styles.ghostBtn}
-              >
-                <Trash2 size={16} color="#333" />
-                <Text style={styles.ghostText}>Clear</Text>
-              </Pressable>
-            </View>
+                {/* Actions */}
+                <View style={styles.row}>
+                  <Pressable
+                    onPress={() => {
+                      canvasRef.current?.undo();
+                    }}
+                    style={styles.ghostBtn}
+                  >
+                    <RotateCcw size={16} color="#333" />
+                    <Text style={styles.ghostText}>Undo</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      canvasRef.current?.clear();
+                    }}
+                    style={styles.ghostBtn}
+                  >
+                    <Trash2 size={16} color="#333" />
+                    <Text style={styles.ghostText}>Clear</Text>
+                  </Pressable>
+                </View>
 
-            {/* Save */}
-            <LinearGradient
-              colors={["#00C950", "#00BC7D"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.saveBtn}
-            >
-              <Pressable
-                style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
-                onPress={() => {
-                  const isUpdate = !!savedAnimalId;
+                {/* Save */}
+                <LinearGradient
+                  colors={["#00C950", "#00BC7D"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.saveBtn}
+                >
+                  <Pressable
+                    style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+                    onPress={() => {
+                      const isUpdate = !!savedAnimalId;
 
-                  // Show modal and trigger confetti immediately for instant feedback
-                  if (!isUpdate) {
-                    setShowSuccessModal(true);
-                    setShowConfetti(true);
-                  } else {
-                    setShowConfetti(true);
-                    setTimeout(() => setShowConfetti(false), 3000);
-                  }
-
-                  // Defer the save operation to next tick so UI updates immediately
-                  setTimeout(async () => {
-                    try {
-                      // Save the image
-                      const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
-                      const animalKey = hybridKey || baseAnimalKey;
-                      if (imageUri && animalKey) {
-                        if (isUpdate) {
-                          // Update existing save (file already overwritten, update name too)
-                          await updateAnimal(savedAnimalId, imageUri, generatedName);
-                        } else {
-                          // First save - create new and store ID and URI
-                          const id = await saveAnimal(animalKey, generatedName, imageUri);
-                          setSavedAnimalId(id);
-                          setSavedImageUri(imageUri);
-                          setHasSaved(true);
-                        }
+                      // Show modal and trigger confetti immediately for instant feedback
+                      if (!isUpdate) {
+                        setShowSuccessModal(true);
+                        setShowConfetti(true);
+                      } else {
+                        setShowConfetti(true);
+                        setTimeout(() => setShowConfetti(false), 3000);
                       }
-                    } catch (error) {
-                      console.error("Save error:", error);
-                      // Hide confetti on error
-                      setShowConfetti(false);
-                      setShowSuccessModal(false);
-                      Alert.alert("Oops!", "Something went wrong. Please try again.");
-                    }
-                  }, 0);
-                }}
-              >
-                <Save size={18} color="#fff" />
-                <Text style={styles.saveText}>Save to Pen</Text>
-              </Pressable>
-            </LinearGradient>
+
+                      // Defer the save operation to next tick so UI updates immediately
+                      setTimeout(async () => {
+                        try {
+                          // Save the image
+                          const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
+                          const animalKey = hybridKey || baseAnimalKey;
+                          if (imageUri && animalKey) {
+                            if (isUpdate) {
+                              // Update existing save (file already overwritten, update name too)
+                              await updateAnimal(savedAnimalId, imageUri, generatedName);
+                            } else {
+                              // First save - create new and store ID and URI
+                              const id = await saveAnimal(animalKey, generatedName, imageUri);
+                              setSavedAnimalId(id);
+                              setSavedImageUri(imageUri);
+                              setHasSaved(true);
+                            }
+                          }
+                        } catch (error) {
+                          console.error("Save error:", error);
+                          // Hide confetti on error
+                          setShowConfetti(false);
+                          setShowSuccessModal(false);
+                          Alert.alert("Oops!", "Something went wrong. Please try again.");
+                        }
+                      }, 0);
+                    }}
+                  >
+                    <Save size={18} color="#fff" />
+                    <Text style={styles.saveText}>Save to Pen</Text>
+                  </Pressable>
+                </LinearGradient>
+              </View>
+            </View>
 
             {/* View Animal Pen - Only show after saving */}
             {hasSaved && (
@@ -533,6 +551,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  mainPortrait: {
+    flexDirection: "column",
+  },
   canvasWrap: {
     flex: 1,
     paddingRight: 8,
@@ -571,6 +592,18 @@ const styles = StyleSheet.create({
     gap: 12,
     flexShrink: 0,
   },
+  panelPortrait: {
+    width: "100%",
+    height: "auto",
+  },
+  panelContentPortrait: {
+    flexDirection: "row",
+    gap: 12,
+    flex: 1,
+  },
+  panelRightContent: {
+    flex: 1,
+  },
   panelTitle: {
     fontFamily: "MadimiOne_400Regular",
     color: "#111",
@@ -583,6 +616,10 @@ const styles = StyleSheet.create({
     gap: 8,
     alignSelf: "stretch",
     width: "100%",
+  },
+  toolColumn: {
+    flexDirection: "column",
+    width: "auto",
   },
   toolBtn: {
     flexDirection: "row",
