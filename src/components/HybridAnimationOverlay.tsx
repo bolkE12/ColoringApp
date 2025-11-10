@@ -7,6 +7,7 @@ import {
   Dimensions,
   Image,
   Modal,
+  Text,
 } from "react-native";
 import { getBaseRequire } from "../../assets/base";
 import { HYBRID_SOURCES } from "../../assets/hybrid";
@@ -49,6 +50,13 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
   const hybridRotate = useRef(new Animated.Value(0)).current;
   const hybridY = useRef(new Animated.Value(0)).current;
 
+  // Collision effect animations
+  const burstScale = useRef(new Animated.Value(0)).current;
+  const burstOpacity = useRef(new Animated.Value(0)).current;
+  const starsScale = useRef(new Animated.Value(0)).current;
+  const starsOpacity = useRef(new Animated.Value(0)).current;
+  const starsRotate = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     if (visible) {
       // Reset all animations
@@ -68,6 +76,12 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
       hybridOpacity.setValue(0);
       hybridRotate.setValue(0);
       hybridY.setValue(0);
+
+      burstScale.setValue(0);
+      burstOpacity.setValue(0);
+      starsScale.setValue(0);
+      starsOpacity.setValue(0);
+      starsRotate.setValue(0);
 
       // Sequence of animations
       Animated.sequence([
@@ -140,7 +154,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
           }),
         ]),
 
-        // Phase 3: Collision impact - scale down and fade out (250ms)
+        // Phase 3: Collision impact - scale down and fade out with burst effects (250ms)
         Animated.parallel([
           Animated.timing(animal1Scale, {
             toValue: 0,
@@ -164,6 +178,46 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
             duration: 250,
             useNativeDriver: true,
           }),
+          // Burst effect
+          Animated.sequence([
+            Animated.parallel([
+              Animated.timing(burstScale, {
+                toValue: 2.5,
+                duration: 200,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+              }),
+              Animated.timing(burstOpacity, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.timing(burstOpacity, {
+              toValue: 0,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+          ]),
+          // Stars burst effect
+          Animated.parallel([
+            Animated.timing(starsScale, {
+              toValue: 1.5,
+              duration: 250,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+            Animated.timing(starsOpacity, {
+              toValue: 1,
+              duration: 100,
+              useNativeDriver: true,
+            }),
+            Animated.timing(starsRotate, {
+              toValue: 360,
+              duration: 250,
+              useNativeDriver: true,
+            }),
+          ]),
         ]),
 
         // Phase 4: Hybrid appears with explosion effect (625ms)
@@ -183,6 +237,12 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
             toValue: 360,
             duration: 625,
             easing: Easing.out(Easing.back(1.5)),
+            useNativeDriver: true,
+          }),
+          // Fade out collision effects
+          Animated.timing(starsOpacity, {
+            toValue: 0,
+            duration: 300,
             useNativeDriver: true,
           }),
         ]),
@@ -273,6 +333,63 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
           <Image source={animal2Image} style={styles.animalImage} resizeMode="contain" />
         </Animated.View>
 
+        {/* Collision Burst Effect */}
+        <Animated.View
+          style={[
+            styles.burstEffect,
+            {
+              transform: [{ scale: burstScale }],
+              opacity: burstOpacity,
+            },
+          ]}
+        />
+
+        {/* Collision Stars */}
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, index) => {
+          const radians = (angle * Math.PI) / 180;
+          const distance = 80;
+          const x = Math.cos(radians) * distance;
+          const y = Math.sin(radians) * distance;
+
+          return (
+            <Animated.View
+              key={index}
+              style={[
+                styles.star,
+                {
+                  left: CENTER_X + x - 15,
+                  top: CENTER_Y + y - 15,
+                  transform: [
+                    { scale: starsScale },
+                    {
+                      rotate: starsRotate.interpolate({
+                        inputRange: [0, 360],
+                        outputRange: ["0deg", "360deg"],
+                      }),
+                    },
+                  ],
+                  opacity: starsOpacity,
+                },
+              ]}
+            >
+              <Text style={styles.starText}>✨</Text>
+            </Animated.View>
+          );
+        })}
+
+        {/* BANG text */}
+        <Animated.View
+          style={[
+            styles.bangContainer,
+            {
+              transform: [{ scale: burstScale }],
+              opacity: burstOpacity,
+            },
+          ]}
+        >
+          <Text style={styles.bangText}>💥</Text>
+        </Animated.View>
+
         {/* Hybrid Result */}
         <Animated.View
           style={[
@@ -341,5 +458,47 @@ const styles = StyleSheet.create({
   hybridImage: {
     width: "100%",
     height: "100%",
+  },
+  burstEffect: {
+    position: "absolute",
+    left: CENTER_X - 60,
+    top: CENTER_Y - 60,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#FFD700",
+    shadowColor: "#FFA500",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  star: {
+    position: "absolute",
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  starText: {
+    fontSize: 40,
+    textShadowColor: "#FFD700",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  bangContainer: {
+    position: "absolute",
+    left: CENTER_X - 40,
+    top: CENTER_Y - 40,
+    width: 80,
+    height: 80,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bangText: {
+    fontSize: 80,
+    textShadowColor: "#FFA500",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
   },
 });
