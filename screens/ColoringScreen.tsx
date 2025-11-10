@@ -660,6 +660,8 @@ const styles = StyleSheet.create({
     borderColor: "#111", // Just change color, not width
   },
   row: {
+    flexDirection: "row",
+    gap: 8,
     marginTop: 2,
   },
   ghostBtn: {
