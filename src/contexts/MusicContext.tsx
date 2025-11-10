@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAudioPlayer, AudioSource, setAudioModeAsync } from 'expo-audio';
 
 interface MusicContextType {
   isMusicPlaying: boolean;
@@ -10,65 +10,43 @@ const MusicContext = createContext<MusicContextType | undefined>(undefined);
 
 export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [isMusicPlaying, setIsMusicPlaying] = useState(true);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const player = useAudioPlayer(require('../../assets/music.mp3') as AudioSource);
 
-  // Load and setup the music
+  // Setup audio mode on mount
   useEffect(() => {
-    let mounted = true;
-
-    async function setupMusic() {
+    async function setupAudioMode() {
       try {
-        // Set audio mode for background music
-        await Audio.setAudioModeAsync({
+        await setAudioModeAsync({
           playsInSilentModeIOS: true,
           staysActiveInBackground: false,
           shouldDuckAndroid: true,
         });
-
-        // Load the MP3 file
-        const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/music.mp3'),
-          {
-            shouldPlay: true,
-            isLooping: true,
-            volume: 0.25, // Set volume to 25%
-          }
-        );
-
-        if (mounted) {
-          soundRef.current = sound;
-        }
       } catch (error) {
-        console.error('Error loading background music:', error);
+        console.error('Error setting audio mode:', error);
       }
     }
 
-    setupMusic();
-
-    // Cleanup on unmount
-    return () => {
-      mounted = false;
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
-      }
-    };
+    setupAudioMode();
   }, []);
 
+  // Start playing music when player is ready
+  useEffect(() => {
+    if (player) {
+      player.loop = true;
+      player.volume = 0.25;
+      player.play();
+    }
+  }, [player]);
+
   // Toggle music on/off
-  const toggleMusic = async () => {
-    if (!soundRef.current) return;
-
+  const toggleMusic = () => {
     try {
-      const status = await soundRef.current.getStatusAsync();
-
-      if (status.isLoaded) {
-        if (isMusicPlaying) {
-          await soundRef.current.pauseAsync();
-          setIsMusicPlaying(false);
-        } else {
-          await soundRef.current.playAsync();
-          setIsMusicPlaying(true);
-        }
+      if (isMusicPlaying) {
+        player.pause();
+        setIsMusicPlaying(false);
+      } else {
+        player.play();
+        setIsMusicPlaying(true);
       }
     } catch (error) {
       console.error('Error toggling music:', error);
