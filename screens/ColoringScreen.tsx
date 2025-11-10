@@ -347,14 +347,14 @@ export default function ColoringScreen() {
               ))}
             </View>
 
-            {/* Action Buttons Row */}
-            <View style={styles.actionButtonsRow}>
+            {/* Action Buttons Row/Column */}
+            <View style={isPortrait ? styles.actionButtonsRow : styles.actionButtonsColumn}>
               {/* Undo Button */}
               <Pressable
                 onPress={() => {
                   canvasRef.current?.undo();
                 }}
-                style={styles.actionBtn}
+                style={isPortrait ? styles.actionBtn : styles.actionBtnLandscape}
               >
                 <RotateCcw size={16} color="#333" />
                 <Text style={styles.actionBtnText}>Undo</Text>
@@ -365,7 +365,7 @@ export default function ColoringScreen() {
                 onPress={() => {
                   canvasRef.current?.clear();
                 }}
-                style={styles.actionBtn}
+                style={isPortrait ? styles.actionBtn : styles.actionBtnLandscape}
               >
                 <Trash2 size={16} color="#333" />
                 <Text style={styles.actionBtnText}>Clear</Text>
@@ -377,19 +377,19 @@ export default function ColoringScreen() {
                   onPress={() => {
                     navigation.navigate("Pen" as never);
                   }}
-                  style={styles.actionBtn}
+                  style={isPortrait ? styles.actionBtn : styles.actionBtnLandscape}
                 >
                   <PawPrint size={16} color="#333" />
                   <Text style={styles.actionBtnText}>View Pen</Text>
                 </Pressable>
               )}
 
-              {/* Save Button - 50% width */}
+              {/* Save Button - 50% width in portrait, full width in landscape */}
               <LinearGradient
                 colors={["#00C950", "#00BC7D"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.actionBtnSave}
+                style={isPortrait ? styles.actionBtnSave : styles.actionBtnSaveLandscape}
               >
                 <Pressable
                   style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
@@ -697,19 +697,25 @@ const styles = StyleSheet.create({
     borderColor: "transparent", // Always have border to prevent layout shift
   },
   swatchPortrait: {
-    width: "8.8%",
+    width: "22%",
     aspectRatio: 1,
   },
   swatchLandscape: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: "8%",
+    aspectRatio: 1,
   },
   swatchActive: {
     borderColor: "#111", // Just change color, not width
   },
   actionButtonsRow: {
     flexDirection: "row",
+    gap: 8,
+    alignSelf: "stretch",
+    width: "100%",
+    marginTop: 8,
+  },
+  actionButtonsColumn: {
+    flexDirection: "column",
     gap: 8,
     alignSelf: "stretch",
     width: "100%",
@@ -728,8 +734,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#999",
   },
+  actionBtnLandscape: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#999",
+  },
   actionBtnSave: {
     flex: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  actionBtnSaveLandscape: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
