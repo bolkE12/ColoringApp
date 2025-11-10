@@ -665,6 +665,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   ghostBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
