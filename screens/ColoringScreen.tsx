@@ -678,21 +678,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBlock: 8,
     alignSelf: "stretch",
     width: "100%",
-    justifyContent: "space-between",
   },
   paletteLandscape: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBlock: 8,
     alignSelf: "stretch",
     width: "100%",
-    justifyContent: "space-between",
   },
   swatch: {
     borderRadius: 100,
@@ -700,11 +698,11 @@ const styles = StyleSheet.create({
     borderColor: "transparent", // Always have border to prevent layout shift
   },
   swatchPortrait: {
-    width: "9%",
+    width: "9.2%",
     aspectRatio: 1,
   },
   swatchLandscape: {
-    width: "18%",
+    width: "18.4%",
     aspectRatio: 1,
   },
   swatchActive: {
