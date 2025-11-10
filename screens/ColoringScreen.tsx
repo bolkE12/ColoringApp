@@ -345,7 +345,7 @@ export default function ColoringScreen() {
 
             {/* Action Buttons Row */}
             <View style={styles.actionButtonsRow}>
-              {/* Undo Button - 25% width */}
+              {/* Undo Button */}
               <Pressable
                 onPress={() => {
                   canvasRef.current?.undo();
@@ -356,7 +356,7 @@ export default function ColoringScreen() {
                 <Text style={styles.actionBtnText}>Undo</Text>
               </Pressable>
 
-              {/* Clear Button - 25% width */}
+              {/* Clear Button */}
               <Pressable
                 onPress={() => {
                   canvasRef.current?.clear();
@@ -366,6 +366,19 @@ export default function ColoringScreen() {
                 <Trash2 size={16} color="#333" />
                 <Text style={styles.actionBtnText}>Clear</Text>
               </Pressable>
+
+              {/* View Animal Pen - Show after saving, in same row */}
+              {hasSaved && (
+                <Pressable
+                  onPress={() => {
+                    navigation.navigate("Pen" as never);
+                  }}
+                  style={styles.actionBtn}
+                >
+                  <PawPrint size={16} color="#333" />
+                  <Text style={styles.actionBtnText}>View Pen</Text>
+                </Pressable>
+              )}
 
               {/* Save Button - 50% width */}
               <LinearGradient
@@ -421,19 +434,6 @@ export default function ColoringScreen() {
                 </Pressable>
               </LinearGradient>
             </View>
-
-            {/* View Animal Pen - Only show after saving */}
-            {hasSaved && (
-              <Pressable
-                onPress={() => {
-                  navigation.navigate("Pen" as never);
-                }}
-                style={styles.viewPenBtn}
-              >
-                <PawPrint size={16} color="#333" />
-                <Text style={styles.ghostText}>View My Animal Pen</Text>
-              </Pressable>
-            )}
           </View>
         </View>
       </SafeAreaView>
@@ -663,9 +663,9 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   swatch: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+    width: "8.8%",
+    aspectRatio: 1,
+    borderRadius: 100,
     borderWidth: 3,
     borderColor: "transparent", // Always have border to prevent layout shift
   },
@@ -710,19 +710,6 @@ const styles = StyleSheet.create({
     fontFamily: "MadimiOne_400Regular",
     color: "#333",
     fontSize: 14,
-  },
-  viewPenBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#fff",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#999",
-    marginTop: 8,
   },
   row: {
     flexDirection: "row",
