@@ -28,7 +28,7 @@ const { width, height } = Dimensions.get("window");
 
 // Determine number of columns based on screen orientation
 const isPortrait = height > width;
-const NUM_COLUMNS = isPortrait ? 3 : 6;
+const NUM_COLUMNS = isPortrait ? 4 : 6;
 
 // PNG requires for base animals
 const LION = require("../assets/base/lion.png");

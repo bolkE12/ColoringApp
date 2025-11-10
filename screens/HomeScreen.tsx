@@ -11,6 +11,7 @@ import {
   Easing,
   ViewStyle,
   Image,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
@@ -59,9 +60,21 @@ export default function App() {
   const [rightAnimal, setRightAnimal] = useState<Animal>(initialPair[1]);
   const hk = hybridKey(leftAnimal, rightAnimal);
 
+  // Track orientation
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const isPortrait = dimensions.height > dimensions.width;
+
   const [fontsLoaded] = useFonts({
     MadimiOne_400Regular,
   });
+
+  // Update dimensions on screen rotation
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   const leftAnim = useRef(new Animated.Value(0)).current;
   const centerAnim = useRef(new Animated.Value(0)).current;
@@ -365,7 +378,9 @@ function cyclePair() {
 
         <View style={styles.container}>
           {/* Headline */}
-          <Text style={styles.title}>Create &amp; Color{'\n'}Your Own Animal</Text>
+          <Text style={styles.title}>
+            Create &amp; Color{isPortrait ? '\n' : ' '}Your Own Animal
+          </Text>
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
