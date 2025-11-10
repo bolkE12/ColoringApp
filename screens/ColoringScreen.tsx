@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   },
   panelLandscape: {
     width: 280,
-    alignSelf: 'stretch',
+    height: '100%',
   },
   panelTitle: {
     fontFamily: "MadimiOne_400Regular",
