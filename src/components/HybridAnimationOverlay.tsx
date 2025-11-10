@@ -308,6 +308,8 @@ const styles = StyleSheet.create({
   },
   animalContainer: {
     position: "absolute",
+    top: 0,
+    left: 0,
     width: TILE_SIZE,
     height: TILE_SIZE,
     backgroundColor: "#fff",
