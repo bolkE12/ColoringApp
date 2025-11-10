@@ -365,7 +365,7 @@ function cyclePair() {
 
         <View style={styles.container}>
           {/* Headline */}
-          <Text style={styles.title}>Create &amp; Color Your Own Animal</Text>
+          <Text style={styles.title}>Create &amp; Color{'\n'}Your Own Animal</Text>
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>

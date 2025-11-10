@@ -24,7 +24,11 @@ import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import { MusicToggle } from "../src/components/MusicToggle";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+
+// Determine number of columns based on screen orientation
+const isPortrait = height > width;
+const NUM_COLUMNS = isPortrait ? 3 : 6;
 
 // PNG requires for base animals
 const LION = require("../assets/base/lion.png");
@@ -250,7 +254,7 @@ export default function CreateScreen() {
             contentContainerStyle={styles.grid}
             columnWrapperStyle={{ gap: GRID_GAP }}
             data={ANIMALS}
-            numColumns={6}
+            numColumns={NUM_COLUMNS}
             keyExtractor={(item) => item.id}
             extraData={selected}
             renderItem={({ item }) => {
@@ -445,7 +449,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tileShell: {
-    width: (width - GRID_GAP * 5 - 48) / 6,
+    width: (width - GRID_GAP * (NUM_COLUMNS - 1) - 48) / NUM_COLUMNS,
     aspectRatio: 1,
     borderRadius: TILE_RADIUS,
     overflow: "visible",
