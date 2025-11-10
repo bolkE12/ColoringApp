@@ -697,11 +697,11 @@ const styles = StyleSheet.create({
     borderColor: "transparent", // Always have border to prevent layout shift
   },
   swatchPortrait: {
-    width: "8.8%",
+    width: "9%",
     aspectRatio: 1,
   },
   swatchLandscape: {
-    width: "23%",
+    width: "24.5%",
     aspectRatio: 1,
   },
   swatchActive: {
