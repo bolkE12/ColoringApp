@@ -681,7 +681,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBlock: 8,
     alignSelf: "stretch",
-    width: "100%",
   },
   paletteLandscape: {
     flexDirection: "row",
@@ -690,20 +689,17 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBlock: 8,
     alignSelf: "stretch",
-    width: "100%",
   },
   swatch: {
-    borderRadius: 100,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 3,
     borderColor: "transparent", // Always have border to prevent layout shift
   },
   swatchPortrait: {
-    width: "9.2%",
-    aspectRatio: 1,
   },
   swatchLandscape: {
-    width: "18.4%",
-    aspectRatio: 1,
   },
   swatchActive: {
     borderColor: "#111", // Just change color, not width
