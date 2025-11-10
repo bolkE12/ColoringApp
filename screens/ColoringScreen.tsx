@@ -476,6 +476,19 @@ export default function ColoringScreen() {
                   </Pressable>
                 </View>
 
+                {/* View Animal Pen - Show after saving, full width */}
+                {hasSaved && (
+                  <Pressable
+                    onPress={() => {
+                      navigation.navigate("Pen" as never);
+                    }}
+                    style={styles.actionBtnLandscape}
+                  >
+                    <PawPrint size={16} color="#333" />
+                    <Text style={styles.actionBtnText}>View Pen</Text>
+                  </Pressable>
+                )}
+
                 {/* Save Button - full width */}
                 <LinearGradient
                   colors={["#00C950", "#00BC7D"]}
@@ -529,19 +542,6 @@ export default function ColoringScreen() {
                     <Text style={styles.saveText}>Save to Pen</Text>
                   </Pressable>
                 </LinearGradient>
-
-                {/* View Animal Pen - Show after saving, full width */}
-                {hasSaved && (
-                  <Pressable
-                    onPress={() => {
-                      navigation.navigate("Pen" as never);
-                    }}
-                    style={styles.actionBtnLandscape}
-                  >
-                    <PawPrint size={16} color="#333" />
-                    <Text style={styles.actionBtnText}>View Pen</Text>
-                  </Pressable>
-                )}
               </View>
             )}
               </ScrollView>
