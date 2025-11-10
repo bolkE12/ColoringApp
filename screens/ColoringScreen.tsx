@@ -354,50 +354,51 @@ export default function ColoringScreen() {
               ))}
             </View>
 
-            {/* Action Buttons Row/Column */}
-            <View style={isPortrait ? styles.actionButtonsRow : styles.actionButtonsColumn}>
-              {/* Undo Button */}
-              <Pressable
-                onPress={() => {
-                  canvasRef.current?.undo();
-                }}
-                style={isPortrait ? styles.actionBtn : styles.actionBtnLandscape}
-              >
-                <RotateCcw size={16} color="#333" />
-                <Text style={styles.actionBtnText}>Undo</Text>
-              </Pressable>
-
-              {/* Clear Button */}
-              <Pressable
-                onPress={() => {
-                  canvasRef.current?.clear();
-                }}
-                style={isPortrait ? styles.actionBtn : styles.actionBtnLandscape}
-              >
-                <Trash2 size={16} color="#333" />
-                <Text style={styles.actionBtnText}>Clear</Text>
-              </Pressable>
-
-              {/* View Animal Pen - Show after saving, in same row */}
-              {hasSaved && (
+            {/* Action Buttons Layout */}
+            {isPortrait ? (
+              <View style={styles.actionButtonsRow}>
+                {/* Undo Button */}
                 <Pressable
                   onPress={() => {
-                    navigation.navigate("Pen" as never);
+                    canvasRef.current?.undo();
                   }}
-                  style={isPortrait ? styles.actionBtn : styles.actionBtnLandscape}
+                  style={styles.actionBtn}
                 >
-                  <PawPrint size={16} color="#333" />
-                  <Text style={styles.actionBtnText}>View Pen</Text>
+                  <RotateCcw size={16} color="#333" />
+                  <Text style={styles.actionBtnText}>Undo</Text>
                 </Pressable>
-              )}
 
-              {/* Save Button - 50% width in portrait, full width in landscape */}
-              <LinearGradient
-                colors={["#00C950", "#00BC7D"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={isPortrait ? styles.actionBtnSave : styles.actionBtnSaveLandscape}
-              >
+                {/* Clear Button */}
+                <Pressable
+                  onPress={() => {
+                    canvasRef.current?.clear();
+                  }}
+                  style={styles.actionBtn}
+                >
+                  <Trash2 size={16} color="#333" />
+                  <Text style={styles.actionBtnText}>Clear</Text>
+                </Pressable>
+
+                {/* View Animal Pen - Show after saving, in same row */}
+                {hasSaved && (
+                  <Pressable
+                    onPress={() => {
+                      navigation.navigate("Pen" as never);
+                    }}
+                    style={styles.actionBtn}
+                  >
+                    <PawPrint size={16} color="#333" />
+                    <Text style={styles.actionBtnText}>View Pen</Text>
+                  </Pressable>
+                )}
+
+                {/* Save Button */}
+                <LinearGradient
+                  colors={["#00C950", "#00BC7D"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.actionBtnSave}
+                >
                 <Pressable
                   style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
                   onPress={() => {
@@ -444,7 +445,102 @@ export default function ColoringScreen() {
                   <Text style={styles.saveText}>Save to Pen</Text>
                 </Pressable>
               </LinearGradient>
-            </View>
+              </View>
+            ) : (
+              <View style={styles.actionButtonsColumn}>
+                {/* Undo and Clear Row */}
+                <View style={styles.undoClearRow}>
+                  {/* Undo Button */}
+                  <Pressable
+                    onPress={() => {
+                      canvasRef.current?.undo();
+                    }}
+                    style={styles.actionBtnLandscapeRow}
+                  >
+                    <RotateCcw size={16} color="#333" />
+                    <Text style={styles.actionBtnText}>Undo</Text>
+                  </Pressable>
+
+                  {/* Clear Button */}
+                  <Pressable
+                    onPress={() => {
+                      canvasRef.current?.clear();
+                    }}
+                    style={styles.actionBtnLandscapeRow}
+                  >
+                    <Trash2 size={16} color="#333" />
+                    <Text style={styles.actionBtnText}>Clear</Text>
+                  </Pressable>
+                </View>
+
+                {/* Save Button - full width */}
+                <LinearGradient
+                  colors={["#00C950", "#00BC7D"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.actionBtnSaveLandscape}
+                >
+                  <Pressable
+                    style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
+                    onPress={() => {
+                      const isUpdate = !!savedAnimalId;
+
+                      // Show modal and trigger confetti immediately for instant feedback
+                      if (!isUpdate) {
+                        setShowSuccessModal(true);
+                        setShowConfetti(true);
+                      } else {
+                        setShowConfetti(true);
+                        setTimeout(() => setShowConfetti(false), 3000);
+                      }
+
+                      // Defer the save operation to next tick so UI updates immediately
+                      setTimeout(async () => {
+                        try {
+                          // Save the image
+                          const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
+                          const animalKey = hybridKey || baseAnimalKey;
+                          if (imageUri && animalKey) {
+                            if (isUpdate) {
+                              // Update existing save (file already overwritten, update name too)
+                              await updateAnimal(savedAnimalId, imageUri, generatedName);
+                            } else {
+                              // First save - create new and store ID and URI
+                              const id = await saveAnimal(animalKey, generatedName, imageUri);
+                              setSavedAnimalId(id);
+                              setSavedImageUri(imageUri);
+                              setHasSaved(true);
+                            }
+                          }
+                        } catch (error) {
+                          console.error("Save error:", error);
+                          // Hide confetti on error
+                          setShowConfetti(false);
+                          setShowSuccessModal(false);
+                          Alert.alert("Oops!", "Something went wrong. Please try again.");
+                        }
+                      }, 0);
+                    }}
+                  >
+                    <Save size={18} color="#fff" />
+                    <Text style={styles.saveText}>Save to Pen</Text>
+                  </Pressable>
+                </LinearGradient>
+
+                {/* View Animal Pen - Show after saving, full width */}
+                {hasSaved && (
+                  <Pressable
+                    onPress={() => {
+                      navigation.navigate("Pen" as never);
+                    }}
+                    style={styles.actionBtnLandscape}
+                  >
+                    <PawPrint size={16} color="#333" />
+                    <Text style={styles.actionBtnText}>View Pen</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
               </ScrollView>
             ) : (
               <>
@@ -888,6 +984,12 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 8,
   },
+  undoClearRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignSelf: "stretch",
+    width: "100%",
+  },
   actionBtn: {
     flex: 1,
     flexDirection: "row",
@@ -902,6 +1004,19 @@ const styles = StyleSheet.create({
     borderColor: "#999",
   },
   actionBtnLandscape: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#999",
+  },
+  actionBtnLandscapeRow: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
