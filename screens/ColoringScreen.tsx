@@ -247,8 +247,8 @@ export default function ColoringScreen() {
           <MusicToggle />
         </View>
 
-        {/* Main layout */}
-        <View style={[styles.main, isPortrait && styles.mainPortrait]}>
+        {/* Main layout - always vertical */}
+        <View style={styles.main}>
           {/* Canvas - Displays the hybrid PNG chosen from CreateScreen
               The hybridKey is passed via navigation params and loaded by GlColoringCanvas */}
           <View style={styles.canvasWrap}>
@@ -276,8 +276,8 @@ export default function ColoringScreen() {
             </View>
           </View>
 
-          {/* Right Panel */}
-          <View style={[styles.panel, isPortrait && styles.panelPortrait, canvasSize?.height && !isPortrait ? { height: canvasSize.height } : null]}>
+          {/* Color Panel */}
+          <View style={styles.panel}>
             <View style={[styles.panelHeaderContainer]}>
               <View style={styles.panelHeader}>
                 <Palette size={24} color="#111" />
@@ -285,10 +285,10 @@ export default function ColoringScreen() {
               </View>
             </View>
 
-            {/* Main content area - layout changes based on orientation */}
-            <View style={[isPortrait && styles.panelContentPortrait]}>
+            {/* Main content area - horizontal layout with tools on left, colors on right */}
+            <View style={styles.panelContentPortrait}>
               {/* Tool Switch */}
-              <View style={[styles.toolRow, isPortrait && styles.toolColumn]}>
+              <View style={styles.toolColumn}>
               <Pressable
                 onPress={() => setActiveTool("fill")}
                 style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
@@ -309,8 +309,8 @@ export default function ColoringScreen() {
               </Pressable>
               </View>
 
-              {/* Right side content in portrait: palette, actions, save */}
-              <View style={[isPortrait && styles.panelRightContent]}>
+              {/* Right side content: palette, actions, save */}
+              <View style={styles.panelRightContent}>
                 {/* Brush Width Selector - Only visible when brush tool is active */}
                 {activeTool === "brush" && (
                   <View style={styles.brushWidthRow}>
@@ -544,19 +544,14 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "column",
     gap: 24,
     paddingHorizontal: 16,
+    paddingTop: 24,
     paddingBottom: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  mainPortrait: {
-    flexDirection: "column",
   },
   canvasWrap: {
-    flex: 1,
-    paddingRight: 8,
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -580,7 +575,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   panel: {
-    width: PANEL_WIDTH,
+    width: "100%",
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 16,
@@ -590,11 +585,6 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 10,
     gap: 12,
-    flexShrink: 0,
-  },
-  panelPortrait: {
-    width: "100%",
-    height: "auto",
   },
   panelContentPortrait: {
     flexDirection: "row",
