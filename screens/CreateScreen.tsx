@@ -1,5 +1,5 @@
 // screens/CreateScreen.tsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -23,12 +23,6 @@ import { ArrowLeft, HelpCircle, Plus, Check } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import { MusicToggle } from "../src/components/MusicToggle";
-
-const { width, height } = Dimensions.get("window");
-
-// Determine number of columns based on screen orientation
-const isPortrait = height > width;
-const NUM_COLUMNS = isPortrait ? 4 : 6;
 
 // PNG requires for base animals
 const LION = require("../assets/base/lion.png");
@@ -100,10 +94,23 @@ function AnimalImage({
 export default function CreateScreen() {
   const navigation = useNavigation<any>();
 
+  // Track dimensions for responsive layout
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const isPortrait = dimensions.height > dimensions.width;
+  const numColumns = isPortrait ? 4 : 6;
+
   const [fontsLoaded] = useFonts({
     MadimiOne_400Regular,
   });
   const [selected, setSelected] = useState<string[]>([]);
+
+  // Update dimensions on screen rotation
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
   React.useEffect(() => {
     if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -254,13 +261,15 @@ export default function CreateScreen() {
             contentContainerStyle={styles.grid}
             columnWrapperStyle={{ gap: GRID_GAP }}
             data={ANIMALS}
-            numColumns={NUM_COLUMNS}
+            numColumns={numColumns}
+            key={numColumns}
             keyExtractor={(item) => item.id}
             extraData={selected}
             renderItem={({ item }) => {
               const isSelected = selected.includes(item.id);
+              const tileWidth = (dimensions.width - GRID_GAP * (numColumns - 1) - 48) / numColumns;
               return (
-                <View style={styles.tileShell}>
+                <View style={[styles.tileShell, { width: tileWidth }]}>
                   {isSelected && (
                     <LinearGradient
                       colors={["#C27AFF", "#FB64B6"]}
@@ -449,7 +458,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tileShell: {
-    width: (width - GRID_GAP * (NUM_COLUMNS - 1) - 48) / NUM_COLUMNS,
     aspectRatio: 1,
     borderRadius: TILE_RADIUS,
     overflow: "visible",
