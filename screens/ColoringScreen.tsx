@@ -342,8 +342,6 @@ export default function ColoringScreen() {
                 <RotateCcw size={16} color="#333" />
                 <Text style={styles.ghostText}>Undo</Text>
               </Pressable>
-            </View>
-            <View style={styles.row}>
               <Pressable
                 onPress={() => {
                   canvasRef.current?.clear();
