@@ -957,9 +957,9 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   swatch: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 3,
     borderColor: "transparent", // Always have border to prevent layout shift
   },
