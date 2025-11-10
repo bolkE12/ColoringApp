@@ -9,7 +9,7 @@ import {
   Modal,
 } from "react-native";
 import { getBaseRequire } from "../../assets/base";
-import { getHybridRequire } from "../../assets/hybrid";
+import { HYBRID_SOURCES } from "../../assets/hybrid";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CENTER_X = SCREEN_WIDTH / 2;
@@ -198,7 +198,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
 
   const animal1Image = getBaseRequire(animal1 as any);
   const animal2Image = getBaseRequire(animal2 as any);
-  const hybridImage = getHybridRequire(hybridKey);
+  const hybridImage = HYBRID_SOURCES[hybridKey];
 
   return (
     <Modal visible={visible} transparent animationType="none">
