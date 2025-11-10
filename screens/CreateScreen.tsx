@@ -23,6 +23,7 @@ import { ArrowLeft, HelpCircle, Plus, Check } from "lucide-react-native";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import { MusicToggle } from "../src/components/MusicToggle";
+import { HybridAnimationOverlay } from "../src/components/HybridAnimationOverlay";
 
 // PNG requires for base animals
 const LION = require("../assets/base/lion.png");
@@ -103,6 +104,12 @@ export default function CreateScreen() {
     MadimiOne_400Regular,
   });
   const [selected, setSelected] = useState<string[]>([]);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    animalName: string;
+    hybridKey?: string;
+    baseAnimalKey?: string;
+  } | null>(null);
 
   // Update dimensions on screen rotation
   useEffect(() => {
@@ -144,6 +151,16 @@ export default function CreateScreen() {
     inputRange: [-1, 1],
     outputRange: ["-2deg", "2deg"],
   });
+
+  const handleAnimationComplete = () => {
+    setShowAnimation(false);
+    if (pendingNavigation) {
+      // @ts-ignore
+      navigation.navigate("Coloring", pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
+
   const toggleSelect = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSelected((prev) => {
@@ -235,13 +252,13 @@ export default function CreateScreen() {
                   style={styles.primaryBtn}
                   onPress={() => {
                     if (TwoSelected) {
-                      // Hybrid: two animals selected
+                      // Hybrid: two animals selected - trigger animation
                       const key = makeHybridKey(selected[0], selected[1]);
                       const displayName = selected.map((s) => s[0].toUpperCase() + s.slice(1)).join(" + ");
-                      // @ts-ignore
-                      navigation.navigate("Coloring", { animalName: displayName, hybridKey: key });
+                      setPendingNavigation({ animalName: displayName, hybridKey: key });
+                      setShowAnimation(true);
                     } else {
-                      // Single animal: only one selected
+                      // Single animal: only one selected - navigate directly (no animation)
                       const animalKey = selected[0];
                       const displayName = animalKey[0].toUpperCase() + animalKey.slice(1);
                       // @ts-ignore
@@ -300,6 +317,17 @@ export default function CreateScreen() {
           />
         </View>
       </SafeAreaView>
+
+      {/* Hybrid Animation Overlay */}
+      {showAnimation && pendingNavigation?.hybridKey && (
+        <HybridAnimationOverlay
+          visible={showAnimation}
+          animal1={selected[0]}
+          animal2={selected[1]}
+          hybridKey={pendingNavigation.hybridKey}
+          onComplete={handleAnimationComplete}
+        />
+      )}
     </ImageBackground>
   );
 }
