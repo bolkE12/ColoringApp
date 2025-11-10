@@ -285,10 +285,8 @@ export default function ColoringScreen() {
               </View>
             </View>
 
-            {/* Main content area - horizontal layout with tools on left, colors on right */}
-            <View style={styles.panelContentPortrait}>
-              {/* Tool Switch */}
-              <View style={styles.toolColumn}>
+            {/* Tool Switch - Horizontal tabs */}
+            <View style={styles.toolRow}>
               <Pressable
                 onPress={() => setActiveTool("fill")}
                 style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
@@ -307,30 +305,32 @@ export default function ColoringScreen() {
                   Brush
                 </Text>
               </Pressable>
-              </View>
+            </View>
 
-              {/* Right side content: palette, actions, save */}
-              <View style={styles.panelRightContent}>
+            {/* Main content area with left (colors) and right (buttons) */}
+            <View style={styles.panelContentRow}>
+              {/* Left side: colors and brush width */}
+              <View style={styles.panelLeftContent}>
                 {/* Brush Width Selector - Only visible when brush tool is active */}
                 {activeTool === "brush" && (
                   <View style={styles.brushWidthRow}>
-                {[4, 8, 16, 24].map((width) => (
-                  <Pressable
-                    key={width}
-                    onPress={() => setBrushWidth(width)}
-                    style={[
-                      styles.brushWidthBtn,
-                      brushWidth === width && styles.brushWidthBtnActive
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.brushWidthDot,
-                        { width: width / 2, height: width / 2, borderRadius: width / 4 },
-                        brushWidth === width && styles.brushWidthDotActive
-                      ]}
-                    />
-                  </Pressable>
+                    {[4, 8, 16, 24].map((width) => (
+                      <Pressable
+                        key={width}
+                        onPress={() => setBrushWidth(width)}
+                        style={[
+                          styles.brushWidthBtn,
+                          brushWidth === width && styles.brushWidthBtnActive
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.brushWidthDot,
+                            { width: width / 2, height: width / 2, borderRadius: width / 4 },
+                            brushWidth === width && styles.brushWidthDotActive
+                          ]}
+                        />
+                      </Pressable>
                     ))}
                   </View>
                 )}
@@ -346,30 +346,33 @@ export default function ColoringScreen() {
                     />
                   ))}
                 </View>
+              </View>
 
-                {/* Actions */}
-                <View style={styles.row}>
-                  <Pressable
-                    onPress={() => {
-                      canvasRef.current?.undo();
-                    }}
-                    style={styles.ghostBtn}
-                  >
-                    <RotateCcw size={16} color="#333" />
-                    <Text style={styles.ghostText}>Undo</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => {
-                      canvasRef.current?.clear();
-                    }}
-                    style={styles.ghostBtn}
-                  >
-                    <Trash2 size={16} color="#333" />
-                    <Text style={styles.ghostText}>Clear</Text>
-                  </Pressable>
-                </View>
+              {/* Right side: Action buttons vertically aligned */}
+              <View style={styles.panelRightButtons}>
+                {/* Undo Button */}
+                <Pressable
+                  onPress={() => {
+                    canvasRef.current?.undo();
+                  }}
+                  style={styles.ghostBtn}
+                >
+                  <RotateCcw size={16} color="#333" />
+                  <Text style={styles.ghostText}>Undo</Text>
+                </Pressable>
 
-                {/* Save */}
+                {/* Clear Button */}
+                <Pressable
+                  onPress={() => {
+                    canvasRef.current?.clear();
+                  }}
+                  style={styles.ghostBtn}
+                >
+                  <Trash2 size={16} color="#333" />
+                  <Text style={styles.ghostText}>Clear</Text>
+                </Pressable>
+
+                {/* Save Button */}
                 <LinearGradient
                   colors={["#00C950", "#00BC7D"]}
                   start={{ x: 0, y: 0 }}
@@ -422,23 +425,21 @@ export default function ColoringScreen() {
                     <Text style={styles.saveText}>Save to Pen</Text>
                   </Pressable>
                 </LinearGradient>
+
+                {/* View Animal Pen - Only show after saving */}
+                {hasSaved && (
+                  <Pressable
+                    onPress={() => {
+                      navigation.navigate("Pen" as never);
+                    }}
+                    style={styles.ghostBtn}
+                  >
+                    <PawPrint size={16} color="#333" />
+                    <Text style={styles.ghostText}>View My Animal Pen</Text>
+                  </Pressable>
+                )}
               </View>
             </View>
-
-            {/* View Animal Pen - Only show after saving */}
-            {hasSaved && (
-              <View style={styles.row}>
-                <Pressable
-                  onPress={() => {
-                    navigation.navigate("Pen" as never);
-                  }}
-                  style={styles.ghostBtn}
-                >
-                  <PawPrint size={16} color="#333" />
-                  <Text style={styles.ghostText}>View My Animal Pen</Text>
-                </Pressable>
-              </View>
-            )}
           </View>
         </View>
       </SafeAreaView>
@@ -586,13 +587,18 @@ const styles = StyleSheet.create({
     elevation: 10,
     gap: 12,
   },
-  panelContentPortrait: {
+  panelContentRow: {
     flexDirection: "row",
     gap: 12,
     flex: 1,
   },
-  panelRightContent: {
+  panelLeftContent: {
     flex: 1,
+  },
+  panelRightButtons: {
+    flexDirection: "column",
+    gap: 8,
+    justifyContent: "flex-start",
   },
   panelTitle: {
     fontFamily: "MadimiOne_400Regular",
