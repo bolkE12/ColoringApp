@@ -12,6 +12,7 @@ import {
   LayoutChangeEvent,
   Alert,
   Modal,
+  ScrollView,
 } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -280,16 +281,22 @@ export default function ColoringScreen() {
           </View>
 
           {/* Color Panel */}
-          <View style={[styles.panel, isPortrait ? styles.panelPortrait : styles.panelLandscape]}>
-            <View style={[styles.panelHeaderContainer]}>
-              <View style={styles.panelHeader}>
-                <Palette size={24} color="#111" />
-                <Text style={styles.panelTitle}>Colors</Text>
-              </View>
-            </View>
+          <View style={[
+            styles.panel,
+            isPortrait ? styles.panelPortrait : styles.panelLandscape,
+            !isPortrait && canvasSize ? { height: canvasSize.height } : null
+          ]}>
+            {!isPortrait ? (
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                <View style={[styles.panelHeaderContainer]}>
+                  <View style={styles.panelHeader}>
+                    <Palette size={24} color="#111" />
+                    <Text style={styles.panelTitle}>Colors</Text>
+                  </View>
+                </View>
 
-            {/* Tool Switch - Horizontal tabs */}
-            <View style={styles.toolRow}>
+                {/* Tool Switch - Horizontal tabs */}
+                <View style={styles.toolRow}>
               <Pressable
                 onPress={() => setActiveTool("fill")}
                 style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
@@ -438,6 +445,168 @@ export default function ColoringScreen() {
                 </Pressable>
               </LinearGradient>
             </View>
+              </ScrollView>
+            ) : (
+              <>
+                <View style={[styles.panelHeaderContainer]}>
+                  <View style={styles.panelHeader}>
+                    <Palette size={24} color="#111" />
+                    <Text style={styles.panelTitle}>Colors</Text>
+                  </View>
+                </View>
+
+                {/* Tool Switch - Horizontal tabs */}
+                <View style={styles.toolRow}>
+                  <Pressable
+                    onPress={() => setActiveTool("fill")}
+                    style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
+                  >
+                    <Droplet size={16} color={activeTool === "fill" ? "#fff" : "#333"} />
+                    <Text style={[styles.toolText, activeTool === "fill" && styles.toolTextActive]}>
+                      Fill
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setActiveTool("brush")}
+                    style={[styles.toolBtn, activeTool === "brush" && styles.toolBtnActive]}
+                  >
+                    <Brush size={16} color={activeTool === "brush" ? "#fff" : "#333"} />
+                    <Text style={[styles.toolText, activeTool === "brush" && styles.toolTextActive]}>
+                      Brush
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {/* Brush Width Selector - Only visible when brush tool is active */}
+                {activeTool === "brush" && (
+                  <View style={styles.brushWidthRow}>
+                    {[4, 8, 16, 24].map((width) => (
+                      <Pressable
+                        key={width}
+                        onPress={() => setBrushWidth(width)}
+                        style={[
+                          styles.brushWidthBtn,
+                          brushWidth === width && styles.brushWidthBtnActive
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.brushWidthDot,
+                            { width: width / 2, height: width / 2, borderRadius: width / 4 },
+                            brushWidth === width && styles.brushWidthDotActive
+                          ]}
+                        />
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+
+                {/* Palette */}
+                <View style={styles.palettePortrait}>
+                  {DEFAULT_COLORS.map((c) => (
+                    <ColorSwatch
+                      key={c}
+                      color={c}
+                      isSelected={c === activeColor}
+                      onSelect={() => handleColorSelect(c)}
+                      swatchStyle={styles.swatchPortrait}
+                    />
+                  ))}
+                </View>
+
+                {/* Action Buttons Row */}
+                <View style={styles.actionButtonsRow}>
+                  {/* Undo Button */}
+                  <Pressable
+                    onPress={() => {
+                      canvasRef.current?.undo();
+                    }}
+                    style={styles.actionBtn}
+                  >
+                    <RotateCcw size={16} color="#333" />
+                    <Text style={styles.actionBtnText}>Undo</Text>
+                  </Pressable>
+
+                  {/* Clear Button */}
+                  <Pressable
+                    onPress={() => {
+                      canvasRef.current?.clear();
+                    }}
+                    style={styles.actionBtn}
+                  >
+                    <Trash2 size={16} color="#333" />
+                    <Text style={styles.actionBtnText}>Clear</Text>
+                  </Pressable>
+
+                  {/* View Animal Pen - Show after saving, in same row */}
+                  {hasSaved && (
+                    <Pressable
+                      onPress={() => {
+                        navigation.navigate("Pen" as never);
+                      }}
+                      style={styles.actionBtn}
+                    >
+                      <PawPrint size={16} color="#333" />
+                      <Text style={styles.actionBtnText}>View Pen</Text>
+                    </Pressable>
+                  )}
+
+                  {/* Save Button */}
+                  <LinearGradient
+                    colors={["#00C950", "#00BC7D"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.actionBtnSave}
+                  >
+                    <Pressable
+                      style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
+                      onPress={() => {
+                        const isUpdate = !!savedAnimalId;
+
+                        // Show modal and trigger confetti immediately for instant feedback
+                        if (!isUpdate) {
+                          setShowSuccessModal(true);
+                          setShowConfetti(true);
+                        } else {
+                          setShowConfetti(true);
+                          setTimeout(() => setShowConfetti(false), 3000);
+                        }
+
+                        // Defer the save operation to next tick so UI updates immediately
+                        setTimeout(async () => {
+                          try {
+                            // Save the image
+                            const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
+                            const animalKey = hybridKey || baseAnimalKey;
+                            if (imageUri && animalKey) {
+                              if (isUpdate) {
+                                // Update existing save (file already overwritten, update name too)
+                                await updateAnimal(savedAnimalId, imageUri, generatedName);
+                              } else {
+                                // First save - create new and store ID and URI
+                                const id = await saveAnimal(animalKey, generatedName, imageUri);
+                                setSavedAnimalId(id);
+                                setSavedImageUri(imageUri);
+                                setHasSaved(true);
+                              }
+                            }
+                          } catch (error) {
+                            console.error("Save error:", error);
+                            // Hide confetti on error
+                            setShowConfetti(false);
+                            setShowSuccessModal(false);
+                            Alert.alert("Oops!", "Something went wrong. Please try again.");
+                          }
+                        }, 0);
+                      }}
+                    >
+                      <Save size={18} color="#fff" />
+                      <Text style={styles.saveText}>Save to Pen</Text>
+                    </Pressable>
+                  </LinearGradient>
+                </View>
+              </>
+            )}
           </View>
         </View>
       </SafeAreaView>
@@ -565,6 +734,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    maxHeight: "100%",
   },
   canvas: {
     width: "100%",
