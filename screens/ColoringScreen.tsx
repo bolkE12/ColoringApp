@@ -600,6 +600,7 @@ const styles = StyleSheet.create({
   },
   panelLandscape: {
     width: 280,
+    alignSelf: 'stretch',
   },
   panelTitle: {
     fontFamily: "MadimiOne_400Regular",
@@ -699,7 +700,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent", // Always have border to prevent layout shift
   },
   swatchPortrait: {
-    width: "9.2%",
+    width: "9%",
     aspectRatio: 1,
   },
   swatchLandscape: {
