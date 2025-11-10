@@ -42,11 +42,13 @@ const DEFAULT_COLORS = [
 const ColorSwatch = React.memo(({
   color,
   isSelected,
-  onSelect
+  onSelect,
+  swatchStyle
 }: {
   color: string;
   isSelected: boolean;
   onSelect: () => void;
+  swatchStyle?: any;
 }) => {
   console.log('[ColorSwatch] Rendering:', color, 'selected:', isSelected);
   return (
@@ -55,6 +57,7 @@ const ColorSwatch = React.memo(({
       onPress={onSelect}
       style={[
         styles.swatch,
+        swatchStyle,
         { backgroundColor: color },
         isSelected && styles.swatchActive
       ]}
@@ -247,11 +250,11 @@ export default function ColoringScreen() {
           <MusicToggle />
         </View>
 
-        {/* Main layout - always vertical */}
-        <View style={styles.main}>
+        {/* Main layout - vertical for portrait, horizontal for landscape */}
+        <View style={[styles.main, isPortrait ? styles.mainPortrait : styles.mainLandscape]}>
           {/* Canvas - Displays the hybrid PNG chosen from CreateScreen
               The hybridKey is passed via navigation params and loaded by GlColoringCanvas */}
-          <View style={styles.canvasWrap}>
+          <View style={isPortrait ? styles.canvasWrapPortrait : styles.canvasWrapLandscape}>
             <View
               style={styles.canvas}
               onLayout={(e: LayoutChangeEvent) => {
@@ -277,7 +280,7 @@ export default function ColoringScreen() {
           </View>
 
           {/* Color Panel */}
-          <View style={styles.panel}>
+          <View style={[styles.panel, isPortrait ? styles.panelPortrait : styles.panelLandscape]}>
             <View style={[styles.panelHeaderContainer]}>
               <View style={styles.panelHeader}>
                 <Palette size={24} color="#111" />
@@ -331,14 +334,15 @@ export default function ColoringScreen() {
               </View>
             )}
 
-            {/* Palette - 10 swatches per row */}
-            <View style={styles.palette}>
+            {/* Palette - 10 swatches per row in portrait, fewer in landscape */}
+            <View style={isPortrait ? styles.palettePortrait : styles.paletteLandscape}>
               {DEFAULT_COLORS.map((c) => (
                 <ColorSwatch
                   key={c}
                   color={c}
                   isSelected={c === activeColor}
                   onSelect={() => handleColorSelect(c)}
+                  swatchStyle={isPortrait ? styles.swatchPortrait : styles.swatchLandscape}
                 />
               ))}
             </View>
@@ -539,14 +543,25 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    flexDirection: "column",
-    gap: 24,
     paddingHorizontal: 16,
     paddingTop: 24,
     paddingBottom: 16,
   },
-  canvasWrap: {
+  mainPortrait: {
+    flexDirection: "column",
+    gap: 24,
+  },
+  mainLandscape: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  canvasWrapPortrait: {
     width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  canvasWrapLandscape: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -570,7 +585,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   panel: {
-    width: "100%",
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 16,
@@ -580,6 +594,12 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 10,
     gap: 12,
+  },
+  panelPortrait: {
+    width: "100%",
+  },
+  panelLandscape: {
+    width: 280,
   },
   panelTitle: {
     fontFamily: "MadimiOne_400Regular",
@@ -653,7 +673,16 @@ const styles = StyleSheet.create({
   brushWidthDotActive: {
     backgroundColor: "#fff",
   },
-  palette: {
+  palettePortrait: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    alignItems: "center",
+    marginBlock: 8,
+    alignSelf: "stretch",
+    width: "100%",
+  },
+  paletteLandscape: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
@@ -663,11 +692,18 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   swatch: {
-    width: "8.8%",
-    aspectRatio: 1,
     borderRadius: 100,
     borderWidth: 3,
     borderColor: "transparent", // Always have border to prevent layout shift
+  },
+  swatchPortrait: {
+    width: "8.8%",
+    aspectRatio: 1,
+  },
+  swatchLandscape: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   swatchActive: {
     borderColor: "#111", // Just change color, not width
