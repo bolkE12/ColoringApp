@@ -307,139 +307,133 @@ export default function ColoringScreen() {
               </Pressable>
             </View>
 
-            {/* Main content area with left (colors) and right (buttons) */}
-            <View style={styles.panelContentRow}>
-              {/* Left side: colors and brush width */}
-              <View style={styles.panelLeftContent}>
-                {/* Brush Width Selector - Only visible when brush tool is active */}
-                {activeTool === "brush" && (
-                  <View style={styles.brushWidthRow}>
-                    {[4, 8, 16, 24].map((width) => (
-                      <Pressable
-                        key={width}
-                        onPress={() => setBrushWidth(width)}
-                        style={[
-                          styles.brushWidthBtn,
-                          brushWidth === width && styles.brushWidthBtnActive
-                        ]}
-                      >
-                        <View
-                          style={[
-                            styles.brushWidthDot,
-                            { width: width / 2, height: width / 2, borderRadius: width / 4 },
-                            brushWidth === width && styles.brushWidthDotActive
-                          ]}
-                        />
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-
-                {/* Palette */}
-                <View style={styles.palette}>
-                  {DEFAULT_COLORS.map((c) => (
-                    <ColorSwatch
-                      key={c}
-                      color={c}
-                      isSelected={c === activeColor}
-                      onSelect={() => handleColorSelect(c)}
+            {/* Brush Width Selector - Only visible when brush tool is active */}
+            {activeTool === "brush" && (
+              <View style={styles.brushWidthRow}>
+                {[4, 8, 16, 24].map((width) => (
+                  <Pressable
+                    key={width}
+                    onPress={() => setBrushWidth(width)}
+                    style={[
+                      styles.brushWidthBtn,
+                      brushWidth === width && styles.brushWidthBtnActive
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.brushWidthDot,
+                        { width: width / 2, height: width / 2, borderRadius: width / 4 },
+                        brushWidth === width && styles.brushWidthDotActive
+                      ]}
                     />
-                  ))}
-                </View>
-              </View>
-
-              {/* Right side: Action buttons vertically aligned */}
-              <View style={styles.panelRightButtons}>
-                {/* Undo Button */}
-                <Pressable
-                  onPress={() => {
-                    canvasRef.current?.undo();
-                  }}
-                  style={styles.ghostBtn}
-                >
-                  <RotateCcw size={16} color="#333" />
-                  <Text style={styles.ghostText}>Undo</Text>
-                </Pressable>
-
-                {/* Clear Button */}
-                <Pressable
-                  onPress={() => {
-                    canvasRef.current?.clear();
-                  }}
-                  style={styles.ghostBtn}
-                >
-                  <Trash2 size={16} color="#333" />
-                  <Text style={styles.ghostText}>Clear</Text>
-                </Pressable>
-
-                {/* Save Button */}
-                <LinearGradient
-                  colors={["#00C950", "#00BC7D"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.saveBtn}
-                >
-                  <Pressable
-                    style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
-                    onPress={() => {
-                      const isUpdate = !!savedAnimalId;
-
-                      // Show modal and trigger confetti immediately for instant feedback
-                      if (!isUpdate) {
-                        setShowSuccessModal(true);
-                        setShowConfetti(true);
-                      } else {
-                        setShowConfetti(true);
-                        setTimeout(() => setShowConfetti(false), 3000);
-                      }
-
-                      // Defer the save operation to next tick so UI updates immediately
-                      setTimeout(async () => {
-                        try {
-                          // Save the image
-                          const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
-                          const animalKey = hybridKey || baseAnimalKey;
-                          if (imageUri && animalKey) {
-                            if (isUpdate) {
-                              // Update existing save (file already overwritten, update name too)
-                              await updateAnimal(savedAnimalId, imageUri, generatedName);
-                            } else {
-                              // First save - create new and store ID and URI
-                              const id = await saveAnimal(animalKey, generatedName, imageUri);
-                              setSavedAnimalId(id);
-                              setSavedImageUri(imageUri);
-                              setHasSaved(true);
-                            }
-                          }
-                        } catch (error) {
-                          console.error("Save error:", error);
-                          // Hide confetti on error
-                          setShowConfetti(false);
-                          setShowSuccessModal(false);
-                          Alert.alert("Oops!", "Something went wrong. Please try again.");
-                        }
-                      }, 0);
-                    }}
-                  >
-                    <Save size={18} color="#fff" />
-                    <Text style={styles.saveText}>Save to Pen</Text>
                   </Pressable>
-                </LinearGradient>
-
-                {/* View Animal Pen - Only show after saving */}
-                {hasSaved && (
-                  <Pressable
-                    onPress={() => {
-                      navigation.navigate("Pen" as never);
-                    }}
-                    style={styles.ghostBtn}
-                  >
-                    <PawPrint size={16} color="#333" />
-                    <Text style={styles.ghostText}>View My Animal Pen</Text>
-                  </Pressable>
-                )}
+                ))}
               </View>
+            )}
+
+            {/* Palette - 10 swatches per row */}
+            <View style={styles.palette}>
+              {DEFAULT_COLORS.map((c) => (
+                <ColorSwatch
+                  key={c}
+                  color={c}
+                  isSelected={c === activeColor}
+                  onSelect={() => handleColorSelect(c)}
+                />
+              ))}
             </View>
+
+            {/* Action Buttons Row */}
+            <View style={styles.actionButtonsRow}>
+              {/* Undo Button - 25% width */}
+              <Pressable
+                onPress={() => {
+                  canvasRef.current?.undo();
+                }}
+                style={styles.actionBtn}
+              >
+                <RotateCcw size={16} color="#333" />
+                <Text style={styles.actionBtnText}>Undo</Text>
+              </Pressable>
+
+              {/* Clear Button - 25% width */}
+              <Pressable
+                onPress={() => {
+                  canvasRef.current?.clear();
+                }}
+                style={styles.actionBtn}
+              >
+                <Trash2 size={16} color="#333" />
+                <Text style={styles.actionBtnText}>Clear</Text>
+              </Pressable>
+
+              {/* Save Button - 50% width */}
+              <LinearGradient
+                colors={["#00C950", "#00BC7D"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.actionBtnSave}
+              >
+                <Pressable
+                  style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
+                  onPress={() => {
+                    const isUpdate = !!savedAnimalId;
+
+                    // Show modal and trigger confetti immediately for instant feedback
+                    if (!isUpdate) {
+                      setShowSuccessModal(true);
+                      setShowConfetti(true);
+                    } else {
+                      setShowConfetti(true);
+                      setTimeout(() => setShowConfetti(false), 3000);
+                    }
+
+                    // Defer the save operation to next tick so UI updates immediately
+                    setTimeout(async () => {
+                      try {
+                        // Save the image
+                        const imageUri = await canvasRef.current?.save(savedImageUri || undefined);
+                        const animalKey = hybridKey || baseAnimalKey;
+                        if (imageUri && animalKey) {
+                          if (isUpdate) {
+                            // Update existing save (file already overwritten, update name too)
+                            await updateAnimal(savedAnimalId, imageUri, generatedName);
+                          } else {
+                            // First save - create new and store ID and URI
+                            const id = await saveAnimal(animalKey, generatedName, imageUri);
+                            setSavedAnimalId(id);
+                            setSavedImageUri(imageUri);
+                            setHasSaved(true);
+                          }
+                        }
+                      } catch (error) {
+                        console.error("Save error:", error);
+                        // Hide confetti on error
+                        setShowConfetti(false);
+                        setShowSuccessModal(false);
+                        Alert.alert("Oops!", "Something went wrong. Please try again.");
+                      }
+                    }, 0);
+                  }}
+                >
+                  <Save size={18} color="#fff" />
+                  <Text style={styles.saveText}>Save to Pen</Text>
+                </Pressable>
+              </LinearGradient>
+            </View>
+
+            {/* View Animal Pen - Only show after saving */}
+            {hasSaved && (
+              <Pressable
+                onPress={() => {
+                  navigation.navigate("Pen" as never);
+                }}
+                style={styles.viewPenBtn}
+              >
+                <PawPrint size={16} color="#333" />
+                <Text style={styles.ghostText}>View My Animal Pen</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </SafeAreaView>
@@ -587,18 +581,6 @@ const styles = StyleSheet.create({
     elevation: 10,
     gap: 12,
   },
-  panelContentRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  panelLeftContent: {
-    flex: 1,
-  },
-  panelRightButtons: {
-    flexDirection: "column",
-    gap: 8,
-    justifyContent: "flex-start",
-  },
   panelTitle: {
     fontFamily: "MadimiOne_400Regular",
     color: "#111",
@@ -681,14 +663,66 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   swatch: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     borderWidth: 3,
     borderColor: "transparent", // Always have border to prevent layout shift
   },
   swatchActive: {
     borderColor: "#111", // Just change color, not width
+  },
+  actionButtonsRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignSelf: "stretch",
+    width: "100%",
+    marginTop: 8,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#999",
+  },
+  actionBtnSave: {
+    flex: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  actionBtnText: {
+    fontFamily: "MadimiOne_400Regular",
+    color: "#333",
+    fontSize: 14,
+  },
+  viewPenBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#999",
+    marginTop: 8,
   },
   row: {
     flexDirection: "row",
