@@ -590,7 +590,6 @@ const styles = StyleSheet.create({
   panelContentRow: {
     flexDirection: "row",
     gap: 12,
-    flex: 1,
   },
   panelLeftContent: {
     flex: 1,
@@ -675,17 +674,16 @@ const styles = StyleSheet.create({
   palette: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 8,
     alignItems: "center",
     marginBlock: 8,
     alignSelf: "stretch",
     width: "100%",
-    justifyContent: "space-between",
   },
   swatch: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 3,
     borderColor: "transparent", // Always have border to prevent layout shift
   },
