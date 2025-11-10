@@ -554,6 +554,7 @@ const styles = StyleSheet.create({
   mainLandscape: {
     flexDirection: "row",
     gap: 16,
+    alignItems: "flex-start",
   },
   canvasWrapPortrait: {
     width: "100%",
@@ -600,7 +601,6 @@ const styles = StyleSheet.create({
   },
   panelLandscape: {
     width: 280,
-    height: '100%',
   },
   panelTitle: {
     fontFamily: "MadimiOne_400Regular",
