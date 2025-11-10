@@ -47,6 +47,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
   const hybridScale = useRef(new Animated.Value(0)).current;
   const hybridOpacity = useRef(new Animated.Value(0)).current;
   const hybridRotate = useRef(new Animated.Value(0)).current;
+  const hybridY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
@@ -66,105 +67,106 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
       hybridScale.setValue(0);
       hybridOpacity.setValue(0);
       hybridRotate.setValue(0);
+      hybridY.setValue(0);
 
       // Sequence of animations
       Animated.sequence([
-        // Phase 1: Animals slide in from sides toward center (800ms)
+        // Phase 1: Animals slide in from sides toward center (1000ms)
         Animated.parallel([
           Animated.timing(animal1X, {
             toValue: CENTER_X - TILE_SIZE - 20,
-            duration: 800,
+            duration: 1000,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }),
           Animated.timing(animal2X, {
             toValue: CENTER_X + 20,
-            duration: 800,
+            duration: 1000,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }),
           // Add slight rotation as they move
           Animated.timing(animal1Rotate, {
             toValue: -15,
-            duration: 800,
+            duration: 1000,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }),
           Animated.timing(animal2Rotate, {
             toValue: 15,
-            duration: 800,
+            duration: 1000,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }),
         ]),
 
-        // Phase 2: Quick smash together (300ms)
+        // Phase 2: Quick smash together (375ms)
         Animated.parallel([
           Animated.timing(animal1X, {
             toValue: CENTER_X - TILE_SIZE / 2,
-            duration: 300,
+            duration: 375,
             easing: Easing.in(Easing.cubic),
             useNativeDriver: true,
           }),
           Animated.timing(animal2X, {
             toValue: CENTER_X - TILE_SIZE / 2,
-            duration: 300,
+            duration: 375,
             easing: Easing.in(Easing.cubic),
             useNativeDriver: true,
           }),
           // Spin faster as they collide
           Animated.timing(animal1Rotate, {
             toValue: -360,
-            duration: 300,
+            duration: 375,
             easing: Easing.in(Easing.cubic),
             useNativeDriver: true,
           }),
           Animated.timing(animal2Rotate, {
             toValue: 360,
-            duration: 300,
+            duration: 375,
             easing: Easing.in(Easing.cubic),
             useNativeDriver: true,
           }),
           // Scale up on collision
           Animated.timing(animal1Scale, {
             toValue: 1.3,
-            duration: 150,
+            duration: 188,
             useNativeDriver: true,
           }),
           Animated.timing(animal2Scale, {
             toValue: 1.3,
-            duration: 150,
+            duration: 188,
             useNativeDriver: true,
           }),
         ]),
 
-        // Phase 3: Collision impact - scale down and fade out (200ms)
+        // Phase 3: Collision impact - scale down and fade out (250ms)
         Animated.parallel([
           Animated.timing(animal1Scale, {
             toValue: 0,
-            duration: 200,
+            duration: 250,
             easing: Easing.in(Easing.cubic),
             useNativeDriver: true,
           }),
           Animated.timing(animal2Scale, {
             toValue: 0,
-            duration: 200,
+            duration: 250,
             easing: Easing.in(Easing.cubic),
             useNativeDriver: true,
           }),
           Animated.timing(animal1Opacity, {
             toValue: 0,
-            duration: 200,
+            duration: 250,
             useNativeDriver: true,
           }),
           Animated.timing(animal2Opacity, {
             toValue: 0,
-            duration: 200,
+            duration: 250,
             useNativeDriver: true,
           }),
         ]),
 
-        // Phase 4: Hybrid appears with explosion effect (500ms)
+        // Phase 4: Hybrid appears with explosion effect (625ms)
         Animated.parallel([
           Animated.spring(hybridScale, {
             toValue: 1,
@@ -174,19 +176,41 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
           }),
           Animated.timing(hybridOpacity, {
             toValue: 1,
-            duration: 300,
+            duration: 375,
             useNativeDriver: true,
           }),
           Animated.timing(hybridRotate, {
             toValue: 360,
-            duration: 500,
+            duration: 625,
             easing: Easing.out(Easing.back(1.5)),
             useNativeDriver: true,
           }),
         ]),
 
-        // Phase 5: Hold for a moment (300ms)
-        Animated.delay(300),
+        // Phase 5: Hold for a moment (375ms)
+        Animated.delay(375),
+
+        // Phase 6: Hybrid enlarges and flies towards screen (750ms)
+        Animated.parallel([
+          Animated.timing(hybridScale, {
+            toValue: 3.5,
+            duration: 750,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(hybridY, {
+            toValue: -100,
+            duration: 750,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(hybridOpacity, {
+            toValue: 0,
+            duration: 750,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
       ]).start(() => {
         // Animation complete, trigger navigation
         onComplete();
@@ -255,6 +279,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
             styles.hybridContainer,
             {
               transform: [
+                { translateY: hybridY },
                 { scale: hybridScale },
                 {
                   rotate: hybridRotate.interpolate({
