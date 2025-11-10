@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
   },
   swatchLandscape: {
-    width: "19%",
+    width: "18%",
     aspectRatio: 1,
   },
   swatchActive: {
