@@ -76,7 +76,6 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   width = "100%",
   height = "100%"
 }, ref) => {
-  console.log('[GlColoringCanvas] RENDERING - this should NOT happen on color change!');
   const [error, setError] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
@@ -296,8 +295,6 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
     clear: () => {
       if (!originalPixelDataRef.current || !glRef.current || !baseTextureRef.current) return;
 
-      console.log('[GlColoringCanvas] Clearing to original state');
-
       // Reset to original state
       pixelDataRef.current = new Uint8ClampedArray(originalPixelDataRef.current);
       historyRef.current = [];
@@ -350,7 +347,6 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
         // Return the file URI for local storage
         return fileUri;
       } catch (error) {
-        console.error('[Save] Error during save:', error);
         throw error;
       }
     },
@@ -448,7 +444,6 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
       render();
 
     } catch (err) {
-      console.error("[GlColoringCanvas] Error:", err);
       setError(err instanceof Error ? err.message : String(err));
     }
   }, [hybridKey, baseAnimalKey, existingImageUri, render]);
@@ -458,8 +453,6 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   const drawBrushStroke = useCallback((x: number, y: number, pixels: Uint8ClampedArray) => {
     const color = hexToRgba(selectedColorRef.current);
     const radius = brushWidthRef.current / 2;
-
-    console.log('[GlColoringCanvas] drawBrushStroke - color:', color, 'radius:', radius);
 
     // Draw a filled circle
     for (let dy = -radius; dy <= radius; dy++) {
@@ -504,29 +497,22 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   }, [drawBrushStroke]);
 
   const handleTouchStart = useCallback((event: any) => {
-    console.log('[GlColoringCanvas] handleTouchStart - tool:', activeToolRef.current);
-
     if (activeToolRef.current !== "brush") return;
     if (!pixelDataRef.current) return;
 
     const { locationX, locationY } = event.nativeEvent;
     const layout = layoutRef.current;
 
-    console.log('[GlColoringCanvas] Brush touch start at:', locationX, locationY);
-
     // Convert touch to bitmap coordinates
     const imageX = locationX - layout.offsetX;
     const imageY = locationY - layout.offsetY;
 
     if (imageX < 0 || imageX >= layout.displayWidth || imageY < 0 || imageY >= layout.displayHeight) {
-      console.log('[GlColoringCanvas] Touch outside canvas bounds');
       return;
     }
 
     const bitmapX = Math.floor((imageX / layout.displayWidth) * TARGET_SIZE);
     const bitmapY = Math.floor((imageY / layout.displayHeight) * TARGET_SIZE);
-
-    console.log('[GlColoringCanvas] Drawing brush at bitmap coords:', bitmapX, bitmapY);
 
     // Save current state to history before making changes
     historyRef.current.push(new Uint8ClampedArray(pixelDataRef.current));
@@ -661,24 +647,19 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
           <View
             style={styles.touchOverlay}
             onStartShouldSetResponder={() => {
-              console.log('[GlColoringCanvas] onStartShouldSetResponder - returning true');
               return true;
             }}
             onMoveShouldSetResponder={() => {
-              console.log('[GlColoringCanvas] onMoveShouldSetResponder - tool:', activeToolRef.current);
               return activeToolRef.current === "brush";
             }}
             onResponderTerminationRequest={() => false}
             onResponderGrant={(event) => {
-              console.log('[GlColoringCanvas] onResponderGrant fired');
               handleTouchStart(event);
             }}
             onResponderMove={(event) => {
-              console.log('[GlColoringCanvas] onResponderMove fired');
               handleTouchMove(event);
             }}
             onResponderRelease={(event) => {
-              console.log('[GlColoringCanvas] onResponderRelease fired');
               handleTouchRelease(event);
             }}
           />

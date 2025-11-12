@@ -51,7 +51,6 @@ const ColorSwatch = React.memo(({
   onSelect: () => void;
   swatchStyle?: any;
 }) => {
-  console.log('[ColorSwatch] Rendering:', color, 'selected:', isSelected);
   return (
     <TouchableOpacity
       activeOpacity={0.7}
@@ -70,7 +69,6 @@ const ColorSwatch = React.memo(({
 });
 
 export default function ColoringScreen() {
-  console.log('[ColoringScreen] Rendering...');
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootStackParamList, "Coloring">>();
   const {
@@ -131,15 +129,8 @@ export default function ColoringScreen() {
 
   // Stable color select handler
   const handleColorSelect = useCallback((color: string) => {
-    console.log('[ColorSelect] Pressed, starting...');
-    const t0 = Date.now();
     setActiveColor(color);
-    const t1 = Date.now();
-    console.log('[ColorSelect] setActiveColor took:', t1 - t0, 'ms');
     canvasRef.current?.setColor(color);
-    const t2 = Date.now();
-    console.log('[ColorSelect] setColor took:', t2 - t1, 'ms');
-    console.log('[ColorSelect] Total onPress:', t2 - t0, 'ms');
   }, []);
 
   // Set initial color when canvas is ready (runs once)
@@ -188,18 +179,6 @@ export default function ColoringScreen() {
       setCurrentNameIndex(currentNameIndex - 1);
     }
   }, [currentNameIndex]);
-
-  // Measure when layout is committed
-  useLayoutEffect(() => {
-    console.log('[ColoringScreen] useLayoutEffect - layout committed for color:', activeColor);
-  }, [activeColor]);
-
-  // Measure when effects run (after paint)
-  useEffect(() => {
-    console.log('[ColoringScreen] useEffect - paint complete for color:', activeColor);
-  }, [activeColor]);
-
-  console.log('[ColoringScreen] About to render JSX, activeColor:', activeColor);
 
   if (!fontsLoaded) return null;
 
@@ -440,7 +419,6 @@ export default function ColoringScreen() {
                           }
                         }
                       } catch (error) {
-                        console.error("Save error:", error);
                         // Hide confetti on error
                         setShowConfetti(false);
                         setShowSuccessModal(false);
@@ -537,7 +515,6 @@ export default function ColoringScreen() {
                             }
                           }
                         } catch (error) {
-                          console.error("Save error:", error);
                           // Hide confetti on error
                           setShowConfetti(false);
                           setShowSuccessModal(false);
@@ -701,7 +678,6 @@ export default function ColoringScreen() {
                               }
                             }
                           } catch (error) {
-                            console.error("Save error:", error);
                             // Hide confetti on error
                             setShowConfetti(false);
                             setShowSuccessModal(false);

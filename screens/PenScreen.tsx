@@ -56,7 +56,7 @@ export default function PenScreen() {
       animals.sort((a, b) => b.timestamp - a.timestamp);
       setSavedAnimals(animals);
     } catch (error) {
-      console.error("Error loading animals:", error);
+      // Silently fail - user will see empty state
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,6 @@ export default function PenScreen() {
               await deleteAnimal(animal.id);
               await loadAnimals();
             } catch (error) {
-              console.error("Error deleting animal:", error);
               Alert.alert("Error", "Failed to delete animal");
             }
           },
@@ -108,7 +107,6 @@ export default function PenScreen() {
       await MediaLibrary.createAssetAsync(animal.imageUri);
       Alert.alert("Success!", `${animal.animalName} has been saved to your photo gallery!`);
     } catch (error) {
-      console.error("Error downloading animal:", error);
       Alert.alert("Download Failed", "Could not save image to gallery. This feature requires a development build.");
     }
   };
