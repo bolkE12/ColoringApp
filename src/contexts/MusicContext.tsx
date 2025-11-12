@@ -17,12 +17,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     async function setupAudioMode() {
       try {
         await setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: false,
-          shouldDuckAndroid: true,
+          playsInSilentMode: true,
         });
       } catch (error) {
-        console.error('Error setting audio mode:', error);
+        // Silently fail - audio mode is optional
       }
     }
 

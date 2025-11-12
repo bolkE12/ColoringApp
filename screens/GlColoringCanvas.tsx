@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, DimensionValue } from "react-native";
 import { GLView, ExpoWebGLRenderingContext } from "expo-gl";
 import * as FileSystem from "expo-file-system/legacy";
 import * as MediaLibrary from "expo-media-library";
@@ -17,8 +17,8 @@ interface GlColoringCanvasProps {
   existingImageUri?: string;
   activeTool: "fill" | "brush";
   brushWidth: number;
-  width?: string | number;
-  height?: string | number;
+  width?: DimensionValue;
+  height?: DimensionValue;
 }
 
 export interface GlColoringCanvasRef {
@@ -80,7 +80,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   // Store WebGL context and resources
-  const glRef = useRef<WebGLRenderingContext | null>(null);
+  const glRef = useRef<ExpoWebGLRenderingContext | null>(null);
   const pixelDataRef = useRef<Uint8ClampedArray | null>(null);
   const originalPixelDataRef = useRef<Uint8ClampedArray | null>(null);
   const baseTextureRef = useRef<WebGLTexture | null>(null);
@@ -96,7 +96,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   const lastBrushPointRef = useRef<{ x: number; y: number } | null>(null);
 
   // Compile shader
-  const compileShader = (gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null => {
+  const compileShader = (gl: ExpoWebGLRenderingContext, type: number, source: string): WebGLShader | null => {
     const shader = gl.createShader(type);
     if (!shader) return null;
 
@@ -113,7 +113,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   };
 
   // Create shader program
-  const createProgram = (gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string): WebGLProgram | null => {
+  const createProgram = (gl: ExpoWebGLRenderingContext, vertexSource: string, fragmentSource: string): WebGLProgram | null => {
     const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
     const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
 
@@ -136,7 +136,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   };
 
   // Setup quad geometry (two triangles covering the viewport)
-  const setupQuad = (gl: WebGLRenderingContext, program: WebGLProgram) => {
+  const setupQuad = (gl: ExpoWebGLRenderingContext, program: WebGLProgram) => {
     // Positions (clip space -1 to 1)
     const positions = new Float32Array([
       -1, -1,  // bottom-left
@@ -173,7 +173,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   };
 
   // Create texture from pixel data
-  const createTexture = (gl: WebGLRenderingContext, pixels: Uint8ClampedArray, width: number, height: number): WebGLTexture | null => {
+  const createTexture = (gl: ExpoWebGLRenderingContext, pixels: Uint8ClampedArray, width: number, height: number): WebGLTexture | null => {
     const texture = gl.createTexture();
     if (!texture) return null;
 
@@ -356,7 +356,7 @@ const GlColoringCanvas = forwardRef<GlColoringCanvasRef, GlColoringCanvasProps>(
   }), [updateOverlayFromPixelData]);
 
   // Initialize WebGL context
-  const onContextCreate = useCallback(async (gl: WebGLRenderingContext) => {
+  const onContextCreate = useCallback(async (gl: ExpoWebGLRenderingContext) => {
     try {
       glRef.current = gl;
 
