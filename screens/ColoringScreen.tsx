@@ -388,7 +388,10 @@ export default function ColoringScreen() {
                 {hasSaved && (
                   <Pressable
                     onPress={() => {
-                      navigation.navigate("Pen" as never);
+                      navigation.reset({
+                        index: 1,
+                        routes: [{ name: "Home" as never }, { name: "Pen" as never }],
+                      });
                     }}
                     style={styles.actionBtn}
                   >
@@ -482,7 +485,10 @@ export default function ColoringScreen() {
                 {hasSaved && (
                   <Pressable
                     onPress={() => {
-                      navigation.navigate("Pen" as never);
+                      navigation.reset({
+                        index: 1,
+                        routes: [{ name: "Home" as never }, { name: "Pen" as never }],
+                      });
                     }}
                     style={styles.actionBtnLandscape}
                   >
@@ -643,7 +649,10 @@ export default function ColoringScreen() {
                   {hasSaved && (
                     <Pressable
                       onPress={() => {
-                        navigation.navigate("Pen" as never);
+                        navigation.reset({
+                          index: 1,
+                          routes: [{ name: "Home" as never }, { name: "Pen" as never }],
+                        });
                       }}
                       style={styles.actionBtn}
                     >
