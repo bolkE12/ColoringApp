@@ -22,6 +22,7 @@ import * as MediaLibrary from "expo-media-library";
 import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAnimals";
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { MusicToggle } from "../src/components/MusicToggle";
+import { UnlockButton } from "../src/components/UnlockButton";
 
 export default function PenScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -207,6 +208,9 @@ export default function PenScreen() {
           />
         </View>
       </SafeAreaView>
+
+      {/* Unlock Button */}
+      <UnlockButton />
     </ImageBackground>
   );
 }

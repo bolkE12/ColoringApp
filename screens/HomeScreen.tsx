@@ -23,6 +23,8 @@ import { getBaseRequire } from "../assets/base";
 import { HYBRID_SOURCES } from "../assets/hybrid";
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { MusicToggle } from "../src/components/MusicToggle";
+import { UnlockButton } from "../src/components/UnlockButton";
+import { usePurchase, FREE_ANIMALS } from "../src/contexts/PurchaseContext";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
 type Animal = typeof ANIMALS[number];
@@ -31,9 +33,18 @@ type Animal = typeof ANIMALS[number];
 const HAS_HYBRID = new Set<string>(Object.keys(HYBRID_SOURCES ?? {}));
 const ALL_HYBRID_KEYS = Object.keys(HYBRID_SOURCES ?? {});
 
+// Get hybrid keys that only use free animals
+function getFreeHybridKeys(): string[] {
+  return ALL_HYBRID_KEYS.filter(key => {
+    const [a, b] = key.split("_");
+    return FREE_ANIMALS.includes(a) && FREE_ANIMALS.includes(b);
+  });
+}
+
 function pickRandomPair(): [Animal, Animal] {
-  if (!ALL_HYBRID_KEYS.length) return ["monkey", "zebra"] as [Animal, Animal];
-  const key = ALL_HYBRID_KEYS[Math.floor(Math.random() * ALL_HYBRID_KEYS.length)];
+  const freeHybrids = getFreeHybridKeys();
+  if (!freeHybrids.length) return ["lion", "fox"] as [Animal, Animal];
+  const key = freeHybrids[Math.floor(Math.random() * freeHybrids.length)];
   const [a, b] = key.split("_") as [Animal, Animal];
   // Randomize which side each base animal appears on
   return Math.random() < 0.5 ? [a, b] : [b, a];
@@ -54,6 +65,7 @@ function hybridKey(a: Animal, b: Animal) {
 
 export default function App() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { getUnlockedAnimals } = usePurchase();
 
   const initialPair = useRef<[Animal, Animal]>(pickRandomPair()).current;
   const [leftAnimal, setLeftAnimal] = useState<Animal>(initialPair[0]);
@@ -394,10 +406,11 @@ function cyclePair() {
               <Pressable
                 style={styles.baseBox}
                 onPress={() => {
-                  const idx = ANIMALS.indexOf(leftAnimal);
-                  let next = ANIMALS[(idx + 1) % ANIMALS.length];
+                  const unlockedAnimals = getUnlockedAnimals() as Animal[];
+                  const idx = unlockedAnimals.indexOf(leftAnimal);
+                  let next = unlockedAnimals[(idx + 1) % unlockedAnimals.length];
                   if (next === rightAnimal) {
-                    next = ANIMALS[(idx + 2) % ANIMALS.length];
+                    next = unlockedAnimals[(idx + 2) % unlockedAnimals.length];
                   }
                   animateSideSwap(leftSwap, setLeftAnimal, next);
                 }}
@@ -426,9 +439,10 @@ function cyclePair() {
               <Pressable
                 style={styles.baseBox}
                 onPress={() => {
-                  const idx = ANIMALS.indexOf(rightAnimal);
-                  let next = ANIMALS[(idx + 1) % ANIMALS.length];
-                  if (next === leftAnimal) next = ANIMALS[(idx + 2) % ANIMALS.length];
+                  const unlockedAnimals = getUnlockedAnimals() as Animal[];
+                  const idx = unlockedAnimals.indexOf(rightAnimal);
+                  let next = unlockedAnimals[(idx + 1) % unlockedAnimals.length];
+                  if (next === leftAnimal) next = unlockedAnimals[(idx + 2) % unlockedAnimals.length];
                   animateSideSwap(rightSwap, setRightAnimal, next);
                 }}
               >
@@ -455,6 +469,9 @@ function cyclePair() {
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Unlock Button */}
+      <UnlockButton />
     </ImageBackground>
   );
 }

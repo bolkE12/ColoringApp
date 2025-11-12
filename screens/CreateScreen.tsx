@@ -15,6 +15,7 @@ import {
   Animated,
   Easing,
   Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -24,6 +25,8 @@ import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import { MusicToggle } from "../src/components/MusicToggle";
 import { HybridAnimationOverlay } from "../src/components/HybridAnimationOverlay";
+import { UnlockButton } from "../src/components/UnlockButton";
+import { usePurchase } from "../src/contexts/PurchaseContext";
 
 // PNG requires for base animals
 const LION = require("../assets/base/lion.png");
@@ -94,6 +97,7 @@ function AnimalImage({
 
 export default function CreateScreen() {
   const navigation = useNavigation<any>();
+  const { isAnimalUnlocked } = usePurchase();
 
   // Track dimensions for responsive layout
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
@@ -162,6 +166,19 @@ export default function CreateScreen() {
   };
 
   const toggleSelect = (id: string) => {
+    // Check if animal is locked
+    if (!isAnimalUnlocked(id)) {
+      Alert.alert(
+        'Locked Animal',
+        'Unlock all animals for just $0.99 to create amazing hybrids!',
+        [
+          { text: 'Maybe Later', style: 'cancel' },
+          { text: 'Unlock Now', onPress: () => {} }, // Will trigger purchase flow
+        ]
+      );
+      return;
+    }
+
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSelected((prev) => {
       const isSelected = prev.includes(id);
@@ -286,6 +303,7 @@ export default function CreateScreen() {
             extraData={selected}
             renderItem={({ item }) => {
               const isSelected = selected.includes(item.id);
+              const isLocked = !isAnimalUnlocked(item.id);
               const tileWidth = (dimensions.width - GRID_GAP * (numColumns - 1) - 48) / numColumns;
               return (
                 <View style={[styles.tileShell, { width: tileWidth }]}>
@@ -310,6 +328,11 @@ export default function CreateScreen() {
                         <MaterialCommunityIcons name="check-bold" color="#111" size={14} />
                       </View>
                     )}
+                    {isLocked && (
+                      <View style={styles.lockOverlay}>
+                        <MaterialCommunityIcons name="lock" color="#fff" size={32} />
+                      </View>
+                    )}
                   </Pressable>
                 </View>
               );
@@ -317,6 +340,9 @@ export default function CreateScreen() {
           />
         </View>
       </SafeAreaView>
+
+      {/* Unlock Button */}
+      <UnlockButton />
 
       {/* Hybrid Animation Overlay */}
       {showAnimation && pendingNavigation?.hybridKey && (
@@ -533,6 +559,13 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
     zIndex: 2,
+  },
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: TILE_RADIUS,
   },
   primarySpacer: {
     height: 64, // roughly matches button height + margin

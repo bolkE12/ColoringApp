@@ -26,6 +26,7 @@ import GlColoringCanvas, { GlColoringCanvasRef } from "./GlColoringCanvas";
 import { saveAnimal, updateAnimal } from "../src/utils/savedAnimals";
 import { generateSillyName } from "../src/utils/nameGenerator";
 import { MusicToggle } from "../src/components/MusicToggle";
+import { UnlockButton } from "../src/components/UnlockButton";
 
 // Import the correct navigation types
 import type { RootStackParamList } from "../navigation/AppNavigator";
@@ -735,6 +736,9 @@ export default function ColoringScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Unlock Button */}
+      <UnlockButton />
     </ImageBackground>
   );
 }

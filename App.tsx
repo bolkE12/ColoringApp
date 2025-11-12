@@ -1,10 +1,13 @@
 import AppNavigator from "./navigation/AppNavigator";
 import { MusicProvider } from "./src/contexts/MusicContext";
+import { PurchaseProvider } from "./src/contexts/PurchaseContext";
 
 export default function App() {
   return (
-    <MusicProvider>
-      <AppNavigator />
-    </MusicProvider>
+    <PurchaseProvider>
+      <MusicProvider>
+        <AppNavigator />
+      </MusicProvider>
+    </PurchaseProvider>
   );
 }
