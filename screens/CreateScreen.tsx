@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import { MusicToggle } from "../src/components/MusicToggle";
@@ -195,7 +195,7 @@ export default function CreateScreen() {
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <Ionicons name="arrow-back" color="#111" size={18} />
+            <MaterialCommunityIcons name="arrow-left" color="#111" size={18} />
             <Text style={styles.backText}>Back</Text>
           </Pressable>
 
@@ -211,7 +211,7 @@ export default function CreateScreen() {
           {/* Selection area */}
           {selected.length === 0 ? (
             <View style={styles.selector}>
-              <Ionicons name="help-circle" color="#111" size={40} />
+              <MaterialCommunityIcons name="help-circle" color="#111" size={40} />
               <Text style={styles.selectorLabel}>Pick animal(s)</Text>
             </View>
           ) : (
@@ -236,7 +236,7 @@ export default function CreateScreen() {
               ) : (
                 <View style={[styles.slotBox, styles.slotOptional]}>
                   <View style={styles.slotQuestion}>
-                    <Ionicons name="help-circle" color="#111" size={40} />
+                    <MaterialCommunityIcons name="help-circle" color="#111" size={40} />
                     <Text style={styles.slotOptionalText}>Optional</Text>
                   </View>
                 </View>
@@ -266,7 +266,7 @@ export default function CreateScreen() {
                     }
                   }}
                 >
-                  <Ionicons name="add" color="#fff" size={18} style={{ marginRight: 8 }} />
+                  <MaterialCommunityIcons name="plus" color="#fff" size={18} style={{ marginRight: 8 }} />
                   <Text style={styles.primaryText}>
                     {TwoSelected ? "Create My Hybrid!" : "Color My Animal!"}
                   </Text>
@@ -307,7 +307,7 @@ export default function CreateScreen() {
                     </View>
                     {isSelected && (
                       <View style={styles.checkBadge}>
-                        <Ionicons name="checkmark" color="#111" size={14} />
+                        <MaterialCommunityIcons name="check-bold" color="#111" size={14} />
                       </View>
                     )}
                   </Pressable>

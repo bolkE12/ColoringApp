@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
@@ -442,14 +442,14 @@ function cyclePair() {
           {/* Buttons */}
           <View style={styles.buttons}>
             <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate("Create")}>
-              <Ionicons name="add" color="#fff" size={20} style={{ marginRight: 8 }} />
+              <MaterialCommunityIcons name="plus" color="#fff" size={20} style={{ marginRight: 8 }} />
               <Text style={styles.primaryText}>
                 Create and Color Your Own Animal!
               </Text>
             </Pressable>
 
             <Pressable style={styles.secondaryBtn} onPress={() => navigation.navigate("Pen")}>
-              <Ionicons name="paw" color="#333" size={20} style={{ marginRight: 8 }} />
+              <MaterialCommunityIcons name="paw" color="#333" size={20} style={{ marginRight: 8 }} />
               <Text style={styles.secondaryText}>My Animal Pen</Text>
             </Pressable>
           </View>

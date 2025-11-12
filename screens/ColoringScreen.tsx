@@ -18,7 +18,7 @@ import ConfettiCannon from "react-native-confetti-cannon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Speech from 'expo-speech';
@@ -197,7 +197,7 @@ export default function ColoringScreen() {
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <Ionicons name="arrow-back" color="#111" size={18} />
+            <MaterialCommunityIcons name="arrow-left" color="#111" size={18} />
             <Text style={styles.backText}>Back</Text>
           </Pressable>
 
@@ -208,7 +208,7 @@ export default function ColoringScreen() {
               accessibilityLabel="Previous name"
               disabled={currentNameIndex === 0}
             >
-              <Ionicons name="chevron-back" size={28} color={currentNameIndex === 0 ? "#999" : "#FFD93D"} />
+              <MaterialCommunityIcons name="chevron-left" size={28} color={currentNameIndex === 0 ? "#999" : "#FFD93D"} />
             </Pressable>
             <Text style={styles.screenTitle}>{generatedName}</Text>
             <Pressable
@@ -216,14 +216,14 @@ export default function ColoringScreen() {
               style={styles.speakerBtn}
               accessibilityLabel="Next name"
             >
-              <Ionicons name="chevron-forward" size={28} color="#FFD93D" />
+              <MaterialCommunityIcons name="chevron-right" size={28} color="#FFD93D" />
             </Pressable>
             <Pressable
               onPress={speakName}
               style={styles.speakerBtn}
               accessibilityLabel="Hear name spoken aloud"
             >
-              <Ionicons name="volume-high" size={32} color="#FFD93D" />
+              <MaterialCommunityIcons name="volume-high" size={32} color="#FFD93D" />
             </Pressable>
           </View>
 
@@ -271,7 +271,7 @@ export default function ColoringScreen() {
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12, flexGrow: 1 }}>
                 <View style={[styles.panelHeaderContainer]}>
                   <View style={styles.panelHeader}>
-                    <Ionicons name="color-palette" size={24} color="#111" />
+                    <MaterialCommunityIcons name="palette" size={24} color="#111" />
                     <Text style={styles.panelTitle}>Colors</Text>
                   </View>
                 </View>
@@ -282,7 +282,7 @@ export default function ColoringScreen() {
                 onPress={() => setActiveTool("fill")}
                 style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
               >
-                <Ionicons name="water" size={16} color={activeTool === "fill" ? "#fff" : "#333"} />
+                <MaterialCommunityIcons name="water" size={16} color={activeTool === "fill" ? "#fff" : "#333"} />
                 <Text style={[styles.toolText, activeTool === "fill" && styles.toolTextActive]}>
                   Fill
                 </Text>
@@ -291,7 +291,7 @@ export default function ColoringScreen() {
                 onPress={() => setActiveTool("brush")}
                 style={[styles.toolBtn, activeTool === "brush" && styles.toolBtnActive]}
               >
-                <Ionicons name="brush" size={16} color={activeTool === "brush" ? "#fff" : "#333"} />
+                <MaterialCommunityIcons name="brush" size={16} color={activeTool === "brush" ? "#fff" : "#333"} />
                 <Text style={[styles.toolText, activeTool === "brush" && styles.toolTextActive]}>
                   Brush
                 </Text>
@@ -348,7 +348,7 @@ export default function ColoringScreen() {
                   }}
                   style={styles.actionBtn}
                 >
-                  <Ionicons name="arrow-undo" size={16} color="#333" />
+                  <MaterialCommunityIcons name="undo-variant" size={16} color="#333" />
                   <Text style={styles.actionBtnText}>Undo</Text>
                 </Pressable>
 
@@ -359,7 +359,7 @@ export default function ColoringScreen() {
                   }}
                   style={styles.actionBtn}
                 >
-                  <Ionicons name="trash" size={16} color="#333" />
+                  <MaterialCommunityIcons name="delete" size={16} color="#333" />
                   <Text style={styles.actionBtnText}>Clear</Text>
                 </Pressable>
 
@@ -374,7 +374,7 @@ export default function ColoringScreen() {
                     }}
                     style={styles.actionBtn}
                   >
-                    <Ionicons name="paw" size={16} color="#333" />
+                    <MaterialCommunityIcons name="paw" size={16} color="#333" />
                     <Text style={styles.actionBtnText}>View Pen</Text>
                   </Pressable>
                 )}
@@ -427,7 +427,7 @@ export default function ColoringScreen() {
                     }, 0);
                   }}
                 >
-                  <Ionicons name="save" size={18} color="#fff" />
+                  <MaterialCommunityIcons name="content-save" size={18} color="#fff" />
                   <Text style={styles.saveText}>Save to Pen</Text>
                 </Pressable>
               </LinearGradient>
@@ -443,7 +443,7 @@ export default function ColoringScreen() {
                     }}
                     style={styles.actionBtnLandscapeRow}
                   >
-                    <Ionicons name="arrow-undo" size={16} color="#333" />
+                    <MaterialCommunityIcons name="undo-variant" size={16} color="#333" />
                     <Text style={styles.actionBtnText}>Undo</Text>
                   </Pressable>
 
@@ -454,7 +454,7 @@ export default function ColoringScreen() {
                     }}
                     style={styles.actionBtnLandscapeRow}
                   >
-                    <Ionicons name="trash" size={16} color="#333" />
+                    <MaterialCommunityIcons name="delete" size={16} color="#333" />
                     <Text style={styles.actionBtnText}>Clear</Text>
                   </Pressable>
                 </View>
@@ -470,7 +470,7 @@ export default function ColoringScreen() {
                     }}
                     style={styles.actionBtnLandscape}
                   >
-                    <Ionicons name="paw" size={16} color="#333" />
+                    <MaterialCommunityIcons name="paw" size={16} color="#333" />
                     <Text style={styles.actionBtnText}>View Pen</Text>
                   </Pressable>
                 )}
@@ -523,7 +523,7 @@ export default function ColoringScreen() {
                       }, 0);
                     }}
                   >
-                    <Ionicons name="save" size={18} color="#fff" />
+                    <MaterialCommunityIcons name="content-save" size={18} color="#fff" />
                     <Text style={styles.saveText}>Save to Pen</Text>
                   </Pressable>
                 </LinearGradient>
@@ -534,7 +534,7 @@ export default function ColoringScreen() {
               <>
                 <View style={[styles.panelHeaderContainer]}>
                   <View style={styles.panelHeader}>
-                    <Ionicons name="color-palette" size={24} color="#111" />
+                    <MaterialCommunityIcons name="palette" size={24} color="#111" />
                     <Text style={styles.panelTitle}>Colors</Text>
                   </View>
                 </View>
@@ -545,7 +545,7 @@ export default function ColoringScreen() {
                     onPress={() => setActiveTool("fill")}
                     style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
                   >
-                    <Ionicons name="water" size={16} color={activeTool === "fill" ? "#fff" : "#333"} />
+                    <MaterialCommunityIcons name="water" size={16} color={activeTool === "fill" ? "#fff" : "#333"} />
                     <Text style={[styles.toolText, activeTool === "fill" && styles.toolTextActive]}>
                       Fill
                     </Text>
@@ -554,7 +554,7 @@ export default function ColoringScreen() {
                     onPress={() => setActiveTool("brush")}
                     style={[styles.toolBtn, activeTool === "brush" && styles.toolBtnActive]}
                   >
-                    <Ionicons name="brush" size={16} color={activeTool === "brush" ? "#fff" : "#333"} />
+                    <MaterialCommunityIcons name="brush" size={16} color={activeTool === "brush" ? "#fff" : "#333"} />
                     <Text style={[styles.toolText, activeTool === "brush" && styles.toolTextActive]}>
                       Brush
                     </Text>
@@ -607,7 +607,7 @@ export default function ColoringScreen() {
                     }}
                     style={styles.actionBtn}
                   >
-                    <Ionicons name="arrow-undo" size={16} color="#333" />
+                    <MaterialCommunityIcons name="undo-variant" size={16} color="#333" />
                     <Text style={styles.actionBtnText}>Undo</Text>
                   </Pressable>
 
@@ -618,7 +618,7 @@ export default function ColoringScreen() {
                     }}
                     style={styles.actionBtn}
                   >
-                    <Ionicons name="trash" size={16} color="#333" />
+                    <MaterialCommunityIcons name="delete" size={16} color="#333" />
                     <Text style={styles.actionBtnText}>Clear</Text>
                   </Pressable>
 
@@ -633,7 +633,7 @@ export default function ColoringScreen() {
                       }}
                       style={styles.actionBtn}
                     >
-                      <Ionicons name="paw" size={16} color="#333" />
+                      <MaterialCommunityIcons name="paw" size={16} color="#333" />
                       <Text style={styles.actionBtnText}>View Pen</Text>
                     </Pressable>
                   )}
@@ -686,7 +686,7 @@ export default function ColoringScreen() {
                         }, 0);
                       }}
                     >
-                      <Ionicons name="save" size={18} color="#fff" />
+                      <MaterialCommunityIcons name="content-save" size={18} color="#fff" />
                       <Text style={styles.saveText}>Save to Pen</Text>
                     </Pressable>
                   </LinearGradient>
@@ -720,7 +720,7 @@ export default function ColoringScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Ionicons name="sparkles" size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
+            <MaterialCommunityIcons name="shimmer" size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Amazing Work!</Text>
             <Text style={styles.modalMessage}>
               {generatedName} has been saved to your Animal Pen! 🎨
@@ -729,7 +729,7 @@ export default function ColoringScreen() {
               style={styles.modalButton}
               onPress={() => setShowSuccessModal(false)}
             >
-              <Ionicons name="thumbs-up" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <MaterialCommunityIcons name="thumb-up" size={20} color="#fff" style={{ marginRight: 8 }} />
               <Text style={styles.modalButtonText}>Awesome!</Text>
             </Pressable>
           </View>

@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import * as MediaLibrary from "expo-media-library";
 import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAnimals";
@@ -141,13 +141,13 @@ export default function PenScreen() {
             style={styles.downloadBtn}
             onPress={() => handleDownload(item)}
           >
-            <Ionicons name="download" size={16} color="#fff" />
+            <MaterialCommunityIcons name="download" size={16} color="#fff" />
           </Pressable>
           <Pressable
             style={styles.deleteBtn}
             onPress={() => handleDelete(item)}
           >
-            <Ionicons name="trash" size={16} color="#fff" />
+            <MaterialCommunityIcons name="delete" size={16} color="#fff" />
           </Pressable>
         </View>
       </Pressable>
@@ -183,7 +183,7 @@ export default function PenScreen() {
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <Ionicons name="arrow-back" color="#111" size={18} />
+            <MaterialCommunityIcons name="arrow-left" color="#111" size={18} />
             <Text style={styles.backText}>Back</Text>
           </Pressable>
 
