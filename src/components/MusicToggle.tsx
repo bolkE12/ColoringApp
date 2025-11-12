@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { Music2, VolumeX } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useMusic } from '../contexts/MusicContext';
 
 export function MusicToggle() {
@@ -13,9 +13,9 @@ export function MusicToggle() {
       accessibilityLabel={isMusicPlaying ? "Turn music off" : "Turn music on"}
     >
       {isMusicPlaying ? (
-        <Music2 size={24} color="#fff" />
+        <Ionicons name="musical-notes" size={24} color="#fff" />
       ) : (
-        <VolumeX size={24} color="#fff" />
+        <Ionicons name="volume-mute" size={24} color="#fff" />
       )}
     </Pressable>
   );
