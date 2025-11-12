@@ -24,6 +24,7 @@ import { HYBRID_SOURCES } from "../assets/hybrid";
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { MusicToggle } from "../src/components/MusicToggle";
 import { UnlockButton } from "../src/components/UnlockButton";
+import { SproutingImages } from "../src/components/SproutingImages";
 import { usePurchase, FREE_ANIMALS } from "../src/contexts/PurchaseContext";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
@@ -469,6 +470,9 @@ function cyclePair() {
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Sprouting saved animal images */}
+      <SproutingImages />
 
       {/* Unlock Button */}
       <UnlockButton />
