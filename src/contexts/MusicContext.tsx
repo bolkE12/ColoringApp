@@ -31,7 +31,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (player) {
       player.loop = true;
-      player.volume = 0.25;
+      player.volume = 0.125; // 50% quieter than original 0.25
       player.play();
     }
   }, [player]);
