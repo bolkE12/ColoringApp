@@ -12,14 +12,11 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [yearDigits, setYearDigits] = useState(['', '', '', '']);
+  const [birthYear, setBirthYear] = useState('');
   const [ageError, setAgeError] = useState('');
 
-  // Refs for the 4 digit inputs
-  const input1 = useRef<TextInput>(null);
-  const input2 = useRef<TextInput>(null);
-  const input3 = useRef<TextInput>(null);
-  const input4 = useRef<TextInput>(null);
+  // Single ref for the hidden input
+  const yearInputRef = useRef<TextInput>(null);
 
   console.log('🔓 UnlockButton render - isPremium:', isPremium);
 
@@ -31,40 +28,37 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
 
   console.log('🔓 Button showing (free user)');
 
-  const handleDigitChange = (index: number, value: string) => {
+  const handleYearChange = (value: string) => {
     // Only allow digits
-    if (value && !/^\d$/.test(value)) return;
+    if (value && !/^\d+$/.test(value)) return;
 
-    const newDigits = [...yearDigits];
-    newDigits[index] = value;
-    setYearDigits(newDigits);
+    setBirthYear(value);
     setAgeError('');
 
-    // Auto-focus next input
-    if (value && index < 3) {
-      const nextInput = [input1, input2, input3, input4][index + 1];
-      nextInput.current?.focus();
+    // Auto-submit when 4 digits entered
+    if (value.length === 4) {
+      setTimeout(() => handleVerifyAge(value), 300);
     }
   };
 
   const handleShowAgeVerification = () => {
     setShowModal(false);
-    setYearDigits(['', '', '', '']);
+    setBirthYear('');
     setAgeError('');
     setShowAgeVerification(true);
-    // Auto-focus first input after modal opens
-    setTimeout(() => input1.current?.focus(), 100);
+    // Auto-focus input after modal opens
+    setTimeout(() => yearInputRef.current?.focus(), 100);
   };
 
-  const handleVerifyAge = async () => {
-    const birthYear = yearDigits.join('');
+  const handleVerifyAge = async (yearToVerify?: string) => {
+    const yearStr = yearToVerify || birthYear;
 
-    if (birthYear.length !== 4) {
+    if (yearStr.length !== 4) {
       setAgeError('Please enter a complete year');
       return;
     }
 
-    const year = parseInt(birthYear, 10);
+    const year = parseInt(yearStr, 10);
     const currentYear = new Date().getFullYear();
     const age = currentYear - year;
 
@@ -153,44 +147,31 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               Please enter your birth year to confirm you are 18 or older
             </Text>
 
-            {/* 4 Digit Year Inputs */}
+            {/* Hidden single input for keyboard */}
+            <TextInput
+              ref={yearInputRef}
+              style={styles.hiddenInput}
+              keyboardType="number-pad"
+              maxLength={4}
+              value={birthYear}
+              onChangeText={handleYearChange}
+              autoFocus
+            />
+
+            {/* Visual 4 Digit Display */}
             <View style={styles.yearInputContainer}>
-              <TextInput
-                ref={input1}
-                style={styles.yearInput}
-                keyboardType="number-pad"
-                maxLength={1}
-                value={yearDigits[0]}
-                onChangeText={(value) => handleDigitChange(0, value)}
-                selectTextOnFocus
-              />
-              <TextInput
-                ref={input2}
-                style={styles.yearInput}
-                keyboardType="number-pad"
-                maxLength={1}
-                value={yearDigits[1]}
-                onChangeText={(value) => handleDigitChange(1, value)}
-                selectTextOnFocus
-              />
-              <TextInput
-                ref={input3}
-                style={styles.yearInput}
-                keyboardType="number-pad"
-                maxLength={1}
-                value={yearDigits[2]}
-                onChangeText={(value) => handleDigitChange(2, value)}
-                selectTextOnFocus
-              />
-              <TextInput
-                ref={input4}
-                style={styles.yearInput}
-                keyboardType="number-pad"
-                maxLength={1}
-                value={yearDigits[3]}
-                onChangeText={(value) => handleDigitChange(3, value)}
-                selectTextOnFocus
-              />
+              <View style={styles.yearInput}>
+                <Text style={styles.yearDigit}>{birthYear[0] || ''}</Text>
+              </View>
+              <View style={styles.yearInput}>
+                <Text style={styles.yearDigit}>{birthYear[1] || ''}</Text>
+              </View>
+              <View style={styles.yearInput}>
+                <Text style={styles.yearDigit}>{birthYear[2] || ''}</Text>
+              </View>
+              <View style={styles.yearInput}>
+                <Text style={styles.yearDigit}>{birthYear[3] || ''}</Text>
+              </View>
             </View>
 
             {ageError ? (
@@ -206,7 +187,7 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               </Pressable>
               <Pressable
                 style={styles.modalButtonPrimary}
-                onPress={handleVerifyAge}
+                onPress={() => handleVerifyAge()}
               >
                 <MaterialCommunityIcons name="check-bold" size={20} color="#101010" style={{ marginRight: 8 }} />
                 <Text style={styles.modalButtonText}>Verify & Unlock</Text>
@@ -277,6 +258,12 @@ const styles = StyleSheet.create({
     color: '#101010',
     fontSize: 23,
   },
+  hiddenInput: {
+    position: 'absolute',
+    opacity: 0,
+    height: 0,
+    width: 0,
+  },
   yearInputContainer: {
     flexDirection: 'row',
     gap: 16,
@@ -288,11 +275,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FDC700',
     borderRadius: 12,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  yearDigit: {
     fontSize: 32,
     fontFamily: 'MadimiOne_400Regular',
-    textAlign: 'center',
     color: '#101010',
-    backgroundColor: '#fff',
   },
   errorText: {
     fontFamily: 'MadimiOne_400Regular',
