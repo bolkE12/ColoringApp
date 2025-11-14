@@ -53,7 +53,7 @@ export function UnlockButton({ centered = false }: UnlockButtonProps) {
             <MaterialCommunityIcons name="star-circle" size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Unlock Everything!</Text>
             <Text style={styles.modalMessage}>
-              Get all 12 animals and 66 amazing hybrid combinations for just $0.99! 🎨
+              Get all 12 animals and 66 amazing hybrid combinations for just $0.99!
             </Text>
             <View style={styles.buttonRow}>
               <Pressable
