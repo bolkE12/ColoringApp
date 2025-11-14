@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
-import { Pressable, Text, StyleSheet, Modal, View } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { Pressable, Text, StyleSheet, Modal, View, TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { usePurchase } from '../contexts/PurchaseContext';
 
 interface UnlockButtonProps {
-  centered?: boolean;
+  position?: 'left' | 'center' | 'right';
 }
 
-export function UnlockButton({ centered = false }: UnlockButtonProps) {
+export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
   const { isPremium, unlockPremium } = usePurchase();
   const [showModal, setShowModal] = useState(false);
+  const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [yearDigits, setYearDigits] = useState(['', '', '', '']);
+  const [ageError, setAgeError] = useState('');
+
+  // Refs for the 4 digit inputs
+  const input1 = useRef<TextInput>(null);
+  const input2 = useRef<TextInput>(null);
+  const input3 = useRef<TextInput>(null);
+  const input4 = useRef<TextInput>(null);
 
   console.log('🔓 UnlockButton render - isPremium:', isPremium);
 
@@ -22,8 +31,55 @@ export function UnlockButton({ centered = false }: UnlockButtonProps) {
 
   console.log('🔓 Button showing (free user)');
 
-  const handleUnlock = async () => {
+  const handleDigitChange = (index: number, value: string) => {
+    // Only allow digits
+    if (value && !/^\d$/.test(value)) return;
+
+    const newDigits = [...yearDigits];
+    newDigits[index] = value;
+    setYearDigits(newDigits);
+    setAgeError('');
+
+    // Auto-focus next input
+    if (value && index < 3) {
+      const nextInput = [input1, input2, input3, input4][index + 1];
+      nextInput.current?.focus();
+    }
+  };
+
+  const handleShowAgeVerification = () => {
     setShowModal(false);
+    setYearDigits(['', '', '', '']);
+    setAgeError('');
+    setShowAgeVerification(true);
+    // Auto-focus first input after modal opens
+    setTimeout(() => input1.current?.focus(), 100);
+  };
+
+  const handleVerifyAge = async () => {
+    const birthYear = yearDigits.join('');
+
+    if (birthYear.length !== 4) {
+      setAgeError('Please enter a complete year');
+      return;
+    }
+
+    const year = parseInt(birthYear, 10);
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - year;
+
+    if (year < 1900 || year > currentYear) {
+      setAgeError('Please enter a valid year');
+      return;
+    }
+
+    if (age < 18) {
+      setAgeError('You must be 18 or older to purchase');
+      return;
+    }
+
+    // Age verified, proceed with unlock
+    setShowAgeVerification(false);
     try {
       // In production, this would trigger the in-app purchase flow
       // For now, we'll unlock immediately for testing
@@ -36,7 +92,14 @@ export function UnlockButton({ centered = false }: UnlockButtonProps) {
 
   return (
     <>
-      <Pressable style={[styles.button, centered && styles.buttonCentered]} onPress={() => setShowModal(true)}>
+      <Pressable
+        style={[
+          styles.button,
+          position === 'center' && styles.buttonCentered,
+          position === 'left' && styles.buttonLeft,
+        ]}
+        onPress={() => setShowModal(true)}
+      >
         <MaterialCommunityIcons name="lock-open-variant" size={25} color="#101010" />
         <Text style={styles.text}>Unlock everything for $0.99</Text>
       </Pressable>
@@ -64,10 +127,88 @@ export function UnlockButton({ centered = false }: UnlockButtonProps) {
               </Pressable>
               <Pressable
                 style={styles.modalButtonPrimary}
-                onPress={handleUnlock}
+                onPress={handleShowAgeVerification}
               >
                 <MaterialCommunityIcons name="lock-open-variant" size={20} color="#101010" style={{ marginRight: 8 }} />
                 <Text style={styles.modalButtonText}>Unlock for $0.99</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Age Verification Modal */}
+      <Modal
+        visible={showAgeVerification}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAgeVerification(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <MaterialCommunityIcons name="shield-check" size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
+            <Text style={styles.modalTitle}>Parent Verification</Text>
+            <Text style={styles.modalMessage}>
+              Please enter your birth year to confirm you are 18 or older
+            </Text>
+
+            {/* 4 Digit Year Inputs */}
+            <View style={styles.yearInputContainer}>
+              <TextInput
+                ref={input1}
+                style={styles.yearInput}
+                keyboardType="number-pad"
+                maxLength={1}
+                value={yearDigits[0]}
+                onChangeText={(value) => handleDigitChange(0, value)}
+                selectTextOnFocus
+              />
+              <TextInput
+                ref={input2}
+                style={styles.yearInput}
+                keyboardType="number-pad"
+                maxLength={1}
+                value={yearDigits[1]}
+                onChangeText={(value) => handleDigitChange(1, value)}
+                selectTextOnFocus
+              />
+              <TextInput
+                ref={input3}
+                style={styles.yearInput}
+                keyboardType="number-pad"
+                maxLength={1}
+                value={yearDigits[2]}
+                onChangeText={(value) => handleDigitChange(2, value)}
+                selectTextOnFocus
+              />
+              <TextInput
+                ref={input4}
+                style={styles.yearInput}
+                keyboardType="number-pad"
+                maxLength={1}
+                value={yearDigits[3]}
+                onChangeText={(value) => handleDigitChange(3, value)}
+                selectTextOnFocus
+              />
+            </View>
+
+            {ageError ? (
+              <Text style={styles.errorText}>{ageError}</Text>
+            ) : null}
+
+            <View style={styles.buttonRow}>
+              <Pressable
+                style={styles.modalButtonSecondary}
+                onPress={() => setShowAgeVerification(false)}
+              >
+                <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={styles.modalButtonPrimary}
+                onPress={handleVerifyAge}
+              >
+                <MaterialCommunityIcons name="check-bold" size={20} color="#101010" style={{ marginRight: 8 }} />
+                <Text style={styles.modalButtonText}>Verify & Unlock</Text>
               </Pressable>
             </View>
           </View>
@@ -126,10 +267,38 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -50 }],
   },
+  buttonLeft: {
+    right: 'auto',
+    left: 16,
+  },
   text: {
     fontFamily: 'MadimiOne_400Regular',
     color: '#101010',
     fontSize: 23,
+  },
+  yearInputContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    marginVertical: 24,
+  },
+  yearInput: {
+    width: 60,
+    height: 70,
+    borderWidth: 2,
+    borderColor: '#FDC700',
+    borderRadius: 12,
+    fontSize: 32,
+    fontFamily: 'MadimiOne_400Regular',
+    textAlign: 'center',
+    color: '#101010',
+    backgroundColor: '#fff',
+  },
+  errorText: {
+    fontFamily: 'MadimiOne_400Regular',
+    fontSize: 14,
+    color: '#FF3E9E',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,

@@ -738,7 +738,7 @@ export default function ColoringScreen() {
       </Modal>
 
       {/* Unlock Button */}
-      <UnlockButton centered />
+      <UnlockButton position="left" />
     </ImageBackground>
   );
 }
