@@ -9,6 +9,7 @@ import {
   Modal,
   Text,
 } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getBaseRequire } from "../../assets/base";
 import { HYBRID_SOURCES } from "../../assets/hybrid";
 
@@ -372,12 +373,12 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
                 },
               ]}
             >
-              <Text style={styles.starText}>✨</Text>
+              <MaterialCommunityIcons name="shimmer" size={40} color="#FFD700" style={styles.starIcon} />
             </Animated.View>
           );
         })}
 
-        {/* BANG text */}
+        {/* BANG explosion */}
         <Animated.View
           style={[
             styles.bangContainer,
@@ -387,7 +388,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
             },
           ]}
         >
-          <Text style={styles.bangText}>💥</Text>
+          <MaterialCommunityIcons name="flash" size={80} color="#FFA500" style={styles.bangIcon} />
         </Animated.View>
 
         {/* Hybrid Result */}
@@ -480,8 +481,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  starText: {
-    fontSize: 40,
+  starIcon: {
     textShadowColor: "#FFD700",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
@@ -495,8 +495,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  bangText: {
-    fontSize: 80,
+  bangIcon: {
     textShadowColor: "#FFA500",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
