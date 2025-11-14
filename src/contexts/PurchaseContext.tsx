@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// ⚠️ DEBUG: Set to true to force free tier for testing (ignores AsyncStorage)
+const FORCE_FREE_TIER = true;
+
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
 
@@ -28,6 +31,12 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   // Load premium status from storage on mount
   useEffect(() => {
     async function loadPremiumStatus() {
+      // Force free tier for testing if debug flag is enabled
+      if (FORCE_FREE_TIER) {
+        setIsPremium(false);
+        return;
+      }
+
       try {
         const value = await AsyncStorage.getItem(PREMIUM_KEY);
         setIsPremium(value === 'true');
