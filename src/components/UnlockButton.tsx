@@ -3,7 +3,11 @@ import { Pressable, Text, StyleSheet, Modal, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { usePurchase } from '../contexts/PurchaseContext';
 
-export function UnlockButton() {
+interface UnlockButtonProps {
+  centered?: boolean;
+}
+
+export function UnlockButton({ centered = false }: UnlockButtonProps) {
   const { isPremium, unlockPremium } = usePurchase();
   const [showModal, setShowModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -32,8 +36,8 @@ export function UnlockButton() {
 
   return (
     <>
-      <Pressable style={styles.button} onPress={() => setShowModal(true)}>
-        <MaterialCommunityIcons name="lock-open-variant" size={20} color="#101010" />
+      <Pressable style={[styles.button, centered && styles.buttonCentered]} onPress={() => setShowModal(true)}>
+        <MaterialCommunityIcons name="lock-open-variant" size={25} color="#101010" />
         <Text style={styles.text}>Unlock everything for $0.99</Text>
       </Pressable>
 
@@ -105,11 +109,11 @@ const styles = StyleSheet.create({
     right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#FDC700',
-    paddingVertical: 13,
-    paddingHorizontal: 18,
-    borderRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 23,
+    borderRadius: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
@@ -117,10 +121,15 @@ const styles = StyleSheet.create({
     elevation: 10,
     zIndex: 1000,
   },
+  buttonCentered: {
+    right: 'auto',
+    left: '50%',
+    transform: [{ translateX: -50 }],
+  },
   text: {
     fontFamily: 'MadimiOne_400Regular',
     color: '#101010',
-    fontSize: 18,
+    fontSize: 23,
   },
   modalOverlay: {
     flex: 1,
