@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     width: TILE_SIZE,
     height: TILE_SIZE,
     backgroundColor: "#fff",
-    borderRadius: 20,
+    borderRadius: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
