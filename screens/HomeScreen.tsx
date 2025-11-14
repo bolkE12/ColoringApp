@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,17 +10,22 @@ import {
   Animated,
   Easing,
   ViewStyle,
+  Image,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
-import { Plus, PawPrint } from "lucide-react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
-import { SvgXml, SvgUri } from "react-native-svg";
-import { loadHybridXml } from "../src/utils/assetLoader.native";
-import { getBaseUri, getBaseXmlAsync } from "../assets/base";
+import { getBaseRequire } from "../assets/base";
 import { HYBRID_SOURCES } from "../assets/hybrid";
+import type { RootStackParamList } from "../navigation/AppNavigator";
+import { MusicToggle } from "../src/components/MusicToggle";
+import { UnlockButton } from "../src/components/UnlockButton";
+import { usePurchase, FREE_ANIMALS } from "../src/contexts/PurchaseContext";
+import { getSavedAnimals } from "../src/utils/savedAnimals";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
 type Animal = typeof ANIMALS[number];
@@ -29,9 +34,18 @@ type Animal = typeof ANIMALS[number];
 const HAS_HYBRID = new Set<string>(Object.keys(HYBRID_SOURCES ?? {}));
 const ALL_HYBRID_KEYS = Object.keys(HYBRID_SOURCES ?? {});
 
+// Get hybrid keys that only use free animals
+function getFreeHybridKeys(): string[] {
+  return ALL_HYBRID_KEYS.filter(key => {
+    const [a, b] = key.split("_");
+    return FREE_ANIMALS.includes(a) && FREE_ANIMALS.includes(b);
+  });
+}
+
 function pickRandomPair(): [Animal, Animal] {
-  if (!ALL_HYBRID_KEYS.length) return ["monkey", "zebra"] as [Animal, Animal];
-  const key = ALL_HYBRID_KEYS[Math.floor(Math.random() * ALL_HYBRID_KEYS.length)];
+  const freeHybrids = getFreeHybridKeys();
+  if (!freeHybrids.length) return ["lion", "fox"] as [Animal, Animal];
+  const key = freeHybrids[Math.floor(Math.random() * freeHybrids.length)];
   const [a, b] = key.split("_") as [Animal, Animal];
   // Randomize which side each base animal appears on
   return Math.random() < 0.5 ? [a, b] : [b, a];
@@ -44,12 +58,6 @@ const NEXT = (a: Animal, step: number = 1) =>
 const fade = (val: Animated.Value, to: number, duration = 220) =>
   Animated.timing(val, { toValue: to, duration, easing: Easing.inOut(Easing.quad), useNativeDriver: true });
 
-type RootStackParamList = {
-  Home: undefined;
-  Create: undefined;
-  Coloring?: { hybridKey: string; animalName: string };
-};
-
 function hybridKey(a: Animal, b: Animal) {
   const [x, y] = [a, b].sort();
   return `${x}_${y}`;
@@ -58,19 +66,44 @@ function hybridKey(a: Animal, b: Animal) {
 
 export default function App() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { getUnlockedAnimals } = usePurchase();
 
   const initialPair = useRef<[Animal, Animal]>(pickRandomPair()).current;
   const [leftAnimal, setLeftAnimal] = useState<Animal>(initialPair[0]);
   const [rightAnimal, setRightAnimal] = useState<Animal>(initialPair[1]);
   const hk = hybridKey(leftAnimal, rightAnimal);
-  const [xml, setXml] = useState<string | null>(null);
 
-  const [leftXml, setLeftXml] = useState<string | null>(null);
-  const [rightXml, setRightXml] = useState<string | null>(null);
+  // Track if user has saved any animals
+  const [hasSavedAnimals, setHasSavedAnimals] = useState(false);
+  const [isCheckingAnimals, setIsCheckingAnimals] = useState(true);
+
+  // Track orientation
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const isPortrait = dimensions.height > dimensions.width;
 
   const [fontsLoaded] = useFonts({
     MadimiOne_400Regular,
   });
+
+  // Check for saved animals on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      async function checkSavedAnimals() {
+        const animals = await getSavedAnimals();
+        setHasSavedAnimals(animals.length > 0);
+        setIsCheckingAnimals(false);
+      }
+      checkSavedAnimals();
+    }, [])
+  );
+
+  // Update dimensions on screen rotation
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   const leftAnim = useRef(new Animated.Value(0)).current;
   const centerAnim = useRef(new Animated.Value(0)).current;
@@ -217,52 +250,6 @@ function cyclePair() {
   }, [fontsLoaded, leftAnim, centerAnim, rightAnim, rock, breath]);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const raw = await loadHybridXml(hk);
-        if (mounted) setXml(raw ?? null);
-      } catch (e) {
-        console.warn("[home] hybrid load failed", e);
-        if (mounted) setXml(null);
-      }
-    })();
-    return () => { mounted = false };
-  }, [hk]);
-
-useEffect(() => {
-  let mounted = true;
-  void (async () => {
-    try {
-      const raw = await getBaseXmlAsync(leftAnimal);
-      if (mounted) setLeftXml(raw ?? null);
-    } catch (err: unknown) {
-      console.warn("[home] base load failed (left)", err);
-      if (mounted) setLeftXml(null);
-    }
-  })();
-  return () => {
-    mounted = false;
-  };
-}, [leftAnimal]);
-
-useEffect(() => {
-  let mounted = true;
-  void (async () => {
-    try {
-      const raw = await getBaseXmlAsync(rightAnimal);
-      if (mounted) setRightXml(raw ?? null);
-    } catch (err: unknown) {
-      console.warn("[home] base load failed (right)", err);
-      if (mounted) setRightXml(null);
-    }
-  })();
-  return () => {
-    mounted = false;
-  };
-}, [rightAnimal]);
-
-useEffect(() => {
   if (!fontsLoaded) return;
 
   const id = setInterval(() => {
@@ -274,14 +261,15 @@ useEffect(() => {
 
   const HybridPreview = ({ size = 160 }: { size?: number }) => {
     const boxStyle: ViewStyle = { width: size, height: size };
-    const [doc, setDoc] = useState<string | null>(xml);
-    useEffect(() => {
-      setDoc(xml);
-    }, [xml]);
+    const hybridSource = HYBRID_SOURCES[hk];
     return (
       <View style={[boxStyle]}>
-        {doc ? (
-          <SvgXml xml={doc} width="100%" height="100%" />
+        {hybridSource ? (
+          <Image
+            source={hybridSource}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="contain"
+          />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" }}>
             <Text style={{ color: "#333" }}>Loading…</Text>
@@ -299,11 +287,15 @@ useEffect(() => {
     size?: number;
   }) => {
     const boxStyle: ViewStyle = { width: size, height: size };
-    const uri = getBaseUri(animal);
+    const source = getBaseRequire(animal);
     return (
       <View style={boxStyle}>
-        {uri ? (
-          <SvgUri width="100%" height="100%" uri={uri} preserveAspectRatio="xMidYMid meet" />
+        {source ? (
+          <Image
+            source={source}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="contain"
+          />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: "#fff" }}>{animal.toUpperCase()}</Text>
@@ -408,13 +400,20 @@ useEffect(() => {
     >
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+        {/* Music Toggle - top left to match other screens */}
+        <View style={styles.musicToggle}>
+          <MusicToggle />
+        </View>
+
         <View style={styles.container}>
           {/* Headline */}
-          <Text style={styles.title}>Create &amp; Color Your Own Animal</Text>
+          <Text style={styles.title}>
+            Create &amp; Color{isPortrait ? '\n' : ' '}Your Own Animal
+          </Text>
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            Mix two animals together and create amazing hybrid creatures to color!
+            Mix two animals together and create amazing custom creatures to color!
           </Text>
 
           {/* Three gradient boxes */}
@@ -424,10 +423,11 @@ useEffect(() => {
               <Pressable
                 style={styles.baseBox}
                 onPress={() => {
-                  const idx = ANIMALS.indexOf(leftAnimal);
-                  let next = ANIMALS[(idx + 1) % ANIMALS.length];
+                  const unlockedAnimals = getUnlockedAnimals() as Animal[];
+                  const idx = unlockedAnimals.indexOf(leftAnimal);
+                  let next = unlockedAnimals[(idx + 1) % unlockedAnimals.length];
                   if (next === rightAnimal) {
-                    next = ANIMALS[(idx + 2) % ANIMALS.length];
+                    next = unlockedAnimals[(idx + 2) % unlockedAnimals.length];
                   }
                   animateSideSwap(leftSwap, setLeftAnimal, next);
                 }}
@@ -456,9 +456,10 @@ useEffect(() => {
               <Pressable
                 style={styles.baseBox}
                 onPress={() => {
-                  const idx = ANIMALS.indexOf(rightAnimal);
-                  let next = ANIMALS[(idx + 1) % ANIMALS.length];
-                  if (next === leftAnimal) next = ANIMALS[(idx + 2) % ANIMALS.length];
+                  const unlockedAnimals = getUnlockedAnimals() as Animal[];
+                  const idx = unlockedAnimals.indexOf(rightAnimal);
+                  let next = unlockedAnimals[(idx + 1) % unlockedAnimals.length];
+                  if (next === leftAnimal) next = unlockedAnimals[(idx + 2) % unlockedAnimals.length];
                   animateSideSwap(rightSwap, setRightAnimal, next);
                 }}
               >
@@ -472,19 +473,25 @@ useEffect(() => {
           {/* Buttons */}
           <View style={styles.buttons}>
             <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate("Create")}>
-              <Plus color="#fff" size={20} style={{ marginRight: 8 }} />
+              <MaterialCommunityIcons name="plus" color="#fff" size={20} style={{ marginRight: 8 }} />
               <Text style={styles.primaryText}>
                 Create and Color Your Own Animal!
               </Text>
             </Pressable>
 
-            <Pressable style={styles.secondaryBtn}>
-              <PawPrint color="#333" size={20} style={{ marginRight: 8 }} />
-              <Text style={styles.secondaryText}>My Animal Pen</Text>
-            </Pressable>
+            {/* Only show "My Animal Pen" button if user has saved animals */}
+            {hasSavedAnimals && (
+              <Pressable style={styles.secondaryBtn} onPress={() => navigation.navigate("Pen")}>
+                <MaterialCommunityIcons name="paw" color="#333" size={20} style={{ marginRight: 8 }} />
+                <Text style={styles.secondaryText}>My Animal Pen</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Unlock Button */}
+      <UnlockButton />
     </ImageBackground>
   );
 }
@@ -499,6 +506,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) : 0,
+  },
+  musicToggle: {
+    position: 'absolute',
+    top: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) + 36 : 36,
+    right: 16,
+    zIndex: 1000,
   },
   container: {
     flex: 1,
@@ -552,7 +565,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,1)",
     borderRadius: 12,
   },
   baseLabel: {

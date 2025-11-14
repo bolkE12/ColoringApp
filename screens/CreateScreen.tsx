@@ -1,5 +1,5 @@
 // screens/CreateScreen.tsx
-import React, { useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,60 +15,58 @@ import {
   Animated,
   Easing,
   Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
-import { ArrowLeft, HelpCircle, Plus, Check } from "lucide-react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
-import type { SvgProps } from "react-native-svg";
-
 import { LinearGradient } from "expo-linear-gradient";
+import { MusicToggle } from "../src/components/MusicToggle";
+import { HybridAnimationOverlay } from "../src/components/HybridAnimationOverlay";
+import { UnlockButton } from "../src/components/UnlockButton";
+import { usePurchase } from "../src/contexts/PurchaseContext";
 
-import { SvgUri } from "react-native-svg";
-import { Asset } from "expo-asset";
-
-import Lion from "../assets/base/lion.svg";
-import Tiger from "../assets/base/tiger.svg";
-import Monkey from "../assets/base/monkey.svg";
-import Zebra from "../assets/base/zebra.svg";
-import Fox from "../assets/base/fox.svg";
-import Penguin from "../assets/base/penguin.svg";
-import Hippo from "../assets/base/hippo.svg";
-import Turtle from "../assets/base/turtle.svg";
-import Bear from "../assets/base/bear.svg";
-import Bunny from "../assets/base/bunny.svg";
-import Giraffe from "../assets/base/giraffe.svg";
-import Elephant from "../assets/base/elephant.svg";
-
-const { width } = Dimensions.get("window");
+// PNG requires for base animals
+const LION = require("../assets/base/lion.png");
+const TIGER = require("../assets/base/tiger.png");
+const MONKEY = require("../assets/base/monkey.png");
+const ZEBRA = require("../assets/base/zebra.png");
+const FOX = require("../assets/base/fox.png");
+const PENGUIN = require("../assets/base/penguin.png");
+const HIPPO = require("../assets/base/hippo.png");
+const TURTLE = require("../assets/base/turtle.png");
+const BEAR = require("../assets/base/bear.png");
+const BUNNY = require("../assets/base/bunny.png");
+const GIRAFFE = require("../assets/base/giraffe.png");
+const ELEPHANT = require("../assets/base/elephant.png");
 
 // tweak these if you want bigger/smaller tiles
-const TILE_SIZE = 132;
 const TILE_RADIUS = 20;
 const GRID_GAP = 18;
 
-type IconType = React.ComponentType<SvgProps>;
+type ImageSourceType = number;
 
-const ANIMALS: { id: string; Icon: IconType }[] = [
-  { id: "lion", Icon: Lion },
-  { id: "tiger", Icon: Tiger },
-  { id: "monkey", Icon: Monkey },
-  { id: "zebra", Icon: Zebra },
-  { id: "fox", Icon: Fox },
-  { id: "penguin", Icon: Penguin },
-  { id: "hippo", Icon: Hippo },
-  { id: "turtle", Icon: Turtle },
-  { id: "bear", Icon: Bear },
-  { id: "bunny", Icon: Bunny },
-  { id: "giraffe", Icon: Giraffe },
-  { id: "elephant", Icon: Elephant },
+const ANIMALS: { id: string; source: ImageSourceType }[] = [
+  { id: "lion", source: LION },
+  { id: "tiger", source: TIGER },
+  { id: "monkey", source: MONKEY },
+  { id: "zebra", source: ZEBRA },
+  { id: "fox", source: FOX },
+  { id: "penguin", source: PENGUIN },
+  { id: "hippo", source: HIPPO },
+  { id: "turtle", source: TURTLE },
+  { id: "bear", source: BEAR },
+  { id: "bunny", source: BUNNY },
+  { id: "giraffe", source: GIRAFFE },
+  { id: "elephant", source: ELEPHANT },
 ];
 
-const ICON_BY_ID: Record<string, IconType> = ANIMALS.reduce((acc, a) => {
-  acc[a.id] = a.Icon as any;
+const IMAGE_BY_ID: Record<string, ImageSourceType> = ANIMALS.reduce((acc, a) => {
+  acc[a.id] = a.source;
   return acc;
-}, {} as Record<string, IconType>);
+}, {} as Record<string, ImageSourceType>);
 
 
 // Build a deterministic hybrid key from two base animals (alphabetized)
@@ -78,58 +76,52 @@ function makeHybridKey(a?: string, b?: string): string {
   return `${x}_${y}`;
 }
 
-// Some environments may return a numeric module ID instead of a React component
-// if the svg transformer isn't engaged. Guard against that at runtime so we don't
-// try to render a number as a component (which crashes FlatList's CellRenderer).
-function isValidIcon(x: any): x is IconType {
-  return typeof x === "function" || (typeof x === "object" && x != null && "render" in x);
-}
-
-function MaybeSvg({
+// Render PNG image
+function AnimalImage({
   source,
-  sizePct = "85%",
   testID,
 }: {
-  source: any;
-  sizePct?: string;
+  source: ImageSourceType;
   testID?: string;
 }) {
-  // Case 1: Valid React component from svg-transformer
-  if (isValidIcon(source)) {
-    const Cmp = source as IconType;
-    return <Cmp width={sizePct} height={sizePct} preserveAspectRatio="xMidYMid meet" testID={testID} />;
-  }
-
-  // Case 2: Metro returned a numeric module id; resolve to a URI and render via SvgUri
-  if (typeof source === "number") {
-    try {
-      const asset = Asset.fromModule(source);
-      // Ensure the asset is available (in dev it may need downloading)
-      if (!asset.downloaded) {
-        // Fire-and-forget; SvgUri will update when uri is ready because asset.uri is stable after resolve
-        asset.downloadAsync?.().catch(() => {});
-      }
-      const uri = asset.localUri ?? asset.uri;
-      if (uri) {
-        return <SvgUri width={sizePct} height={sizePct} uri={uri} />;
-      }
-    } catch {
-      // fall through to empty render
-    }
-  }
-
-  // Unknown/unsupported shape — render nothing to avoid crashes
-  return null;
+  return (
+    <Image
+      source={source}
+      style={{ width: "85%", height: "85%", borderRadius: 12 }}
+      resizeMode="contain"
+      testID={testID}
+    />
+  );
 }
 
 
 export default function CreateScreen() {
   const navigation = useNavigation<any>();
+  const { isAnimalUnlocked } = usePurchase();
+
+  // Track dimensions for responsive layout
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const isPortrait = dimensions.height > dimensions.width;
+  const numColumns = isPortrait ? 4 : 6;
 
   const [fontsLoaded] = useFonts({
     MadimiOne_400Regular,
   });
   const [selected, setSelected] = useState<string[]>([]);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    animalName: string;
+    hybridKey?: string;
+    baseAnimalKey?: string;
+  } | null>(null);
+
+  // Update dimensions on screen rotation
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
   React.useEffect(() => {
     if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -163,7 +155,30 @@ export default function CreateScreen() {
     inputRange: [-1, 1],
     outputRange: ["-2deg", "2deg"],
   });
+
+  const handleAnimationComplete = () => {
+    setShowAnimation(false);
+    if (pendingNavigation) {
+      // @ts-ignore
+      navigation.navigate("Coloring", pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
+
   const toggleSelect = (id: string) => {
+    // Check if animal is locked
+    if (!isAnimalUnlocked(id)) {
+      Alert.alert(
+        'Locked Animal',
+        'Unlock all animals for just $0.99 to create amazing custom creatures!',
+        [
+          { text: 'Maybe Later', style: 'cancel' },
+          { text: 'Unlock Now', onPress: () => {} }, // Will trigger purchase flow
+        ]
+      );
+      return;
+    }
+
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSelected((prev) => {
       const isSelected = prev.includes(id);
@@ -174,10 +189,10 @@ export default function CreateScreen() {
   };
   const PrimaryEnabled = selected.length >= 1;
   const TwoSelected = selected.length === 2;
-  const renderAnimalIcon = (id?: string, sizePct: string = "78%") => {
+  const renderAnimalIcon = (id?: string) => {
     if (!id) return null;
-    const src = ICON_BY_ID[id] as any;
-    return <MaybeSvg source={src} sizePct={sizePct} />;
+    const src = IMAGE_BY_ID[id];
+    return <AnimalImage source={src} />;
   };
 
   if (!fontsLoaded) return null;
@@ -197,9 +212,13 @@ export default function CreateScreen() {
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <ArrowLeft color="#111" size={18} />
+            <MaterialCommunityIcons name="arrow-left" color="#111" size={18} />
             <Text style={styles.backText}>Back</Text>
           </Pressable>
+
+          <View style={{ marginTop: 4 }}>
+            <MusicToggle />
+          </View>
         </View>
 
         <View style={styles.container}>
@@ -209,7 +228,7 @@ export default function CreateScreen() {
           {/* Selection area */}
           {selected.length === 0 ? (
             <View style={styles.selector}>
-              <HelpCircle color="#111" size={40} />
+              <MaterialCommunityIcons name="help-circle" color="#111" size={40} />
               <Text style={styles.selectorLabel}>Pick animal(s)</Text>
             </View>
           ) : (
@@ -234,7 +253,7 @@ export default function CreateScreen() {
               ) : (
                 <View style={[styles.slotBox, styles.slotOptional]}>
                   <View style={styles.slotQuestion}>
-                    <HelpCircle color="#111" size={40} />
+                    <MaterialCommunityIcons name="help-circle" color="#111" size={40} />
                     <Text style={styles.slotOptionalText}>Optional</Text>
                   </View>
                 </View>
@@ -246,19 +265,28 @@ export default function CreateScreen() {
           <View style={styles.primarySpacer}>
             {PrimaryEnabled && (
               <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
-                {/* Build a deterministic key (alphabetical) like "bear_fox" so it matches /assets/hybrid/bear_fox.svg */}
                 <Pressable
-                  style={[styles.primaryBtn, !TwoSelected && { opacity: 0.6 }]}
-                  disabled={!TwoSelected}
+                  style={styles.primaryBtn}
                   onPress={() => {
-                    const key = makeHybridKey(selected[0], selected[1]);
-                    const displayName = selected.map((s) => s[0].toUpperCase() + s.slice(1)).join(" + ");
-                    // @ts-ignore
-                    navigation.navigate("Coloring", { animalName: displayName, hybridKey: key });
+                    if (TwoSelected) {
+                      // Hybrid: two animals selected - trigger animation
+                      const key = makeHybridKey(selected[0], selected[1]);
+                      const displayName = selected.map((s) => s[0].toUpperCase() + s.slice(1)).join(" + ");
+                      setPendingNavigation({ animalName: displayName, hybridKey: key });
+                      setShowAnimation(true);
+                    } else {
+                      // Single animal: only one selected - navigate directly (no animation)
+                      const animalKey = selected[0];
+                      const displayName = animalKey[0].toUpperCase() + animalKey.slice(1);
+                      // @ts-ignore
+                      navigation.navigate("Coloring", { animalName: displayName, baseAnimalKey: animalKey });
+                    }
                   }}
                 >
-                  <Plus color="#fff" size={18} style={{ marginRight: 8 }} />
-                  <Text style={styles.primaryText}>Create My Animal!</Text>
+                  <MaterialCommunityIcons name="plus" color="#fff" size={18} style={{ marginRight: 8 }} />
+                  <Text style={styles.primaryText}>
+                    {TwoSelected ? "Create My Custom Creature!" : "Color My Animal!"}
+                  </Text>
                 </Pressable>
               </Animated.View>
             )}
@@ -269,14 +297,16 @@ export default function CreateScreen() {
             contentContainerStyle={styles.grid}
             columnWrapperStyle={{ gap: GRID_GAP }}
             data={ANIMALS}
-            numColumns={6}
+            numColumns={numColumns}
+            key={numColumns}
             keyExtractor={(item) => item.id}
             extraData={selected}
             renderItem={({ item }) => {
-              const Icon: IconType | undefined = item.Icon as IconType | undefined;
               const isSelected = selected.includes(item.id);
+              const isLocked = !isAnimalUnlocked(item.id);
+              const tileWidth = (dimensions.width - GRID_GAP * (numColumns - 1) - 48) / numColumns;
               return (
-                <View style={styles.tileShell}>
+                <View style={[styles.tileShell, { width: tileWidth }]}>
                   {isSelected && (
                     <LinearGradient
                       colors={["#C27AFF", "#FB64B6"]}
@@ -291,11 +321,16 @@ export default function CreateScreen() {
                     android_ripple={{ color: "rgba(0,0,0,0.06)" }}
                   >
                     <View style={styles.tileInner}>
-                      <MaybeSvg source={ICON_BY_ID[item.id]} sizePct="85%" />
+                      <AnimalImage source={item.source} />
                     </View>
                     {isSelected && (
                       <View style={styles.checkBadge}>
-                        <Check color="#111" size={14} />
+                        <MaterialCommunityIcons name="check-bold" color="#111" size={14} />
+                      </View>
+                    )}
+                    {isLocked && (
+                      <View style={styles.lockOverlay}>
+                        <MaterialCommunityIcons name="lock" color="#fff" size={32} />
                       </View>
                     )}
                   </Pressable>
@@ -305,6 +340,20 @@ export default function CreateScreen() {
           />
         </View>
       </SafeAreaView>
+
+      {/* Unlock Button */}
+      <UnlockButton />
+
+      {/* Hybrid Animation Overlay */}
+      {showAnimation && pendingNavigation?.hybridKey && (
+        <HybridAnimationOverlay
+          visible={showAnimation}
+          animal1={selected[0]}
+          animal2={selected[1]}
+          hybridKey={pendingNavigation.hybridKey}
+          onComplete={handleAnimationComplete}
+        />
+      )}
     </ImageBackground>
   );
 }
@@ -319,6 +368,9 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight ?? 0 : 0,
   },
   topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 4,
   },
@@ -396,7 +448,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 3,
     borderColor: "#fff",
-    backgroundColor: "rgba(255,255,255,0.85)",
+    backgroundColor: "rgba(255,255,255,1)",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -462,7 +514,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tileShell: {
-    width: (width - GRID_GAP * 5 - 48) / 6,
     aspectRatio: 1,
     borderRadius: TILE_RADIUS,
     overflow: "visible",
@@ -508,6 +559,13 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
     zIndex: 2,
+  },
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: TILE_RADIUS,
   },
   primarySpacer: {
     height: 64, // roughly matches button height + margin

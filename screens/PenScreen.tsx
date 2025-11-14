@@ -1,0 +1,348 @@
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  Pressable,
+  Platform,
+  StatusBar as RNStatusBar,
+  FlatList,
+  Image,
+  Dimensions,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import type { NavigationProp } from "@react-navigation/native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
+import * as MediaLibrary from "expo-media-library";
+import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAnimals";
+import type { RootStackParamList } from "../navigation/AppNavigator";
+import { MusicToggle } from "../src/components/MusicToggle";
+import { UnlockButton } from "../src/components/UnlockButton";
+
+export default function PenScreen() {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [fontsLoaded] = useFonts({ MadimiOne_400Regular });
+  const [savedAnimals, setSavedAnimals] = useState<SavedAnimal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  const isPortrait = dimensions.height > dimensions.width;
+
+  // Calculate tile size based on orientation
+  // Portrait: 25% smaller tiles (0.75 of landscape size)
+  // Landscape: standard size
+  const baseTileSize = (dimensions.width - 64) / 3;
+  const tileSize = isPortrait ? baseTileSize * 0.75 : baseTileSize;
+
+  // Calculate number of columns that fit
+  const numColumns = Math.floor((dimensions.width - 32) / (tileSize + 8));
+
+  // Update dimensions on screen rotation
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
+
+  const loadAnimals = async () => {
+    try {
+      const animals = await getSavedAnimals();
+      // Sort by newest first
+      animals.sort((a, b) => b.timestamp - a.timestamp);
+      setSavedAnimals(animals);
+    } catch (error) {
+      // Silently fail - user will see empty state
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reload animals when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadAnimals();
+    }, [])
+  );
+
+  const handleDelete = (animal: SavedAnimal) => {
+    Alert.alert(
+      "Delete Animal",
+      `Are you sure you want to delete this ${animal.animalName}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteAnimal(animal.id);
+              await loadAnimals();
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete animal");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDownload = async (animal: SavedAnimal) => {
+    try {
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          "Permission Required",
+          "Please grant permission to save images to your photo gallery."
+        );
+        return;
+      }
+
+      // Save to media library
+      await MediaLibrary.createAssetAsync(animal.imageUri);
+      Alert.alert("Success!", `${animal.animalName} has been saved to your photo gallery!`);
+    } catch (error) {
+      Alert.alert("Download Failed", "Could not save image to gallery. This feature requires a development build.");
+    }
+  };
+
+  const handleEdit = (animal: SavedAnimal) => {
+    // Determine if this is a hybrid (contains "_") or base animal (no "_")
+    const isHybrid = animal.hybridKey.includes("_");
+
+    navigation.navigate("Coloring", {
+      animalName: animal.animalName,
+      ...(isHybrid ? { hybridKey: animal.hybridKey } : { baseAnimalKey: animal.hybridKey }),
+      savedAnimalId: animal.id,
+      existingImageUri: animal.imageUri,
+    });
+  };
+
+  const renderAnimal = ({ item }: { item: SavedAnimal }) => (
+    <View style={[styles.gridItem, { width: tileSize }]}>
+      <Pressable
+        style={[styles.imageContainer, { width: tileSize - 8, height: tileSize - 8 }]}
+        onPress={() => handleEdit(item)}
+        onLongPress={() => handleDelete(item)}
+      >
+        <Image
+          source={{ uri: `${item.imageUri}?t=${item.timestamp}` }}
+          style={styles.image}
+          resizeMode="cover"
+          key={`${item.id}-${item.timestamp}`}
+        />
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={styles.downloadBtn}
+            onPress={() => handleDownload(item)}
+          >
+            <MaterialCommunityIcons name="download" size={16} color="#fff" />
+          </Pressable>
+          <Pressable
+            style={styles.deleteBtn}
+            onPress={() => handleDelete(item)}
+          >
+            <MaterialCommunityIcons name="delete" size={16} color="#fff" />
+          </Pressable>
+        </View>
+      </Pressable>
+      <Text style={styles.animalName} numberOfLines={1}>
+        {item.animalName}
+      </Text>
+    </View>
+  );
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>No saved animals yet!</Text>
+      <Text style={styles.emptySubtext}>
+        Color some animals and save them to see them here.
+      </Text>
+    </View>
+  );
+
+  if (!fontsLoaded) return null;
+
+  return (
+    <ImageBackground
+      source={require("../assets/background.png")}
+      resizeMode="cover"
+      style={styles.bg}
+    >
+      <StatusBar style="light" />
+      <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+        {/* Top Bar */}
+        <View style={styles.topBar}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.goBack()}
+            style={styles.backBtn}
+          >
+            <MaterialCommunityIcons name="arrow-left" color="#111" size={18} />
+            <Text style={styles.backText}>Back</Text>
+          </Pressable>
+
+          <Text style={styles.screenTitle}>My Animal Pen</Text>
+          <View style={{ marginTop: 4 }}>
+            <MusicToggle />
+          </View>
+        </View>
+
+        {/* Gallery */}
+        <View style={styles.container}>
+          <FlatList
+            data={savedAnimals}
+            renderItem={renderAnimal}
+            keyExtractor={(item) => item.id}
+            numColumns={numColumns}
+            key={numColumns}
+            contentContainerStyle={styles.grid}
+            ListEmptyComponent={loading ? null : renderEmpty}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </SafeAreaView>
+
+      {/* Unlock Button */}
+      <UnlockButton />
+    </ImageBackground>
+  );
+}
+
+const styles = StyleSheet.create({
+  bg: {
+    flex: 1,
+    backgroundColor: "#4CA0E8",
+  },
+  safe: {
+    flex: 1,
+    paddingTop: Platform.OS === "android" ? RNStatusBar.currentHeight ?? 0 : 0,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  backText: {
+    fontFamily: "MadimiOne_400Regular",
+    color: "#111",
+    fontSize: 16,
+  },
+  screenTitle: {
+    fontFamily: "MadimiOne_400Regular",
+    color: "#fff",
+    fontSize: 42,
+    textShadowColor: "rgba(0,0,0,0.25)",
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 6,
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  grid: {
+    paddingTop: 8,
+    paddingBottom: 32,
+  },
+  gridItem: {
+    marginBottom: 16,
+    marginHorizontal: 4,
+    alignItems: "center",
+  },
+  imageContainer: {
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    overflow: "hidden",
+    position: "relative",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  buttonRow: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
+  downloadBtn: {
+    backgroundColor: "#6BCF7F",
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteBtn: {
+    backgroundColor: "#FF6B6B",
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  animalName: {
+    fontFamily: "MadimiOne_400Regular",
+    color: "#fff",
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.25)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+  emptyText: {
+    fontFamily: "MadimiOne_400Regular",
+    color: "#fff",
+    fontSize: 24,
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.25)",
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 6,
+  },
+  emptySubtext: {
+    fontFamily: "MadimiOne_400Regular",
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 12,
+    opacity: 0.9,
+    textShadowColor: "rgba(0,0,0,0.25)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+});

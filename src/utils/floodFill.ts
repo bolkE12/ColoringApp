@@ -17,10 +17,20 @@ export function floodFill(
     data[start + 3],
   ];
 
-  // Don’t fill transparent or stroke-black
-  if (target[3] === 0) return;
-  const isStrokeBlack = target[0] < 20 && target[1] < 20 && target[2] < 20;
-  if (isStrokeBlack) return;
+  // Don't fill if tapping on black outline
+  // Black outline: RGB all < 50 (allowing for slight anti-aliasing)
+  const isBlackOutline = target[0] < 50 && target[1] < 50 && target[2] < 50;
+  if (isBlackOutline) return;
+
+  // Already filled with this exact color? Skip.
+  if (
+    target[0] === newCol[0] &&
+    target[1] === newCol[1] &&
+    target[2] === newCol[2] &&
+    target[3] === newCol[3]
+  ) {
+    return;
+  }
 
   const nearly = (a: number, b: number) => Math.abs(a - b) <= tolerance;
   const isTarget = (i: number) =>
