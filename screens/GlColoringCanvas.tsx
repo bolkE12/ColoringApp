@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperat
 import { View, Text, StyleSheet, DimensionValue } from "react-native";
 import { GLView, ExpoWebGLRenderingContext } from "expo-gl";
 import * as FileSystem from "expo-file-system/legacy";
-import * as MediaLibrary from "expo-media-library";
 import { getHybridPngUri, getBasePngUri } from "../src/utils/assetLoader.native";
 import { floodFill, hexToRgba } from "../src/utils/floodFill";
 

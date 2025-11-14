@@ -7,7 +7,6 @@ import {
   Dimensions,
   Image,
   Modal,
-  Text,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getBaseRequire } from "../../assets/base";
