@@ -5,7 +5,7 @@ import { IAP_PRODUCTS } from '../config/iap';
 
 // ⚠️ DEBUG: Set to true to force free tier for testing (ignores AsyncStorage & IAP)
 // ⚠️ PRODUCTION: Set to false before releasing to App Store/Play Store
-const FORCE_FREE_TIER = false;
+const FORCE_FREE_TIER = true;
 
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
