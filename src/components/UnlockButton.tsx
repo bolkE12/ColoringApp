@@ -33,7 +33,7 @@ export function UnlockButton() {
   return (
     <>
       <Pressable style={styles.button} onPress={() => setShowModal(true)}>
-        <MaterialCommunityIcons name="lock-open-variant" size={16} color="#fff" />
+        <MaterialCommunityIcons name="lock-open-variant" size={16} color="#101010" />
         <Text style={styles.text}>Unlock everything for $0.99</Text>
       </Pressable>
 
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FF3E9E',
+    backgroundColor: '#FDC700',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 20,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: 'MadimiOne_400Regular',
-    color: '#fff',
+    color: '#101010',
     fontSize: 14,
   },
   modalOverlay: {
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 32,
     alignItems: 'center',
-    width: 320,
+    width: 480,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
