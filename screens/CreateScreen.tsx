@@ -170,7 +170,7 @@ export default function CreateScreen() {
     if (!isAnimalUnlocked(id)) {
       Alert.alert(
         'Locked Animal',
-        'Unlock all animals for just $0.99 to create amazing hybrids!',
+        'Unlock all animals for just $0.99 to create amazing custom creatures!',
         [
           { text: 'Maybe Later', style: 'cancel' },
           { text: 'Unlock Now', onPress: () => {} }, // Will trigger purchase flow
@@ -285,7 +285,7 @@ export default function CreateScreen() {
                 >
                   <MaterialCommunityIcons name="plus" color="#fff" size={18} style={{ marginRight: 8 }} />
                   <Text style={styles.primaryText}>
-                    {TwoSelected ? "Create My Hybrid!" : "Color My Animal!"}
+                    {TwoSelected ? "Create My Custom Creature!" : "Color My Animal!"}
                   </Text>
                 </Pressable>
               </Animated.View>

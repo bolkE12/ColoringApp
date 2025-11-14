@@ -111,7 +111,7 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
             <MaterialCommunityIcons name="star-circle" size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Unlock Everything!</Text>
             <Text style={styles.modalMessage}>
-              Get all 12 animals and 66 amazing hybrid combinations for just $0.99!
+              Get all 12 animals and 66 amazing custom combinations for just $0.99!
             </Text>
             <View style={styles.buttonRow}>
               <Pressable
@@ -209,7 +209,7 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
             <MaterialCommunityIcons name="shimmer" size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Amazing!</Text>
             <Text style={styles.modalMessage}>
-              All animals unlocked! Have fun creating amazing hybrids! 🎨
+              All animals unlocked! Have fun creating amazing custom creatures! 🎨
             </Text>
             <Pressable
               style={styles.modalButtonPrimary}

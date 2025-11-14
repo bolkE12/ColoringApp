@@ -413,7 +413,7 @@ function cyclePair() {
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            Mix two animals together and create amazing hybrid creatures to color!
+            Mix two animals together and create amazing custom creatures to color!
           </Text>
 
           {/* Three gradient boxes */}
