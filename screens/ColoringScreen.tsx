@@ -726,7 +726,7 @@ export default function ColoringScreen() {
             <MaterialCommunityIcons name="shimmer" size={64} color="#FFD93D" style={{ marginBottom: 16 }} />
             <Text style={styles.modalTitle}>Amazing Work!</Text>
             <Text style={styles.modalMessage}>
-              {generatedName} has been saved to your Animal Pen! 🎨
+              {generatedName} has been saved to your Animal Pen!
             </Text>
             <Pressable
               style={styles.modalButton}
