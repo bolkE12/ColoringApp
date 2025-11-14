@@ -58,6 +58,10 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
   const starsOpacity = useRef(new Animated.Value(0)).current;
   const starsRotate = useRef(new Animated.Value(0)).current;
 
+  // Confetti animations
+  const confettiOpacity = useRef(new Animated.Value(0)).current;
+  const confettiY = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     if (visible) {
       // Reset all animations
@@ -83,6 +87,8 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
       starsScale.setValue(0);
       starsOpacity.setValue(0);
       starsRotate.setValue(0);
+      confettiOpacity.setValue(0);
+      confettiY.setValue(0);
 
       // Sequence of animations
       Animated.sequence([
@@ -246,6 +252,18 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
             duration: 300,
             useNativeDriver: true,
           }),
+          // Trigger confetti
+          Animated.timing(confettiOpacity, {
+            toValue: 1,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(confettiY, {
+            toValue: SCREEN_HEIGHT,
+            duration: 2000,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
         ]),
 
         // Phase 5: Hold for a moment (375ms)
@@ -388,8 +406,49 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
             },
           ]}
         >
-          <MaterialCommunityIcons name="flash" size={80} color="#FFA500" style={styles.bangIcon} />
+          <MaterialCommunityIcons name="creation" size={80} color="#FFA500" style={styles.bangIcon} />
         </Animated.View>
+
+        {/* Confetti particles */}
+        {Array.from({ length: 30 }).map((_, index) => {
+          const randomX = (Math.random() - 0.5) * SCREEN_WIDTH * 0.8 + CENTER_X;
+          const randomDelay = Math.random() * 200;
+          const randomRotation = Math.random() * 720;
+          const confettiColors = ['#FF3E9E', '#FDC700', '#4CA0E8', '#FF6B6B', '#4ECDC4', '#95E1D3'];
+          const color = confettiColors[index % confettiColors.length];
+          const confettiIcons = ['circle', 'square', 'triangle', 'star'];
+          const icon = confettiIcons[index % confettiIcons.length];
+
+          return (
+            <Animated.View
+              key={`confetti-${index}`}
+              style={[
+                styles.confetti,
+                {
+                  left: randomX,
+                  top: CENTER_Y - 100,
+                  transform: [
+                    {
+                      translateY: confettiY.interpolate({
+                        inputRange: [0, SCREEN_HEIGHT],
+                        outputRange: [0, SCREEN_HEIGHT + 100],
+                      }),
+                    },
+                    {
+                      rotate: confettiY.interpolate({
+                        inputRange: [0, SCREEN_HEIGHT],
+                        outputRange: ['0deg', `${randomRotation}deg`],
+                      }),
+                    },
+                  ],
+                  opacity: confettiOpacity,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons name={icon as any} size={20} color={color} />
+            </Animated.View>
+          );
+        })}
 
         {/* Hybrid Result */}
         <Animated.View
@@ -499,5 +558,10 @@ const styles = StyleSheet.create({
     textShadowColor: "#FFA500",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
+  },
+  confetti: {
+    position: "absolute",
+    width: 20,
+    height: 20,
   },
 });
