@@ -411,16 +411,13 @@ function cyclePair() {
             Create &amp; Color{isPortrait ? '\n' : ' '}Your Own Animal
           </Text>
 
-          {/* Subtitle - only show if user has saved animals */}
-          {hasSavedAnimals && (
-            <Text style={styles.subtitle}>
-              Mix two animals together and create amazing hybrid creatures to color!
-            </Text>
-          )}
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>
+            Mix two animals together and create amazing hybrid creatures to color!
+          </Text>
 
-          {/* Three gradient boxes - only show if user has saved animals */}
-          {hasSavedAnimals && (
-            <View style={styles.boxRow}>
+          {/* Three gradient boxes */}
+          <View style={styles.boxRow}>
             {/* Left base animal */}
             <Animated.View style={[styles.box, leftStyle]}>
               <Pressable
@@ -472,7 +469,6 @@ function cyclePair() {
               </Pressable>
             </Animated.View>
           </View>
-          )}
 
           {/* Buttons */}
           <View style={styles.buttons}>
