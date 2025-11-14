@@ -8,7 +8,7 @@ interface UnlockButtonProps {
 }
 
 export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
-  const { isPremium, unlockPremium } = usePurchase();
+  const { isPremium, purchaseUnlock } = usePurchase();
   const [showModal, setShowModal] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -78,15 +78,16 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
       return;
     }
 
-    // Age verified, proceed with unlock
+    // Age verified, proceed with IAP purchase flow
     setShowAgeVerification(false);
     try {
-      // In production, this would trigger the in-app purchase flow
-      // For now, we'll unlock immediately for testing
-      await unlockPremium();
+      await purchaseUnlock();
       setShowSuccessModal(true);
     } catch (error) {
-      // Could show error modal here
+      console.log('💳 Purchase failed:', error);
+      // Purchase was canceled or failed - could show error modal here
+      setAgeError('Purchase failed. Please try again.');
+      setShowAgeVerification(true);
     }
   };
 
