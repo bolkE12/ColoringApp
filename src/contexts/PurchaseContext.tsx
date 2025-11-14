@@ -1,11 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as InAppPurchases from 'expo-in-app-purchases';
-import { IAP_PRODUCTS } from '../config/iap';
 
 // ⚠️ DEBUG: Set to true to force free tier for testing (ignores AsyncStorage & IAP)
 // ⚠️ PRODUCTION: Set to false before releasing to App Store/Play Store
 const FORCE_FREE_TIER = true;
+
+// Conditionally import IAP modules only when not in free tier mode
+let InAppPurchases: any = null;
+let IAP_PRODUCTS: any = null;
+
+if (!FORCE_FREE_TIER) {
+  try {
+    InAppPurchases = require('expo-in-app-purchases');
+    IAP_PRODUCTS = require('../config/iap').IAP_PRODUCTS;
+  } catch (error) {
+    console.warn('⚠️ IAP modules not available:', error);
+  }
+}
 
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
@@ -36,6 +47,11 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   // Initialize IAP connection on mount
   useEffect(() => {
     async function initializeIAP() {
+      if (!InAppPurchases) {
+        console.log('💳 IAP not available (running in Expo Go)');
+        return;
+      }
+
       try {
         await InAppPurchases.connectAsync();
         console.log('💳 IAP Connected');
@@ -50,7 +66,7 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
     // Cleanup on unmount
     return () => {
-      if (!FORCE_FREE_TIER) {
+      if (!FORCE_FREE_TIER && InAppPurchases) {
         InAppPurchases.disconnectAsync();
       }
     };
@@ -103,6 +119,12 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Purchase unlock via IAP
   const purchaseUnlock = async () => {
+    if (!InAppPurchases || !IAP_PRODUCTS) {
+      console.log('💳 IAP not available, unlocking for testing');
+      await unlockPremium();
+      return;
+    }
+
     try {
       console.log('💳 Starting purchase flow');
 
@@ -121,7 +143,7 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       await InAppPurchases.purchaseItemAsync(results[0].productId);
 
       // Set up purchase listener
-      InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }) => {
+      InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
         console.log('💳 Purchase response:', responseCode, errorCode);
 
         if (responseCode === InAppPurchases.IAPResponseCode.OK) {
@@ -148,6 +170,11 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Restore previous purchases
   const restorePurchases = async (): Promise<boolean> => {
+    if (!InAppPurchases || !IAP_PRODUCTS) {
+      console.log('💳 IAP not available, cannot restore purchases');
+      return false;
+    }
+
     try {
       console.log('💳 Restoring purchases');
 
@@ -155,7 +182,7 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
       if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
         const hasUnlockPurchase = results.some(
-          (purchase) => purchase.productId === IAP_PRODUCTS.UNLOCK_ALL
+          (purchase: any) => purchase.productId === IAP_PRODUCTS.UNLOCK_ALL
         );
 
         if (hasUnlockPurchase) {
