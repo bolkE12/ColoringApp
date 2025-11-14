@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -17,7 +17,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts, MadimiOne_400Regular } from "@expo-google-fonts/madimi-one";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NavigationProp } from "@react-navigation/native";
 import { getBaseRequire } from "../assets/base";
 import { HYBRID_SOURCES } from "../assets/hybrid";
@@ -25,6 +25,7 @@ import type { RootStackParamList } from "../navigation/AppNavigator";
 import { MusicToggle } from "../src/components/MusicToggle";
 import { UnlockButton } from "../src/components/UnlockButton";
 import { usePurchase, FREE_ANIMALS } from "../src/contexts/PurchaseContext";
+import { getSavedAnimals } from "../src/utils/savedAnimals";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
 type Animal = typeof ANIMALS[number];
@@ -72,6 +73,10 @@ export default function App() {
   const [rightAnimal, setRightAnimal] = useState<Animal>(initialPair[1]);
   const hk = hybridKey(leftAnimal, rightAnimal);
 
+  // Track if user has saved any animals
+  const [hasSavedAnimals, setHasSavedAnimals] = useState(false);
+  const [isCheckingAnimals, setIsCheckingAnimals] = useState(true);
+
   // Track orientation
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
   const isPortrait = dimensions.height > dimensions.width;
@@ -79,6 +84,18 @@ export default function App() {
   const [fontsLoaded] = useFonts({
     MadimiOne_400Regular,
   });
+
+  // Check for saved animals on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      async function checkSavedAnimals() {
+        const animals = await getSavedAnimals();
+        setHasSavedAnimals(animals.length > 0);
+        setIsCheckingAnimals(false);
+      }
+      checkSavedAnimals();
+    }, [])
+  );
 
   // Update dimensions on screen rotation
   useEffect(() => {
@@ -394,13 +411,16 @@ function cyclePair() {
             Create &amp; Color{isPortrait ? '\n' : ' '}Your Own Animal
           </Text>
 
-          {/* Subtitle */}
-          <Text style={styles.subtitle}>
-            Mix two animals together and create amazing hybrid creatures to color!
-          </Text>
+          {/* Subtitle - only show if user has saved animals */}
+          {hasSavedAnimals && (
+            <Text style={styles.subtitle}>
+              Mix two animals together and create amazing hybrid creatures to color!
+            </Text>
+          )}
 
-          {/* Three gradient boxes */}
-          <View style={styles.boxRow}>
+          {/* Three gradient boxes - only show if user has saved animals */}
+          {hasSavedAnimals && (
+            <View style={styles.boxRow}>
             {/* Left base animal */}
             <Animated.View style={[styles.box, leftStyle]}>
               <Pressable
@@ -452,6 +472,7 @@ function cyclePair() {
               </Pressable>
             </Animated.View>
           </View>
+          )}
 
           {/* Buttons */}
           <View style={styles.buttons}>
@@ -462,10 +483,13 @@ function cyclePair() {
               </Text>
             </Pressable>
 
-            <Pressable style={styles.secondaryBtn} onPress={() => navigation.navigate("Pen")}>
-              <MaterialCommunityIcons name="paw" color="#333" size={20} style={{ marginRight: 8 }} />
-              <Text style={styles.secondaryText}>My Animal Pen</Text>
-            </Pressable>
+            {/* Only show "My Animal Pen" button if user has saved animals */}
+            {hasSavedAnimals && (
+              <Pressable style={styles.secondaryBtn} onPress={() => navigation.navigate("Pen")}>
+                <MaterialCommunityIcons name="paw" color="#333" size={20} style={{ marginRight: 8 }} />
+                <Text style={styles.secondaryText}>My Animal Pen</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </SafeAreaView>
