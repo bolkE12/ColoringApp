@@ -33,7 +33,7 @@ export function UnlockButton() {
   return (
     <>
       <Pressable style={styles.button} onPress={() => setShowModal(true)}>
-        <MaterialCommunityIcons name="lock-open-variant" size={16} color="#101010" />
+        <MaterialCommunityIcons name="lock-open-variant" size={20} color="#101010" />
         <Text style={styles.text}>Unlock everything for $0.99</Text>
       </Pressable>
 
@@ -62,7 +62,7 @@ export function UnlockButton() {
                 style={styles.modalButtonPrimary}
                 onPress={handleUnlock}
               >
-                <MaterialCommunityIcons name="lock-open-variant" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <MaterialCommunityIcons name="lock-open-variant" size={20} color="#101010" style={{ marginRight: 8 }} />
                 <Text style={styles.modalButtonText}>Unlock for $0.99</Text>
               </Pressable>
             </View>
@@ -88,7 +88,7 @@ export function UnlockButton() {
               style={styles.modalButtonPrimary}
               onPress={() => setShowSuccessModal(false)}
             >
-              <MaterialCommunityIcons name="thumb-up" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <MaterialCommunityIcons name="thumb-up" size={20} color="#101010" style={{ marginRight: 8 }} />
               <Text style={styles.modalButtonText}>Awesome!</Text>
             </Pressable>
           </View>
@@ -105,22 +105,22 @@ const styles = StyleSheet.create({
     right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     backgroundColor: '#FDC700',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    paddingVertical: 13,
+    paddingHorizontal: 18,
+    borderRadius: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
     zIndex: 1000,
   },
   text: {
     fontFamily: 'MadimiOne_400Regular',
     color: '#101010',
-    fontSize: 14,
+    fontSize: 18,
   },
   modalOverlay: {
     flex: 1,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF3E9E',
+    backgroundColor: '#FDC700',
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontFamily: 'MadimiOne_400Regular',
     fontSize: 16,
-    color: '#fff',
+    color: '#101010',
   },
   modalButtonSecondaryText: {
     fontFamily: 'MadimiOne_400Regular',
