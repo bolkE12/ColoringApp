@@ -38,6 +38,8 @@ const DEFAULT_COLORS = [
   '#FFD93D', '#6BCF7F', '#B388FF', '#FF80AB', '#A5D6A7',
   '#FFB74D', '#64B5F6', '#F06292', '#81C784', '#A98052',
   '#9575CD', '#4DB6AC', '#FF8A65', '#BA68C8', '#7986CB',
+  '#FF5722', '#26C6DA', '#FFCA28', '#66BB6A', '#EC407A',
+  '#AB47BC', '#FFA726', '#42A5F5', '#26A69A', '#EF5350',
 ];
 
 // Memoized color swatch - only re-renders when its own selection state changes
