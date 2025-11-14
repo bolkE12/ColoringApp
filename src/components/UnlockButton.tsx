@@ -6,10 +6,15 @@ import { usePurchase } from '../contexts/PurchaseContext';
 export function UnlockButton() {
   const { isPremium, unlockPremium } = usePurchase();
 
+  console.log('🔓 UnlockButton render - isPremium:', isPremium);
+
   // Don't show button if already premium
   if (isPremium) {
+    console.log('🔓 Button hidden (premium user)');
     return null;
   }
+
+  console.log('🔓 Button showing (free user)');
 
   const handlePress = () => {
     Alert.alert(

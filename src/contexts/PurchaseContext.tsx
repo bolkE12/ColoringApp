@@ -31,16 +31,21 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   // Load premium status from storage on mount
   useEffect(() => {
     async function loadPremiumStatus() {
+      console.log('🔓 FORCE_FREE_TIER:', FORCE_FREE_TIER);
+
       // Force free tier for testing if debug flag is enabled
       if (FORCE_FREE_TIER) {
+        console.log('🔓 Setting isPremium to FALSE (free tier)');
         setIsPremium(false);
         return;
       }
 
       try {
         const value = await AsyncStorage.getItem(PREMIUM_KEY);
+        console.log('🔓 Loaded from storage:', value);
         setIsPremium(value === 'true');
       } catch (error) {
+        console.log('🔓 Error loading, defaulting to free');
         // Default to free tier
         setIsPremium(false);
       }
