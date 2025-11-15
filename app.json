@@ -1,25 +1,46 @@
 {
   "expo": {
-    "name": "ChimeraColoring",
-    "slug": "ChimeraColoring",
+    "name": "Chimera Coloring",
+    "slug": "chimera-coloring",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "chimeracoloring",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#4CA0E8"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chimera.coloring",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save your colored animal creations.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs permission to save your colored animals to your photo library.",
+        "NSMicrophoneUsageDescription": "This app uses audio for background music and sound effects to enhance the coloring experience.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#4CA0E8"
       },
+      "package": "com.chimera.coloring",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -28,6 +49,11 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_PROJECT_ID_HERE"
+      }
+    }
   }
 }
