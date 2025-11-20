@@ -80,11 +80,13 @@ All creations are stored on your device and are as secure as your device itself.
 
 ## In-App Purchases
 
-Currently, Coloring Creatures does NOT include in-app purchases. If this changes in the future:
+Coloring Creatures offers a one-time in-app purchase to unlock the full collection of creatures:
 
-- We will update this Privacy Policy
-- Purchase information will be handled by Apple/Google
-- We will not receive or store payment information
+- **"Unlock All Creatures" - $0.99**: Unlocks all 66 hybrid animal combinations
+- All purchase information is handled securely by Apple/Google
+- We do not receive, store, or have access to your payment information
+- No subscriptions or recurring charges
+- One-time purchase grants permanent access
 
 ## Changes to This Privacy Policy
 

@@ -75,7 +75,8 @@ Use this checklist to track your progress toward App Store submission.
 - [ ] Copyright information added
 
 ### Pricing & Availability
-- [ ] Price tier selected (Free)
+- [ ] Price tier selected (Free with in-app purchase)
+- [ ] In-app purchase created ($0.99 - "Unlock All Creatures")
 - [ ] Availability countries selected (All or specific)
 - [ ] Release date set (manual or automatic)
 

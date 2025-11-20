@@ -1,7 +1,7 @@
 # App Store Description
 
 ## Short Description (Promotional Text - 170 characters)
-Create magical animal hybrids! Mix a giraffe and zebra, then bring them to life with colors. Endless combinations for creative fun!
+Create magical animal hybrids! Mix animals, color them, and build your collection. Unlock all 66 creatures for just $0.99. Hours of creative fun!
 
 ## Full Description (Up to 4000 characters)
 
@@ -17,6 +17,9 @@ Transform ordinary animals into extraordinary creatures! Coloring Creatures lets
 **CREATIVE ANIMAL MIXING**
 Choose from 12 adorable animals including giraffes, zebras, elephants, lions, penguins, and more. Combine any two to create 66 unique hybrid creatures! Each combination creates a brand new animal friend waiting to be colored.
 
+**INCREDIBLE VALUE**
+Try the app FREE with sample creatures! Unlock the entire collection of all 66 hybrid animals for just $0.99 - that's less than a cup of coffee for endless creative fun! No subscriptions, no ads, just one simple unlock.
+
 **EASY-TO-USE COLORING TOOLS**
 • Fill Tool: Tap to instantly fill any area with color
 • Brush Tool: Draw and add creative details
@@ -29,13 +32,17 @@ Every colored creation gets a silly, auto-generated name (with text-to-speech!)!
 
 **DESIGNED FOR KIDS**
 • Simple, intuitive interface perfect for ages 4+
-• No ads or in-app purchases
+• No ads, ever!
 • No accounts or logins required
 • Playful background music (toggle on/off)
 • Colorful, engaging design
 • Safe and educational
+• One-time unlock for just $0.99
 
 **FEATURES PARENTS LOVE**
+✓ Incredibly affordable - just $0.99 for everything!
+✓ No subscriptions or recurring fees
+✓ No ads cluttering the experience
 ✓ Develops creativity and imagination
 ✓ Improves fine motor skills
 ✓ Teaches color recognition
@@ -54,6 +61,12 @@ Perfect for:
 • Bedtime wind-down
 • Rainy day fun
 • Learning through play
+
+**PRICING**
+• Download FREE and try sample creatures
+• Unlock ALL 66 creatures for just $0.99
+• One-time payment - no subscriptions!
+• No ads ever
 
 Download Coloring Creatures today and start creating your magical animal kingdom!
 
@@ -96,7 +109,7 @@ The Animal Pen stores all saved creations. Kids love building their gallery and 
 
 **DESIGNED WITH CARE**
 • Ad-free experience
-• No in-app purchases
+• Unlock everything for just $0.99
 • No data collection
 • No accounts needed
 • Offline functionality
@@ -109,6 +122,9 @@ Perfect for children ages 4-10 who love:
 • Animals and nature
 • Creative play
 • Screen time that's actually beneficial
+
+**AFFORDABLE PRICING**
+Try the app FREE with sample creatures, then unlock the full collection of 66 hybrid animals for just $0.99. No subscriptions, no recurring charges, no ads!
 
 Join thousands of young artists creating magical creatures every day!
 

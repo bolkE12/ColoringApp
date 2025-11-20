@@ -267,7 +267,7 @@ No account or login required.
 - [ ] Privacy policy URL added
 - [ ] Support URL added
 - [ ] Age rating completed
-- [ ] Pricing set (Free)
+- [ ] Pricing set (Free with $0.99 IAP)
 - [ ] Build uploaded via EAS
 - [ ] TestFlight testing completed
 - [ ] All review notes added
