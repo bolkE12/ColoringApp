@@ -46,8 +46,6 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
     setBirthYear('');
     setAgeError('');
     setShowAgeVerification(true);
-    // Auto-focus input after modal opens
-    setTimeout(() => yearInputRef.current?.focus(), 100);
   };
 
   const handleVerifyAge = async (yearToVerify?: string) => {
@@ -155,11 +153,13 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               maxLength={4}
               value={birthYear}
               onChangeText={handleYearChange}
-              autoFocus
             />
 
             {/* Visual 4 Digit Display */}
-            <View style={styles.yearInputContainer}>
+            <Pressable
+              style={styles.yearInputContainer}
+              onPress={() => yearInputRef.current?.focus()}
+            >
               <View style={styles.yearInput}>
                 <Text style={styles.yearDigit}>{birthYear[0] || ''}</Text>
               </View>
@@ -172,7 +172,7 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               <View style={styles.yearInput}>
                 <Text style={styles.yearDigit}>{birthYear[3] || ''}</Text>
               </View>
-            </View>
+            </Pressable>
 
             {ageError ? (
               <Text style={styles.errorText}>{ageError}</Text>
