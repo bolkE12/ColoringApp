@@ -23,7 +23,8 @@
     "production": {
       "ios": {
         "buildConfiguration": "Release",
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "deviceFamily": "ipad"
       },
       "android": {
         "buildType": "apk"
