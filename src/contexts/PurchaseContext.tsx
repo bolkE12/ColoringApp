@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ⚠️ DEBUG: Set to true to force free tier for testing (ignores AsyncStorage & IAP)
 // ⚠️ PRODUCTION: Set to false before releasing to App Store/Play Store
-const FORCE_FREE_TIER = true;
+const FORCE_FREE_TIER = false;
 
 // Conditionally import IAP modules only when not in free tier mode
 let InAppPurchases: any = null;
