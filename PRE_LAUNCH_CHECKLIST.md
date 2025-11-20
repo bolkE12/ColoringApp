@@ -1,4 +1,4 @@
-# Pre-Launch Checklist for Creature Coloring
+# Pre-Launch Checklist for Coloring Creatures
 
 Use this checklist to track your progress toward App Store submission.
 
@@ -62,7 +62,7 @@ Use this checklist to track your progress toward App Store submission.
 ### App Store Connect
 - [ ] Logged into App Store Connect
 - [ ] App registered (Bundle ID: com.creature.coloring)
-- [ ] App name claimed: "Creature Coloring"
+- [ ] App name claimed: "Coloring Creatures"
 - [ ] Primary language set
 - [ ] SKU assigned
 

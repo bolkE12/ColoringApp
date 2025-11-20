@@ -1,14 +1,14 @@
-# Privacy Policy for Creature Coloring
+# Privacy Policy for Coloring Creatures
 
 **Last Updated: November 15, 2024**
 
 ## Introduction
 
-Creature Coloring ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how our mobile application ("App") handles information.
+Coloring Creatures ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how our mobile application ("App") handles information.
 
 ## Information We Do NOT Collect
 
-Creature Coloring is designed with privacy as a priority. We do NOT collect, store, or transmit any personal information, including but not limited to:
+Coloring Creatures is designed with privacy as a priority. We do NOT collect, store, or transmit any personal information, including but not limited to:
 
 - Names
 - Email addresses
@@ -48,7 +48,7 @@ The App requests the following permissions:
 
 ## Third-Party Services
 
-Creature Coloring does NOT use any third-party services, including:
+Coloring Creatures does NOT use any third-party services, including:
 
 - No analytics platforms
 - No advertising networks
@@ -58,7 +58,7 @@ Creature Coloring does NOT use any third-party services, including:
 
 ## Children's Privacy
 
-Creature Coloring is designed for children aged 4 and up. We take children's privacy seriously:
+Coloring Creatures is designed for children aged 4 and up. We take children's privacy seriously:
 
 - We do not collect any personal information from children
 - We do not allow children to share personal information
@@ -80,7 +80,7 @@ All creations are stored on your device and are as secure as your device itself.
 
 ## In-App Purchases
 
-Currently, Creature Coloring does NOT include in-app purchases. If this changes in the future:
+Currently, Coloring Creatures does NOT include in-app purchases. If this changes in the future:
 
 - We will update this Privacy Policy
 - Purchase information will be handled by Apple/Google
@@ -120,7 +120,7 @@ This app complies with:
 
 ## Summary
 
-**In short**: Creature Coloring respects your privacy by not collecting any information at all. Everything happens on your device, and nothing is sent to us or anyone else.
+**In short**: Coloring Creatures respects your privacy by not collecting any information at all. Everything happens on your device, and nothing is sent to us or anyone else.
 
 ---
 

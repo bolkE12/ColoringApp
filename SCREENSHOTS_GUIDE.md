@@ -207,7 +207,7 @@ Before uploading to App Store Connect:
    - https://appstoreconnect.apple.com
 
 2. **Navigate to your app**
-   - My Apps → Creature Coloring → App Store tab
+   - My Apps → Coloring Creatures → App Store tab
 
 3. **Select device size**
    - iPhone 6.7" Display

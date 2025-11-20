@@ -7,9 +7,9 @@ Create magical animal hybrids! Mix a giraffe and zebra, then bring them to life 
 
 ### Version 1
 
-**Unleash Your Child's Imagination with Creature Coloring!**
+**Unleash Your Child's Imagination with Coloring Creatures!**
 
-Transform ordinary animals into extraordinary creatures! Creature Coloring lets kids create magical hybrid animals by mixing and matching their favorite creatures, then bringing them to life with vibrant colors.
+Transform ordinary animals into extraordinary creatures! Coloring Creatures lets kids create magical hybrid animals by mixing and matching their favorite creatures, then bringing them to life with vibrant colors.
 
 🦒 + 🦓 = A Giraffe-Zebra Creature!
 🐻 + 🐰 = A Bear-Bunny masterpiece!
@@ -55,7 +55,7 @@ Perfect for:
 • Rainy day fun
 • Learning through play
 
-Download Creature Coloring today and start creating your magical animal kingdom!
+Download Coloring Creatures today and start creating your magical animal kingdom!
 
 ---
 
@@ -63,7 +63,7 @@ Download Creature Coloring today and start creating your magical animal kingdom!
 
 **Where Creativity Meets Learning!**
 
-Creature Coloring is an educational art app that sparks imagination while teaching children about animals, colors, and creative expression.
+Coloring Creatures is an educational art app that sparks imagination while teaching children about animals, colors, and creative expression.
 
 **WHAT ARE HYBRID CREATURES?**
 In mythology, hybrid creatures are magical beings made from different animals combined together. Now kids can create their own! Mix a giraffe with a zebra, or combine a lion with a penguin - the possibilities are endless!
@@ -137,7 +137,7 @@ paint,color,animals,kids,children,art,creative,learning,education,fun,drawing
 
 ### Version 1.0.0 (Initial Release)
 ```
-Welcome to Creature Coloring!
+Welcome to Coloring Creatures!
 
 Create magical hybrid animals and bring them to life with color!
 
@@ -176,7 +176,7 @@ A: We only request photo library access to save your colored creations. The imag
 A: No! We don't collect any personal information. Everything stays on your device.
 
 **Q: Can I use this app offline?**
-A: Yes! Creature Coloring works completely offline. Perfect for car rides, planes, or anywhere without internet.
+A: Yes! Coloring Creatures works completely offline. Perfect for car rides, planes, or anywhere without internet.
 
 **Q: What age is this app appropriate for?**
-A: Creature Coloring is rated 4+ and is perfect for preschool through elementary school children. The simple interface makes it easy for even young children to use independently.
+A: Coloring Creatures is rated 4+ and is perfect for preschool through elementary school children. The simple interface makes it easy for even young children to use independently.

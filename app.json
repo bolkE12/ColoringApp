@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Creature Coloring",
-    "slug": "creature-coloring",
+    "name": "Coloring Creatures",
+    "slug": "coloring-creatures",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "creaturecoloring",
+    "scheme": "coloringcreatures",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
