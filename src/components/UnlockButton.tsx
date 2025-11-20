@@ -145,43 +145,35 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               Please enter your birth year to confirm you are 18 or older
             </Text>
 
-            {/* Visual 4 Digit Display */}
-            <View style={styles.yearInputContainer}>
-              <Pressable
-                style={styles.yearInput}
-                onPress={() => yearInputRef.current?.focus()}
-              >
+            {/* Visual 4 Digit Display with hidden input overlay */}
+            <Pressable
+              style={styles.yearInputContainer}
+              onPress={() => yearInputRef.current?.focus()}
+            >
+              <View style={styles.yearInput}>
                 <Text style={styles.yearDigit}>{birthYear[0] || ''}</Text>
-              </Pressable>
-              <Pressable
-                style={styles.yearInput}
-                onPress={() => yearInputRef.current?.focus()}
-              >
+              </View>
+              <View style={styles.yearInput}>
                 <Text style={styles.yearDigit}>{birthYear[1] || ''}</Text>
-              </Pressable>
-              <Pressable
-                style={styles.yearInput}
-                onPress={() => yearInputRef.current?.focus()}
-              >
+              </View>
+              <View style={styles.yearInput}>
                 <Text style={styles.yearDigit}>{birthYear[2] || ''}</Text>
-              </Pressable>
-              <Pressable
-                style={styles.yearInput}
-                onPress={() => yearInputRef.current?.focus()}
-              >
+              </View>
+              <View style={styles.yearInput}>
                 <Text style={styles.yearDigit}>{birthYear[3] || ''}</Text>
-              </Pressable>
-            </View>
+              </View>
 
-            {/* Hidden single input for keyboard */}
-            <TextInput
-              ref={yearInputRef}
-              style={styles.hiddenInput}
-              keyboardType="number-pad"
-              maxLength={4}
-              value={birthYear}
-              onChangeText={handleYearChange}
-            />
+              {/* Hidden input overlaid on top */}
+              <TextInput
+                ref={yearInputRef}
+                style={styles.hiddenInput}
+                keyboardType="number-pad"
+                maxLength={4}
+                value={birthYear}
+                onChangeText={handleYearChange}
+                caretHidden
+              />
+            </Pressable>
 
             {ageError ? (
               <Text style={styles.errorText}>{ageError}</Text>
@@ -269,13 +261,15 @@ const styles = StyleSheet.create({
   },
   hiddenInput: {
     position: 'absolute',
-    top: -9999,
-    left: -9999,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     opacity: 0,
-    height: 44,
-    width: 44,
+    color: 'transparent',
   },
   yearInputContainer: {
+    position: 'relative',
     flexDirection: 'row',
     gap: 16,
     marginVertical: 24,
