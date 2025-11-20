@@ -145,6 +145,34 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               Please enter your birth year to confirm you are 18 or older
             </Text>
 
+            {/* Visual 4 Digit Display */}
+            <View style={styles.yearInputContainer}>
+              <Pressable
+                style={styles.yearInput}
+                onPress={() => yearInputRef.current?.focus()}
+              >
+                <Text style={styles.yearDigit}>{birthYear[0] || ''}</Text>
+              </Pressable>
+              <Pressable
+                style={styles.yearInput}
+                onPress={() => yearInputRef.current?.focus()}
+              >
+                <Text style={styles.yearDigit}>{birthYear[1] || ''}</Text>
+              </Pressable>
+              <Pressable
+                style={styles.yearInput}
+                onPress={() => yearInputRef.current?.focus()}
+              >
+                <Text style={styles.yearDigit}>{birthYear[2] || ''}</Text>
+              </Pressable>
+              <Pressable
+                style={styles.yearInput}
+                onPress={() => yearInputRef.current?.focus()}
+              >
+                <Text style={styles.yearDigit}>{birthYear[3] || ''}</Text>
+              </Pressable>
+            </View>
+
             {/* Hidden single input for keyboard */}
             <TextInput
               ref={yearInputRef}
@@ -154,25 +182,6 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               value={birthYear}
               onChangeText={handleYearChange}
             />
-
-            {/* Visual 4 Digit Display */}
-            <Pressable
-              style={styles.yearInputContainer}
-              onPress={() => yearInputRef.current?.focus()}
-            >
-              <View style={styles.yearInput}>
-                <Text style={styles.yearDigit}>{birthYear[0] || ''}</Text>
-              </View>
-              <View style={styles.yearInput}>
-                <Text style={styles.yearDigit}>{birthYear[1] || ''}</Text>
-              </View>
-              <View style={styles.yearInput}>
-                <Text style={styles.yearDigit}>{birthYear[2] || ''}</Text>
-              </View>
-              <View style={styles.yearInput}>
-                <Text style={styles.yearDigit}>{birthYear[3] || ''}</Text>
-              </View>
-            </Pressable>
 
             {ageError ? (
               <Text style={styles.errorText}>{ageError}</Text>
@@ -260,9 +269,11 @@ const styles = StyleSheet.create({
   },
   hiddenInput: {
     position: 'absolute',
+    top: -9999,
+    left: -9999,
     opacity: 0,
-    height: 0,
-    width: 0,
+    height: 44,
+    width: 44,
   },
   yearInputContainer: {
     flexDirection: 'row',
