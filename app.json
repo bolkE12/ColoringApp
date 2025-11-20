@@ -56,8 +56,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "YOUR_PROJECT_ID_HERE"
+        "projectId": "9576650e-3c41-422f-b7ca-585e587ddcb7"
       }
-    }
+    },
+    "owner": "bolke"
   }
 }

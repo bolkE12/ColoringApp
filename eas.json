@@ -33,7 +33,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "YOUR_APPLE_ID_EMAIL@example.com",
+        "appleId": "brian.boehlke@gmail.com",
         "ascAppId": "YOUR_ASC_APP_ID",
         "appleTeamId": "YOUR_TEAM_ID"
       },

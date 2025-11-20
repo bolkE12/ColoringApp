@@ -21,15 +21,6 @@ This guide will help you prepare Coloring Creatures for App Store submission whi
 #### Required Screenshots
 You'll need screenshots for different device sizes:
 
-**iPhone (Required)**
-- 6.7" Display (iPhone 15 Pro Max, 14 Pro Max, 13 Pro Max, 12 Pro Max)
-  - Size: 1290 x 2796 pixels
-  - Minimum: 3 screenshots, Maximum: 10
-
-- 6.5" Display (iPhone 11 Pro Max, XS Max)
-  - Size: 1242 x 2688 pixels
-  - Minimum: 3 screenshots, Maximum: 10
-
 **iPad (Required if supporting iPad)**
 - 12.9" Display (iPad Pro)
   - Size: 2048 x 2732 pixels
