@@ -3,6 +3,9 @@
     "name": "Coloring Creatures",
     "slug": "coloring-creatures",
     "version": "1.0.0",
+    "cli": {
+      "appVersionSource": "local"
+    },
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
