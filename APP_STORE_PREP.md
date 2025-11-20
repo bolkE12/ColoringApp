@@ -1,11 +1,11 @@
 # App Store Preparation Checklist
 
-This guide will help you prepare Chimera Coloring for App Store submission while waiting for Apple Developer Program approval.
+This guide will help you prepare Creature Coloring for App Store submission while waiting for Apple Developer Program approval.
 
 ## ✅ Completed
 
 ### 1. App Configuration (app.json)
-- ✅ Bundle identifier set: `com.chimera.coloring`
+- ✅ Bundle identifier set: `com.creature.coloring`
 - ✅ Build number added
 - ✅ Privacy permissions configured
 - ✅ Splash screen background updated
@@ -61,7 +61,7 @@ You'll need screenshots for different device sizes:
 ### 3. App Store Metadata
 
 #### App Name
-**Chimera Coloring** (already set)
+**Creature Coloring** (already set)
 
 #### Subtitle (30 characters max)
 Suggested: "Mix & Color Hybrid Animals"
@@ -81,7 +81,7 @@ Create magical animal hybrids! Mix a giraffe and zebra, then bring them to life 
 
 #### What's New in This Version
 ```
-Initial release of Chimera Coloring!
+Initial release of Creature Coloring!
 • Create unique hybrid animals
 • Color with easy-to-use tools
 • Save your creations to the Animal Pen
@@ -232,7 +232,7 @@ Apple will review your app. Be ready to provide:
 
 **Review Notes**
 ```
-Chimera Coloring is a creative app for children to mix and color animals.
+Creature Coloring is a creative app for children to mix and color animals.
 
 How to test:
 1. Tap "Create Animal" on home screen

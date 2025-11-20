@@ -207,7 +207,7 @@ Before uploading to App Store Connect:
    - https://appstoreconnect.apple.com
 
 2. **Navigate to your app**
-   - My Apps → Chimera Coloring → App Store tab
+   - My Apps → Creature Coloring → App Store tab
 
 3. **Select device size**
    - iPhone 6.7" Display
@@ -270,7 +270,7 @@ If you want to create a video preview:
 2. **Create Screen**: "Mix Any Two Animals Together!"
 3. **Hybrid Preview**: "See Your Unique Creation!"
 4. **Coloring - In Progress**: "Easy Fill & Brush Tools!"
-5. **Coloring - Complete**: "Bring Your Chimera to Life!"
+5. **Coloring - Complete**: "Bring Your Creature to Life!"
 6. **Animal Pen**: "Build Your Magical Collection!"
 
 This order tells a complete story of the user journey.

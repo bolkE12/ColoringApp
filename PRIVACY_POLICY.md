@@ -1,14 +1,14 @@
-# Privacy Policy for Chimera Coloring
+# Privacy Policy for Creature Coloring
 
 **Last Updated: November 15, 2024**
 
 ## Introduction
 
-Chimera Coloring ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how our mobile application ("App") handles information.
+Creature Coloring ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how our mobile application ("App") handles information.
 
 ## Information We Do NOT Collect
 
-Chimera Coloring is designed with privacy as a priority. We do NOT collect, store, or transmit any personal information, including but not limited to:
+Creature Coloring is designed with privacy as a priority. We do NOT collect, store, or transmit any personal information, including but not limited to:
 
 - Names
 - Email addresses
@@ -48,7 +48,7 @@ The App requests the following permissions:
 
 ## Third-Party Services
 
-Chimera Coloring does NOT use any third-party services, including:
+Creature Coloring does NOT use any third-party services, including:
 
 - No analytics platforms
 - No advertising networks
@@ -58,7 +58,7 @@ Chimera Coloring does NOT use any third-party services, including:
 
 ## Children's Privacy
 
-Chimera Coloring is designed for children aged 4 and up. We take children's privacy seriously:
+Creature Coloring is designed for children aged 4 and up. We take children's privacy seriously:
 
 - We do not collect any personal information from children
 - We do not allow children to share personal information
@@ -80,7 +80,7 @@ All creations are stored on your device and are as secure as your device itself.
 
 ## In-App Purchases
 
-Currently, Chimera Coloring does NOT include in-app purchases. If this changes in the future:
+Currently, Creature Coloring does NOT include in-app purchases. If this changes in the future:
 
 - We will update this Privacy Policy
 - Purchase information will be handled by Apple/Google
@@ -120,7 +120,7 @@ This app complies with:
 
 ## Summary
 
-**In short**: Chimera Coloring respects your privacy by not collecting any information at all. Everything happens on your device, and nothing is sent to us or anyone else.
+**In short**: Creature Coloring respects your privacy by not collecting any information at all. Everything happens on your device, and nothing is sent to us or anyone else.
 
 ---
 

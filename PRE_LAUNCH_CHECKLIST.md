@@ -1,4 +1,4 @@
-# Pre-Launch Checklist for Chimera Coloring
+# Pre-Launch Checklist for Creature Coloring
 
 Use this checklist to track your progress toward App Store submission.
 
@@ -61,8 +61,8 @@ Use this checklist to track your progress toward App Store submission.
 
 ### App Store Connect
 - [ ] Logged into App Store Connect
-- [ ] App registered (Bundle ID: com.chimera.coloring)
-- [ ] App name claimed: "Chimera Coloring"
+- [ ] App registered (Bundle ID: com.creature.coloring)
+- [ ] App name claimed: "Creature Coloring"
 - [ ] Primary language set
 - [ ] SKU assigned
 
