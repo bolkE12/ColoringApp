@@ -25,9 +25,6 @@
       "bundleIdentifier": "com.creature.coloring",
       "buildNumber": "1",
       "infoPlist": {
-        "UIDeviceFamily": [
-          2
-        ],
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save your colored animal creations.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save your colored animals to your photo library.",
         "NSMicrophoneUsageDescription": "This app uses audio for background music and sound effects to enhance the coloring experience.",
@@ -55,7 +52,18 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "13.4",
+            "extraXcodeSettings": {
+              "TARGETED_DEVICE_FAMILY": "2"
+            }
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
