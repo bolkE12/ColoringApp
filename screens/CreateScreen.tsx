@@ -27,6 +27,7 @@ import { MusicToggle } from "../src/components/MusicToggle";
 import { HybridAnimationOverlay } from "../src/components/HybridAnimationOverlay";
 import { UnlockButton } from "../src/components/UnlockButton";
 import { usePurchase } from "../src/contexts/PurchaseContext";
+import LocalAnalytics from "../src/utils/localAnalytics";
 
 // PNG requires for base animals
 const LION = require("../assets/base/lion.png");
@@ -115,6 +116,11 @@ export default function CreateScreen() {
     baseAnimalKey?: string;
   } | null>(null);
 
+  // Track screen view
+  useEffect(() => {
+    LocalAnalytics.trackEvent('screen_view', { screen: 'CreateScreen' });
+  }, []);
+
   // Update dimensions on screen rotation
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -182,8 +188,15 @@ export default function CreateScreen() {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSelected((prev) => {
       const isSelected = prev.includes(id);
-      if (isSelected) return prev.filter((x) => x !== id);
-      if (prev.length >= 2) return [prev[0], id]; // keep max 2; replace second
+      if (isSelected) {
+        LocalAnalytics.trackEvent('animal_deselected', { animal: id });
+        return prev.filter((x) => x !== id);
+      }
+      if (prev.length >= 2) {
+        LocalAnalytics.trackEvent('animal_selected', { animal: id, replacing: prev[1] });
+        return [prev[0], id]; // keep max 2; replace second
+      }
+      LocalAnalytics.trackEvent('animal_selected', { animal: id, position: prev.length });
       return [...prev, id];
     });
   };
@@ -272,12 +285,20 @@ export default function CreateScreen() {
                       // Hybrid: two animals selected - trigger animation
                       const key = makeHybridKey(selected[0], selected[1]);
                       const displayName = selected.map((s) => s[0].toUpperCase() + s.slice(1)).join(" + ");
+                      LocalAnalytics.trackEvent('hybrid_created', {
+                        hybridKey: key,
+                        animal1: selected[0],
+                        animal2: selected[1]
+                      });
                       setPendingNavigation({ animalName: displayName, hybridKey: key });
                       setShowAnimation(true);
                     } else {
                       // Single animal: only one selected - navigate directly (no animation)
                       const animalKey = selected[0];
                       const displayName = animalKey[0].toUpperCase() + animalKey.slice(1);
+                      LocalAnalytics.trackEvent('single_animal_selected', {
+                        animal: animalKey
+                      });
                       // @ts-ignore
                       navigation.navigate("Coloring", { animalName: displayName, baseAnimalKey: animalKey });
                     }

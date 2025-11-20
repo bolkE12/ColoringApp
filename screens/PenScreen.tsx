@@ -23,6 +23,7 @@ import { getSavedAnimals, deleteAnimal, SavedAnimal } from "../src/utils/savedAn
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { MusicToggle } from "../src/components/MusicToggle";
 import { UnlockButton } from "../src/components/UnlockButton";
+import LocalAnalytics from "../src/utils/localAnalytics";
 
 export default function PenScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -56,6 +57,11 @@ export default function PenScreen() {
       // Sort by newest first
       animals.sort((a, b) => b.timestamp - a.timestamp);
       setSavedAnimals(animals);
+
+      // Track if empty state is shown
+      if (animals.length === 0) {
+        LocalAnalytics.trackEvent('empty_state_viewed', { screen: 'PenScreen' });
+      }
     } catch (error) {
       // Silently fail - user will see empty state
     } finally {
@@ -66,6 +72,7 @@ export default function PenScreen() {
   // Reload animals when screen comes into focus
   useFocusEffect(
     useCallback(() => {
+      LocalAnalytics.trackEvent('screen_view', { screen: 'PenScreen' });
       loadAnimals();
     }, [])
   );
@@ -75,15 +82,29 @@ export default function PenScreen() {
       "Delete Animal",
       `Are you sure you want to delete this ${animal.animalName}?`,
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {
+            LocalAnalytics.trackEvent('delete_cancelled', { hybridKey: animal.hybridKey });
+          }
+        },
         {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
             try {
               await deleteAnimal(animal.id);
+              LocalAnalytics.trackEvent('animal_deleted', {
+                hybridKey: animal.hybridKey,
+                animalName: animal.animalName
+              });
               await loadAnimals();
             } catch (error) {
+              LocalAnalytics.trackEvent('delete_failed', {
+                hybridKey: animal.hybridKey,
+                error: String(error)
+              });
               Alert.alert("Error", "Failed to delete animal");
             }
           },
@@ -97,6 +118,7 @@ export default function PenScreen() {
       // Request media library permissions
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
+        LocalAnalytics.trackEvent('download_permission_denied', { hybridKey: animal.hybridKey });
         Alert.alert(
           "Permission Required",
           "Please grant permission to save images to your photo gallery."
@@ -106,8 +128,16 @@ export default function PenScreen() {
 
       // Save to media library
       await MediaLibrary.createAssetAsync(animal.imageUri);
+      LocalAnalytics.trackEvent('animal_downloaded', {
+        hybridKey: animal.hybridKey,
+        animalName: animal.animalName
+      });
       Alert.alert("Success!", `${animal.animalName} has been saved to your photo gallery!`);
     } catch (error) {
+      LocalAnalytics.trackEvent('download_failed', {
+        hybridKey: animal.hybridKey,
+        error: String(error)
+      });
       Alert.alert("Download Failed", "Could not save image to gallery. This feature requires a development build.");
     }
   };
@@ -115,6 +145,12 @@ export default function PenScreen() {
   const handleEdit = (animal: SavedAnimal) => {
     // Determine if this is a hybrid (contains "_") or base animal (no "_")
     const isHybrid = animal.hybridKey.includes("_");
+
+    LocalAnalytics.trackEvent('animal_edited', {
+      hybridKey: animal.hybridKey,
+      animalName: animal.animalName,
+      isHybrid
+    });
 
     navigation.navigate("Coloring", {
       animalName: animal.animalName,

@@ -27,6 +27,7 @@ import { saveAnimal, updateAnimal } from "../src/utils/savedAnimals";
 import { generateSillyName } from "../src/utils/nameGenerator";
 import { MusicToggle } from "../src/components/MusicToggle";
 import { UnlockButton } from "../src/components/UnlockButton";
+import LocalAnalytics from "../src/utils/localAnalytics";
 
 // Import the correct navigation types
 import type { RootStackParamList } from "../navigation/AppNavigator";
@@ -105,6 +106,16 @@ export default function ColoringScreen() {
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
   const isPortrait = dimensions.height > dimensions.width;
 
+  // Track screen view and coloring session start
+  useEffect(() => {
+    LocalAnalytics.trackEvent('screen_view', {
+      screen: 'ColoringScreen',
+      hybridKey: hybridKey || undefined,
+      baseAnimalKey: baseAnimalKey || undefined,
+      isEditing: !!initialSavedAnimalId
+    });
+  }, []);
+
   // Update dimensions on screen rotation
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -132,6 +143,7 @@ export default function ColoringScreen() {
 
   // Stable color select handler
   const handleColorSelect = useCallback((color: string) => {
+    LocalAnalytics.trackEvent('color_selected', { color });
     setActiveColor(color);
     canvasRef.current?.setColor(color);
   }, []);
@@ -145,6 +157,7 @@ export default function ColoringScreen() {
 
   // Speak introduction first time, then just the name
   const speakName = useCallback(() => {
+    LocalAnalytics.trackEvent('name_spoken', { name: generatedName });
     if (!hasSpokenRef.current) {
       // First time: say the introduction
       Speech.speak(`Choose your animal's name: ${generatedName}`, {
@@ -165,6 +178,7 @@ export default function ColoringScreen() {
 
   // Navigate to the next name (generates a new one if at the end)
   const nextName = useCallback(() => {
+    LocalAnalytics.trackEvent('name_cycled', { direction: 'next' });
     if (currentNameIndex < nameListRef.current.length - 1) {
       // Move to next existing name
       setCurrentNameIndex(currentNameIndex + 1);
@@ -178,6 +192,7 @@ export default function ColoringScreen() {
 
   // Navigate to the previous name
   const previousName = useCallback(() => {
+    LocalAnalytics.trackEvent('name_cycled', { direction: 'previous' });
     if (currentNameIndex > 0) {
       setCurrentNameIndex(currentNameIndex - 1);
     }
@@ -282,7 +297,10 @@ export default function ColoringScreen() {
                 {/* Tool Switch - Horizontal tabs */}
                 <View style={styles.toolRow}>
               <Pressable
-                onPress={() => setActiveTool("fill")}
+                onPress={() => {
+                  LocalAnalytics.trackEvent('tool_used', { tool: 'fill' });
+                  setActiveTool("fill");
+                }}
                 style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
               >
                 <MaterialCommunityIcons name="water" size={16} color={activeTool === "fill" ? "#fff" : "#333"} />
@@ -291,7 +309,10 @@ export default function ColoringScreen() {
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => setActiveTool("brush")}
+                onPress={() => {
+                  LocalAnalytics.trackEvent('tool_used', { tool: 'brush' });
+                  setActiveTool("brush");
+                }}
                 style={[styles.toolBtn, activeTool === "brush" && styles.toolBtnActive]}
               >
                 <MaterialCommunityIcons name="brush" size={16} color={activeTool === "brush" ? "#fff" : "#333"} />
@@ -307,7 +328,10 @@ export default function ColoringScreen() {
                 {[4, 8, 16, 24].map((width) => (
                   <Pressable
                     key={width}
-                    onPress={() => setBrushWidth(width)}
+                    onPress={() => {
+                      LocalAnalytics.trackEvent('brush_width_changed', { width });
+                      setBrushWidth(width);
+                    }}
                     style={[
                       styles.brushWidthBtn,
                       brushWidth === width && styles.brushWidthBtnActive
@@ -347,6 +371,7 @@ export default function ColoringScreen() {
                 {/* Undo Button */}
                 <Pressable
                   onPress={() => {
+                    LocalAnalytics.trackEvent('undo_used');
                     canvasRef.current?.undo();
                   }}
                   style={styles.actionBtn}
@@ -358,6 +383,7 @@ export default function ColoringScreen() {
                 {/* Clear Button */}
                 <Pressable
                   onPress={() => {
+                    LocalAnalytics.trackEvent('clear_used');
                     canvasRef.current?.clear();
                   }}
                   style={styles.actionBtn}
@@ -393,6 +419,7 @@ export default function ColoringScreen() {
                   style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
                   onPress={() => {
                     const isUpdate = !!savedAnimalId;
+                    const startTime = Date.now();
 
                     // Show modal and trigger confetti immediately for instant feedback
                     if (!isUpdate) {
@@ -420,11 +447,24 @@ export default function ColoringScreen() {
                             setSavedImageUri(imageUri);
                             setHasSaved(true);
                           }
+                          // Track successful save
+                          LocalAnalytics.trackEvent('animal_saved', {
+                            hybridKey: hybridKey || undefined,
+                            baseAnimalKey: baseAnimalKey || undefined,
+                            isUpdate,
+                            saveTimeMs: Date.now() - startTime
+                          });
                         }
                       } catch (error) {
                         // Hide confetti on error
                         setShowConfetti(false);
                         setShowSuccessModal(false);
+                        // Track failed save
+                        LocalAnalytics.trackEvent('save_failed', {
+                          hybridKey: hybridKey || undefined,
+                          baseAnimalKey: baseAnimalKey || undefined,
+                          error: String(error)
+                        });
                         Alert.alert("Oops!", "Something went wrong. Please try again.");
                       }
                     }, 0);
@@ -442,6 +482,7 @@ export default function ColoringScreen() {
                   {/* Undo Button */}
                   <Pressable
                     onPress={() => {
+                      LocalAnalytics.trackEvent('undo_used');
                       canvasRef.current?.undo();
                     }}
                     style={styles.actionBtnLandscapeRow}
@@ -453,6 +494,7 @@ export default function ColoringScreen() {
                   {/* Clear Button */}
                   <Pressable
                     onPress={() => {
+                      LocalAnalytics.trackEvent('clear_used');
                       canvasRef.current?.clear();
                     }}
                     style={styles.actionBtnLandscapeRow}
@@ -489,6 +531,7 @@ export default function ColoringScreen() {
                     style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
                     onPress={() => {
                       const isUpdate = !!savedAnimalId;
+                      const startTime = Date.now();
 
                       // Show modal and trigger confetti immediately for instant feedback
                       if (!isUpdate) {
@@ -516,11 +559,24 @@ export default function ColoringScreen() {
                               setSavedImageUri(imageUri);
                               setHasSaved(true);
                             }
+                            // Track successful save
+                            LocalAnalytics.trackEvent('animal_saved', {
+                              hybridKey: hybridKey || undefined,
+                              baseAnimalKey: baseAnimalKey || undefined,
+                              isUpdate,
+                              saveTimeMs: Date.now() - startTime
+                            });
                           }
                         } catch (error) {
                           // Hide confetti on error
                           setShowConfetti(false);
                           setShowSuccessModal(false);
+                          // Track failed save
+                          LocalAnalytics.trackEvent('save_failed', {
+                            hybridKey: hybridKey || undefined,
+                            baseAnimalKey: baseAnimalKey || undefined,
+                            error: String(error)
+                          });
                           Alert.alert("Oops!", "Something went wrong. Please try again.");
                         }
                       }, 0);
@@ -545,7 +601,10 @@ export default function ColoringScreen() {
                 {/* Tool Switch - Horizontal tabs */}
                 <View style={styles.toolRow}>
                   <Pressable
-                    onPress={() => setActiveTool("fill")}
+                    onPress={() => {
+                      LocalAnalytics.trackEvent('tool_used', { tool: 'fill' });
+                      setActiveTool("fill");
+                    }}
                     style={[styles.toolBtn, activeTool === "fill" && styles.toolBtnActive]}
                   >
                     <MaterialCommunityIcons name="water" size={16} color={activeTool === "fill" ? "#fff" : "#333"} />
@@ -554,7 +613,10 @@ export default function ColoringScreen() {
                     </Text>
                   </Pressable>
                   <Pressable
-                    onPress={() => setActiveTool("brush")}
+                    onPress={() => {
+                      LocalAnalytics.trackEvent('tool_used', { tool: 'brush' });
+                      setActiveTool("brush");
+                    }}
                     style={[styles.toolBtn, activeTool === "brush" && styles.toolBtnActive]}
                   >
                     <MaterialCommunityIcons name="brush" size={16} color={activeTool === "brush" ? "#fff" : "#333"} />
@@ -570,7 +632,10 @@ export default function ColoringScreen() {
                     {[4, 8, 16, 24].map((width) => (
                       <Pressable
                         key={width}
-                        onPress={() => setBrushWidth(width)}
+                        onPress={() => {
+                          LocalAnalytics.trackEvent('brush_width_changed', { width });
+                          setBrushWidth(width);
+                        }}
                         style={[
                           styles.brushWidthBtn,
                           brushWidth === width && styles.brushWidthBtnActive
@@ -606,6 +671,7 @@ export default function ColoringScreen() {
                   {/* Undo Button */}
                   <Pressable
                     onPress={() => {
+                      LocalAnalytics.trackEvent('undo_used');
                       canvasRef.current?.undo();
                     }}
                     style={styles.actionBtn}
@@ -617,6 +683,7 @@ export default function ColoringScreen() {
                   {/* Clear Button */}
                   <Pressable
                     onPress={() => {
+                      LocalAnalytics.trackEvent('clear_used');
                       canvasRef.current?.clear();
                     }}
                     style={styles.actionBtn}
@@ -652,6 +719,7 @@ export default function ColoringScreen() {
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, flex: 1 }}
                       onPress={() => {
                         const isUpdate = !!savedAnimalId;
+                        const startTime = Date.now();
 
                         // Show modal and trigger confetti immediately for instant feedback
                         if (!isUpdate) {
@@ -679,11 +747,24 @@ export default function ColoringScreen() {
                                 setSavedImageUri(imageUri);
                                 setHasSaved(true);
                               }
+                              // Track successful save
+                              LocalAnalytics.trackEvent('animal_saved', {
+                                hybridKey: hybridKey || undefined,
+                                baseAnimalKey: baseAnimalKey || undefined,
+                                isUpdate,
+                                saveTimeMs: Date.now() - startTime
+                              });
                             }
                           } catch (error) {
                             // Hide confetti on error
                             setShowConfetti(false);
                             setShowSuccessModal(false);
+                            // Track failed save
+                            LocalAnalytics.trackEvent('save_failed', {
+                              hybridKey: hybridKey || undefined,
+                              baseAnimalKey: baseAnimalKey || undefined,
+                              error: String(error)
+                            });
                             Alert.alert("Oops!", "Something went wrong. Please try again.");
                           }
                         }, 0);
