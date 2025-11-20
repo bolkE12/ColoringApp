@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -12,9 +12,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getBaseRequire } from "../../assets/base";
 import { HYBRID_SOURCES } from "../../assets/hybrid";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const CENTER_X = SCREEN_WIDTH / 2;
-const CENTER_Y = SCREEN_HEIGHT / 2;
 const TILE_SIZE = 140;
 
 interface HybridAnimationOverlayProps {
@@ -32,6 +29,21 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
   hybridKey,
   onComplete,
 }) => {
+  // Get current dimensions
+  const [dimensions, setDimensions] = useState(Dimensions.get("window"));
+  const SCREEN_WIDTH = dimensions.width;
+  const SCREEN_HEIGHT = dimensions.height;
+  const CENTER_X = SCREEN_WIDTH / 2;
+  const CENTER_Y = SCREEN_HEIGHT / 2;
+
+  // Update dimensions on orientation change
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
+
   // Animation values
   const animal1X = useRef(new Animated.Value(-TILE_SIZE)).current;
   const animal1Y = useRef(new Animated.Value(CENTER_Y - TILE_SIZE / 2)).current;
@@ -276,13 +288,29 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
         onComplete();
       });
     }
-  }, [visible]);
+  }, [visible, CENTER_X, CENTER_Y, SCREEN_WIDTH]);
 
   if (!visible) return null;
 
   const animal1Image = getBaseRequire(animal1 as any);
   const animal2Image = getBaseRequire(animal2 as any);
   const hybridImage = HYBRID_SOURCES[hybridKey];
+
+  // Create dynamic styles based on current dimensions
+  const dynamicStyles = {
+    hybridContainer: {
+      left: CENTER_X - (TILE_SIZE * 1.5) / 2,
+      top: CENTER_Y - (TILE_SIZE * 1.5) / 2,
+    },
+    burstEffect: {
+      left: CENTER_X - 60,
+      top: CENTER_Y - 60,
+    },
+    bangContainer: {
+      left: CENTER_X - 40,
+      top: CENTER_Y - 40,
+    },
+  };
 
   return (
     <Modal visible={visible} transparent animationType="none">
@@ -337,6 +365,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
         <Animated.View
           style={[
             styles.burstEffect,
+            dynamicStyles.burstEffect,
             {
               transform: [{ scale: burstScale }],
               opacity: burstOpacity,
@@ -381,6 +410,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
         <Animated.View
           style={[
             styles.bangContainer,
+            dynamicStyles.bangContainer,
             {
               transform: [{ scale: burstScale }],
               opacity: burstOpacity,
@@ -394,6 +424,7 @@ export const HybridAnimationOverlay: React.FC<HybridAnimationOverlayProps> = ({
         <Animated.View
           style={[
             styles.hybridContainer,
+            dynamicStyles.hybridContainer,
             {
               transform: [
                 { translateY: hybridY },
@@ -454,8 +485,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 15,
-    left: CENTER_X - (TILE_SIZE * 1.5) / 2,
-    top: CENTER_Y - (TILE_SIZE * 1.5) / 2,
   },
   hybridImage: {
     width: "100%",
@@ -463,8 +492,6 @@ const styles = StyleSheet.create({
   },
   burstEffect: {
     position: "absolute",
-    left: CENTER_X - 60,
-    top: CENTER_Y - 60,
     width: 120,
     height: 120,
     borderRadius: 60,
@@ -489,8 +516,6 @@ const styles = StyleSheet.create({
   },
   bangContainer: {
     position: "absolute",
-    left: CENTER_X - 40,
-    top: CENTER_Y - 40,
     width: 80,
     height: 80,
     justifyContent: "center",

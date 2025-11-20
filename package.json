@@ -1,5 +1,5 @@
 {
-  "name": "chimeracoloring",
+  "name": "coloringcreatures",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -42,7 +42,6 @@
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.6.2",
-    "react-native-svg-transformer": "^1.5.1",
     "typescript": "~5.9.2"
   },
   "private": true

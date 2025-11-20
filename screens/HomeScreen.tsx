@@ -26,6 +26,7 @@ import { MusicToggle } from "../src/components/MusicToggle";
 import { UnlockButton } from "../src/components/UnlockButton";
 import { usePurchase, FREE_ANIMALS } from "../src/contexts/PurchaseContext";
 import { getSavedAnimals } from "../src/utils/savedAnimals";
+import LocalAnalytics from "../src/utils/localAnalytics";
 
 const ANIMALS = ["bear","bunny","elephant","fox","giraffe","hippo","lion","monkey","penguin","tiger","turtle","zebra"] as const;
 type Animal = typeof ANIMALS[number];
@@ -88,6 +89,9 @@ export default function App() {
   // Check for saved animals on screen focus
   useFocusEffect(
     useCallback(() => {
+      // Track screen view
+      LocalAnalytics.trackEvent('screen_view', { screen: 'HomeScreen' });
+
       async function checkSavedAnimals() {
         const animals = await getSavedAnimals();
         setHasSavedAnimals(animals.length > 0);
@@ -472,7 +476,14 @@ function cyclePair() {
 
           {/* Buttons */}
           <View style={styles.buttons}>
-            <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate("Create")}>
+            <Pressable style={styles.primaryBtn} onPress={() => {
+              LocalAnalytics.trackEvent('create_button_pressed', {
+                leftAnimal,
+                rightAnimal,
+                hybridKey: hk
+              });
+              navigation.navigate("Create");
+            }}>
               <MaterialCommunityIcons name="plus" color="#fff" size={20} style={{ marginRight: 8 }} />
               <Text style={styles.primaryText}>
                 Create and Color Your Own Animal!
@@ -481,7 +492,10 @@ function cyclePair() {
 
             {/* Only show "My Animal Pen" button if user has saved animals */}
             {hasSavedAnimals && (
-              <Pressable style={styles.secondaryBtn} onPress={() => navigation.navigate("Pen")}>
+              <Pressable style={styles.secondaryBtn} onPress={() => {
+                LocalAnalytics.trackEvent('pen_button_pressed');
+                navigation.navigate("Pen");
+              }}>
                 <MaterialCommunityIcons name="paw" color="#333" size={20} style={{ marginRight: 8 }} />
                 <Text style={styles.secondaryText}>My Animal Pen</Text>
               </Pressable>
