@@ -3,7 +3,7 @@
     "name": "Coloring Creatures",
     "slug": "coloring-creatures",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "coloringcreatures",
@@ -18,9 +18,13 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "requiresFullScreen": false,
       "bundleIdentifier": "com.creature.coloring",
       "buildNumber": "1",
       "infoPlist": {
+        "UIDeviceFamily": [
+          2
+        ],
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save your colored animal creations.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save your colored animals to your photo library.",
         "NSMicrophoneUsageDescription": "This app uses audio for background music and sound effects to enhance the coloring experience.",
