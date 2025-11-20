@@ -119,6 +119,13 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Purchase unlock via IAP
   const purchaseUnlock = async () => {
+    // In development mode (simulator/Expo Go), allow test unlocking
+    if (__DEV__) {
+      console.log('💳 Development mode detected, unlocking for testing');
+      await unlockPremium();
+      return;
+    }
+
     if (!InAppPurchases || !IAP_PRODUCTS) {
       console.log('💳 IAP not available, unlocking for testing');
       await unlockPremium();
