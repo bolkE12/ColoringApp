@@ -6,13 +6,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const FORCE_FREE_TIER = false;
 
 // Conditionally import IAP modules only when not in free tier mode
+// Note: expo-in-app-purchases is only available on iOS
 let InAppPurchases: any = null;
 let IAP_PRODUCTS: any = null;
 
 if (!FORCE_FREE_TIER) {
   try {
-    InAppPurchases = require('expo-in-app-purchases');
-    IAP_PRODUCTS = require('../config/iap').IAP_PRODUCTS;
+    // expo-in-app-purchases only works on iOS in this setup
+    // For Android, you would use react-native-iap or similar
+    if (require('react-native').Platform.OS === 'ios') {
+      InAppPurchases = require('expo-in-app-purchases');
+      IAP_PRODUCTS = require('../config/iap').IAP_PRODUCTS;
+    }
   } catch (error) {
     console.warn('⚠️ IAP modules not available:', error);
   }

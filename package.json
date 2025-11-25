@@ -20,7 +20,6 @@
     "expo-file-system": "^19.0.17",
     "expo-font": "~14.0.9",
     "expo-gl": "^16.0.7",
-    "expo-in-app-purchases": "^14.5.0",
     "expo-linear-gradient": "~15.0.7",
     "expo-media-library": "^18.2.0",
     "expo-speech": "^14.0.7",
