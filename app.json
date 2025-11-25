@@ -45,9 +45,7 @@
       "permissions": [
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_EXTERNAL_STORAGE"
-      ],
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -62,6 +60,12 @@
             "extraXcodeSettings": {
               "TARGETED_DEVICE_FAMILY": "2"
             }
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 24,
+            "buildToolsVersion": "34.0.0"
           }
         }
       ]
