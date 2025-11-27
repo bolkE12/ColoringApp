@@ -73,8 +73,13 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
     // Age verified, proceed with IAP purchase flow
     setShowAgeVerification(false);
     try {
+      console.log('🔓 Starting purchase flow...');
       await purchaseUnlock();
-      setShowSuccessModal(true);
+      console.log('🔓 Purchase completed successfully!');
+      // Small delay to ensure state updates propagate
+      setTimeout(() => {
+        setShowSuccessModal(true);
+      }, 100);
     } catch (error) {
       console.log('💳 Purchase failed:', error);
       // Purchase was canceled or failed - could show error modal here
@@ -214,10 +219,13 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
             </Text>
             <Pressable
               style={styles.modalButtonPrimary}
-              onPress={() => setShowSuccessModal(false)}
+              onPress={() => {
+                console.log('🔓 Success modal closed, isPremium should be true');
+                setShowSuccessModal(false);
+              }}
             >
               <MaterialCommunityIcons name="thumb-up" size={20} color="#101010" style={{ marginRight: 8 }} />
-              <Text style={styles.modalButtonText}>Awesome!</Text>
+              <Text style={styles.modalButtonText}>Let's Go!</Text>
             </Pressable>
           </View>
         </View>
@@ -362,7 +370,8 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     fontFamily: 'MadimiOne_400Regular',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '600',
     color: '#101010',
   },
   modalButtonSecondaryText: {

@@ -34,6 +34,17 @@ const PREMIUM_KEY = 'premium_unlocked';
 export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
 
+  // Unlock premium (defined early so it's available in useEffect)
+  const unlockPremium = async () => {
+    try {
+      await AsyncStorage.setItem(PREMIUM_KEY, 'true');
+      setIsPremium(true);
+      console.log('🔓 Premium unlocked');
+    } catch (error) {
+      throw new Error('Failed to unlock premium');
+    }
+  };
+
   // Initialize IAP connection on mount
   useEffect(() => {
     async function initializeIAP() {
@@ -55,7 +66,8 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
           if (receipt) {
             try {
               // Unlock premium
-              await unlockPremium();
+              await AsyncStorage.setItem(PREMIUM_KEY, 'true');
+              setIsPremium(true);
               console.log('💳 Purchase successful, finishing transaction');
 
               // Finish the transaction
@@ -120,17 +132,6 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
     }
     loadPremiumStatus();
   }, []);
-
-  // Unlock premium (called after successful purchase)
-  const unlockPremium = async () => {
-    try {
-      await AsyncStorage.setItem(PREMIUM_KEY, 'true');
-      setIsPremium(true);
-      console.log('🔓 Premium unlocked');
-    } catch (error) {
-      throw new Error('Failed to unlock premium');
-    }
-  };
 
   // Purchase unlock via IAP
   const purchaseUnlock = async () => {
