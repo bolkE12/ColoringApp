@@ -150,6 +150,7 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
     try {
       console.log('💳 Starting purchase flow');
+      console.log('💳 Platform:', Platform.OS);
 
       // Get products (iOS and Android use different product arrays)
       const productIds = Platform.OS === 'ios'
@@ -159,25 +160,39 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       console.log('💳 Fetching products:', productIds);
       const products = await RNIap.getProducts({ skus: productIds });
 
+      console.log('💳 Products received:', products);
+      console.log('💳 Number of products:', products?.length);
+
       if (!products || products.length === 0) {
-        throw new Error('Product not found');
+        console.log('💳 ERROR: No products found!');
+        console.log('💳 Make sure IAP product exists in App Store Connect/Play Console');
+        console.log('💳 Product ID must be:', IAP_PRODUCTS.UNLOCK_ALL);
+        throw new Error('Product not available. Please try again later.');
       }
 
-      console.log('💳 Product found:', products[0]);
+      console.log('💳 Product found:', JSON.stringify(products[0]));
 
       // Purchase the product
-      // For iOS, use requestPurchase
-      // For Android, use requestPurchase as well
+      console.log('💳 Requesting purchase for SKU:', IAP_PRODUCTS.UNLOCK_ALL);
       await RNIap.requestPurchase({ sku: IAP_PRODUCTS.UNLOCK_ALL });
 
       console.log('💳 Purchase request sent, waiting for listener...');
       // The purchase will be handled by the purchaseUpdatedListener set up in useEffect
     } catch (error: any) {
-      console.log('💳 Purchase error:', error);
+      console.log('💳 Purchase error details:', JSON.stringify(error));
+      console.log('💳 Error code:', error.code);
+      console.log('💳 Error message:', error.message);
+
       if (error.code === 'E_USER_CANCELLED') {
         throw new Error('Purchase canceled');
       }
-      throw error;
+
+      // Better error messages
+      if (error.message?.includes('Product not available')) {
+        throw new Error('Product not available. Please try again later.');
+      }
+
+      throw new Error(error.message || 'Purchase failed. Please try again.');
     }
   };
 
