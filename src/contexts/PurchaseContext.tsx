@@ -8,6 +8,10 @@ import { IAP_PRODUCTS } from '../config/iap';
 // ⚠️ PRODUCTION: Set to false before releasing to App Store/Play Store
 const FORCE_FREE_TIER = false;
 
+// ⚠️ TESTFLIGHT DEBUG: Set to true to test IAP flow without real product in TestFlight
+// This allows testing the purchase UI/UX before IAP is approved by Apple
+const TESTFLIGHT_BYPASS = false;
+
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
 
@@ -148,6 +152,13 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // TestFlight bypass for testing UI before IAP is approved
+    if (TESTFLIGHT_BYPASS) {
+      console.log('💳 TestFlight bypass enabled - simulating purchase');
+      await unlockPremium();
+      return;
+    }
+
     try {
       console.log('💳 Starting purchase flow');
       console.log('💳 Platform:', Platform.OS);
@@ -167,6 +178,7 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
         console.log('💳 ERROR: No products found!');
         console.log('💳 Make sure IAP product exists in App Store Connect/Play Console');
         console.log('💳 Product ID must be:', IAP_PRODUCTS.UNLOCK_ALL);
+        console.log('💳 IAP Status must be "Waiting for Review" or "Approved" for TestFlight');
         throw new Error('Product not available. Please try again later.');
       }
 
