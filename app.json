@@ -24,7 +24,7 @@
       "isTabletOnly": true,
       "requiresFullScreen": false,
       "bundleIdentifier": "com.creature.coloring",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save your colored animal creations.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save your colored animals to your photo library.",
