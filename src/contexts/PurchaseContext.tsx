@@ -10,7 +10,7 @@ const FORCE_FREE_TIER = false;
 
 // ⚠️ TESTFLIGHT DEBUG: Set to true to test IAP flow without real product in TestFlight
 // This allows testing the purchase UI/UX before IAP is approved by Apple
-const TESTFLIGHT_BYPASS = true; // ENABLED FOR TESTING - SET TO FALSE BEFORE PRODUCTION BUILD!
+const TESTFLIGHT_BYPASS = false;
 
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
