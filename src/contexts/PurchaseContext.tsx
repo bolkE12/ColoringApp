@@ -1,11 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as InAppPurchases from 'expo-in-app-purchases';
-import { IAP_PRODUCTS } from '../config/iap';
 
 // ⚠️ DEBUG: Set to true to force free tier for testing (ignores AsyncStorage & IAP)
 // ⚠️ PRODUCTION: Set to false before releasing to App Store/Play Store
 const FORCE_FREE_TIER = false;
+
+// Conditionally import IAP modules only when not in free tier mode
+let InAppPurchases: any = null;
+let IAP_PRODUCTS: any = null;
+
+if (!FORCE_FREE_TIER) {
+  try {
+    InAppPurchases = require('expo-in-app-purchases');
+    IAP_PRODUCTS = require('../config/iap').IAP_PRODUCTS;
+  } catch (error) {
+    console.warn('⚠️ IAP modules not available:', error);
+  }
+}
 
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
@@ -36,8 +47,8 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   // Initialize IAP connection on mount
   useEffect(() => {
     async function initializeIAP() {
-      if (FORCE_FREE_TIER) {
-        console.log('💳 Free tier mode enabled');
+      if (!InAppPurchases) {
+        console.log('💳 IAP not available (running in Expo Go)');
         return;
       }
 
@@ -49,11 +60,13 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    initializeIAP();
+    if (!FORCE_FREE_TIER) {
+      initializeIAP();
+    }
 
     // Cleanup on unmount
     return () => {
-      if (!FORCE_FREE_TIER) {
+      if (!FORCE_FREE_TIER && InAppPurchases) {
         InAppPurchases.disconnectAsync();
       }
     };
@@ -106,81 +119,59 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Purchase unlock via IAP
   const purchaseUnlock = async () => {
-    // In development mode (simulator/Expo Go), allow test unlocking
-    if (__DEV__) {
-      console.log('💳 Development mode detected, unlocking for testing');
+    if (!InAppPurchases || !IAP_PRODUCTS) {
+      console.log('💳 IAP not available, unlocking for testing');
       await unlockPremium();
       return;
     }
 
-    if (FORCE_FREE_TIER) {
-      console.log('💳 Free tier mode enabled, unlocking for testing');
-      await unlockPremium();
-      return;
-    }
+    try {
+      console.log('💳 Starting purchase flow');
 
-    return new Promise(async (resolve, reject) => {
-      try {
-        console.log('💳 Starting purchase flow');
+      // Get products
+      const { results, responseCode } = await InAppPurchases.getProductsAsync([
+        IAP_PRODUCTS.UNLOCK_ALL,
+      ]);
 
-        // Get products
-        const { results, responseCode } = await InAppPurchases.getProductsAsync([
-          IAP_PRODUCTS.UNLOCK_ALL,
-        ]);
+      if (responseCode !== InAppPurchases.IAPResponseCode.OK || !results || results.length === 0) {
+        throw new Error('Product not found');
+      }
 
-        console.log('💳 Get products response code:', responseCode);
-        console.log('💳 Products:', results);
+      console.log('💳 Product found:', results[0]);
 
-        if (responseCode !== InAppPurchases.IAPResponseCode.OK || !results || results.length === 0) {
-          console.log('💳 ERROR: Product not found!');
-          console.log('💳 Response code:', responseCode);
-          reject(new Error('Product not available. Please try again later.'));
-          return;
+      // Purchase the product
+      await InAppPurchases.purchaseItemAsync(results[0].productId);
+
+      // Set up purchase listener
+      InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
+        console.log('💳 Purchase response:', responseCode, errorCode);
+
+        if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+          console.log('💳 Purchase successful');
+          await unlockPremium();
+        } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+          console.log('💳 Purchase canceled by user');
+          throw new Error('Purchase canceled');
+        } else {
+          console.log('💳 Purchase failed:', errorCode);
+          throw new Error('Purchase failed');
         }
 
-        console.log('💳 Product found:', results[0]);
-
-        // Set up purchase listener BEFORE making purchase
-        InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
-          console.log('💳 Purchase response code:', responseCode);
-          console.log('💳 Purchase error code:', errorCode);
-          console.log('💳 Purchase results:', results);
-
-          if (responseCode === InAppPurchases.IAPResponseCode.OK) {
-            console.log('💳 Purchase successful');
-            await unlockPremium();
-
-            // Finish transaction
-            if (results && results.length > 0) {
-              await InAppPurchases.finishTransactionAsync(results[0], true);
-            }
-
-            resolve(true);
-          } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
-            console.log('💳 Purchase canceled by user');
-            reject(new Error('Purchase canceled'));
-          } else {
-            console.log('💳 Purchase failed with error code:', errorCode);
-            reject(new Error('Purchase failed. Please try again.'));
-          }
-        });
-
-        // Purchase the product
-        console.log('💳 Requesting purchase for:', results[0].productId);
-        await InAppPurchases.purchaseItemAsync(results[0].productId);
-
-      } catch (error: any) {
-        console.log('💳 Purchase error:', error);
-        console.log('💳 Error message:', error.message);
-        reject(new Error(error.message || 'Purchase failed. Please try again.'));
-      }
-    });
+        // Finish transaction
+        if (results && results.length > 0) {
+          await InAppPurchases.finishTransactionAsync(results[0], true);
+        }
+      });
+    } catch (error) {
+      console.log('💳 Purchase error:', error);
+      throw error;
+    }
   };
 
   // Restore previous purchases
   const restorePurchases = async (): Promise<boolean> => {
-    if (FORCE_FREE_TIER) {
-      console.log('💳 Free tier mode enabled, cannot restore purchases');
+    if (!InAppPurchases || !IAP_PRODUCTS) {
+      console.log('💳 IAP not available, cannot restore purchases');
       return false;
     }
 
@@ -188,9 +179,6 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       console.log('💳 Restoring purchases');
 
       const { results, responseCode } = await InAppPurchases.getPurchaseHistoryAsync();
-
-      console.log('💳 Restore response code:', responseCode);
-      console.log('💳 Purchase history:', results);
 
       if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
         const hasUnlockPurchase = results.some(
