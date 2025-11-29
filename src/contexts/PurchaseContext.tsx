@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as InAppPurchases from 'expo-in-app-purchases';
+
+// Conditionally import IAP - allows testing in Expo Go
+let InAppPurchases: any = null;
+try {
+  InAppPurchases = require('expo-in-app-purchases');
+} catch (error) {
+  console.log('⚠️ IAP not available (Expo Go mode)');
+}
 
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
@@ -32,6 +39,11 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Connect to IAP on mount
   useEffect(() => {
+    if (!InAppPurchases) {
+      console.log('💳 Expo Go mode - IAP disabled, use test unlock');
+      return;
+    }
+
     let purchaseListener: any;
 
     async function initialize() {
@@ -91,6 +103,8 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Check purchase history for existing purchases
   const checkPurchaseHistory = async () => {
+    if (!InAppPurchases) return;
+
     try {
       const { responseCode, results } = await InAppPurchases.getPurchaseHistoryAsync();
 
@@ -119,6 +133,13 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Start purchase flow
   const purchaseUnlock = async () => {
+    // Expo Go mode - simulate purchase for testing
+    if (!InAppPurchases) {
+      console.log('💳 Expo Go mode - simulating purchase for testing');
+      await unlockPremium();
+      return;
+    }
+
     try {
       console.log('💳 Getting products...');
 
@@ -143,6 +164,11 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
   // Restore purchases
   const restorePurchases = async (): Promise<boolean> => {
+    if (!InAppPurchases) {
+      console.log('💳 Expo Go mode - no restore available');
+      return false;
+    }
+
     try {
       await checkPurchaseHistory();
       return isPremium;
