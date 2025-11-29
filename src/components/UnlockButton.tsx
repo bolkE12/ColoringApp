@@ -361,8 +361,8 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   modalButtonText: {
-    fontFamily: 'MadimiOne_400Regular',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#101010',
   },
   modalButtonSecondaryText: {
