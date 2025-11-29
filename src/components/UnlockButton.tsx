@@ -361,8 +361,8 @@ const styles = StyleSheet.create({
     color: '#101010',
   },
   successButtonText: {
+    fontFamily: 'MadimiOne_400Regular',
     fontSize: 20,
-    fontWeight: '700',
     color: '#101010',
   },
   modalButtonSecondaryText: {
