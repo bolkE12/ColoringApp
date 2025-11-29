@@ -119,55 +119,62 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    try {
-      console.log('💳 Starting purchase flow');
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log('💳 Starting purchase flow');
 
-      // Get products
-      const { results, responseCode } = await InAppPurchases.getProductsAsync([
-        IAP_PRODUCTS.UNLOCK_ALL,
-      ]);
+        // Get products
+        const { results, responseCode } = await InAppPurchases.getProductsAsync([
+          IAP_PRODUCTS.UNLOCK_ALL,
+        ]);
 
-      console.log('💳 Get products response code:', responseCode);
-      console.log('💳 Products:', results);
+        console.log('💳 Get products response code:', responseCode);
+        console.log('💳 Products:', results);
 
-      if (responseCode !== InAppPurchases.IAPResponseCode.OK || !results || results.length === 0) {
-        console.log('💳 ERROR: Product not found!');
-        console.log('💳 Response code:', responseCode);
-        throw new Error('Product not available. Please try again later.');
-      }
-
-      console.log('💳 Product found:', results[0]);
-
-      // Set up purchase listener BEFORE making purchase
-      InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
-        console.log('💳 Purchase response code:', responseCode);
-        console.log('💳 Purchase error code:', errorCode);
-        console.log('💳 Purchase results:', results);
-
-        if (responseCode === InAppPurchases.IAPResponseCode.OK) {
-          console.log('💳 Purchase successful');
-          await unlockPremium();
-
-          // Finish transaction
-          if (results && results.length > 0) {
-            await InAppPurchases.finishTransactionAsync(results[0], true);
-          }
-        } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
-          console.log('💳 Purchase canceled by user');
-        } else {
-          console.log('💳 Purchase failed with error code:', errorCode);
+        if (responseCode !== InAppPurchases.IAPResponseCode.OK || !results || results.length === 0) {
+          console.log('💳 ERROR: Product not found!');
+          console.log('💳 Response code:', responseCode);
+          reject(new Error('Product not available. Please try again later.'));
+          return;
         }
-      });
 
-      // Purchase the product
-      console.log('💳 Requesting purchase for:', results[0].productId);
-      await InAppPurchases.purchaseItemAsync(results[0].productId);
+        console.log('💳 Product found:', results[0]);
 
-    } catch (error: any) {
-      console.log('💳 Purchase error:', error);
-      console.log('💳 Error message:', error.message);
-      throw new Error(error.message || 'Purchase failed. Please try again.');
-    }
+        // Set up purchase listener BEFORE making purchase
+        InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
+          console.log('💳 Purchase response code:', responseCode);
+          console.log('💳 Purchase error code:', errorCode);
+          console.log('💳 Purchase results:', results);
+
+          if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+            console.log('💳 Purchase successful');
+            await unlockPremium();
+
+            // Finish transaction
+            if (results && results.length > 0) {
+              await InAppPurchases.finishTransactionAsync(results[0], true);
+            }
+
+            resolve(true);
+          } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+            console.log('💳 Purchase canceled by user');
+            reject(new Error('Purchase canceled'));
+          } else {
+            console.log('💳 Purchase failed with error code:', errorCode);
+            reject(new Error('Purchase failed. Please try again.'));
+          }
+        });
+
+        // Purchase the product
+        console.log('💳 Requesting purchase for:', results[0].productId);
+        await InAppPurchases.purchaseItemAsync(results[0].productId);
+
+      } catch (error: any) {
+        console.log('💳 Purchase error:', error);
+        console.log('💳 Error message:', error.message);
+        reject(new Error(error.message || 'Purchase failed. Please try again.'));
+      }
+    });
   };
 
   // Restore previous purchases
