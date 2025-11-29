@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Conditionally import IAP - allows testing in Expo Go
@@ -37,6 +37,12 @@ const PurchaseContext = createContext<PurchaseContextType | undefined>(undefined
 export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
 
+  // Store pending purchase promise callbacks
+  const purchaseCallbacks = useRef<{
+    resolve?: () => void;
+    reject?: (error: Error) => void;
+  }>({});
+
   // Connect to IAP on mount
   useEffect(() => {
     if (!InAppPurchases) {
@@ -52,19 +58,33 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
         console.log('💳 IAP connected');
 
         // Set up purchase listener
-        purchaseListener = InAppPurchases.setPurchaseListener(({ responseCode, results }) => {
+        purchaseListener = InAppPurchases.setPurchaseListener(async ({ responseCode, results }) => {
           if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
             for (const purchase of results) {
               if (purchase.productId === PRODUCT_ID) {
                 console.log('💳 Purchase successful');
-                unlockPremium();
-                InAppPurchases.finishTransactionAsync(purchase, true);
+                await unlockPremium();
+                await InAppPurchases.finishTransactionAsync(purchase, true);
+
+                // Resolve the pending purchase promise
+                if (purchaseCallbacks.current.resolve) {
+                  purchaseCallbacks.current.resolve();
+                  purchaseCallbacks.current = {};
+                }
               }
             }
           } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
             console.log('💳 Purchase canceled');
+            if (purchaseCallbacks.current.reject) {
+              purchaseCallbacks.current.reject(new Error('Purchase canceled'));
+              purchaseCallbacks.current = {};
+            }
           } else {
             console.log('💳 Purchase failed:', responseCode);
+            if (purchaseCallbacks.current.reject) {
+              purchaseCallbacks.current.reject(new Error('Purchase failed'));
+              purchaseCallbacks.current = {};
+            }
           }
         });
 
@@ -140,26 +160,32 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    try {
-      console.log('💳 Getting products...');
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        console.log('💳 Getting products...');
 
-      const { responseCode, results } = await InAppPurchases.getProductsAsync([PRODUCT_ID]);
+        const { responseCode, results } = await InAppPurchases.getProductsAsync([PRODUCT_ID]);
 
-      if (responseCode !== InAppPurchases.IAPResponseCode.OK || !results || results.length === 0) {
-        console.log('💳 Product not found, response code:', responseCode);
-        throw new Error('Product not available');
+        if (responseCode !== InAppPurchases.IAPResponseCode.OK || !results || results.length === 0) {
+          console.log('💳 Product not found, response code:', responseCode);
+          reject(new Error('Product not available'));
+          return;
+        }
+
+        console.log('💳 Product found:', results[0]);
+        console.log('💳 Starting purchase...');
+
+        // Store callbacks for the purchase listener to call
+        purchaseCallbacks.current = { resolve, reject };
+
+        await InAppPurchases.purchaseItemAsync(PRODUCT_ID);
+
+        // Purchase listener will call resolve/reject when done
+      } catch (error: any) {
+        console.log('💳 Purchase error:', error);
+        reject(error);
       }
-
-      console.log('💳 Product found:', results[0]);
-      console.log('💳 Starting purchase...');
-
-      await InAppPurchases.purchaseItemAsync(PRODUCT_ID);
-
-      // Purchase listener will handle the response
-    } catch (error: any) {
-      console.log('💳 Purchase error:', error);
-      throw error;
-    }
+    });
   };
 
   // Restore purchases

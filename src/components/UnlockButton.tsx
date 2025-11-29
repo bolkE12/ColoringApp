@@ -34,11 +34,6 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
 
     setBirthYear(value);
     setAgeError('');
-
-    // Auto-submit when 4 digits entered
-    if (value.length === 4) {
-      setTimeout(() => handleVerifyAge(value), 300);
-    }
   };
 
   const handleShowAgeVerification = () => {
@@ -191,7 +186,7 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
                 onPress={() => handleVerifyAge()}
               >
                 <MaterialCommunityIcons name="check-bold" size={20} color="#101010" style={{ marginRight: 8 }} />
-                <Text style={styles.modalButtonText}>Verify & Unlock</Text>
+                <Text style={styles.verifyButtonText}>Verify & Unlock</Text>
               </Pressable>
             </View>
           </View>
@@ -217,7 +212,7 @@ export function UnlockButton({ position = 'right' }: UnlockButtonProps) {
               onPress={() => setShowSuccessModal(false)}
             >
               <MaterialCommunityIcons name="thumb-up" size={20} color="#101010" style={{ marginRight: 8 }} />
-              <Text style={styles.modalButtonText}>Awesome!</Text>
+              <Text style={styles.successButtonText}>Awesome!</Text>
             </Pressable>
           </View>
         </View>
@@ -360,9 +355,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ddd',
   },
-  modalButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  verifyButtonText: {
+    fontFamily: 'MadimiOne_400Regular',
+    fontSize: 16,
+    color: '#101010',
+  },
+  successButtonText: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#101010',
   },
   modalButtonSecondaryText: {
