@@ -1,16 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
-import * as RNIap from 'react-native-iap';
+import * as InAppPurchases from 'expo-in-app-purchases';
 import { IAP_PRODUCTS } from '../config/iap';
 
 // ⚠️ DEBUG: Set to true to force free tier for testing (ignores AsyncStorage & IAP)
 // ⚠️ PRODUCTION: Set to false before releasing to App Store/Play Store
 const FORCE_FREE_TIER = false;
-
-// ⚠️ TESTFLIGHT DEBUG: Set to true to test IAP flow without real product in TestFlight
-// This allows testing the purchase UI/UX before IAP is approved by Apple
-const TESTFLIGHT_BYPASS = false;
 
 // Free animals available to all users
 export const FREE_ANIMALS = ['lion', 'fox', 'penguin', 'bunny'];
@@ -38,17 +33,6 @@ const PREMIUM_KEY = 'premium_unlocked';
 export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
 
-  // Unlock premium (defined early so it's available in useEffect)
-  const unlockPremium = async () => {
-    try {
-      await AsyncStorage.setItem(PREMIUM_KEY, 'true');
-      setIsPremium(true);
-      console.log('🔓 Premium unlocked');
-    } catch (error) {
-      throw new Error('Failed to unlock premium');
-    }
-  };
-
   // Initialize IAP connection on mount
   useEffect(() => {
     async function initializeIAP() {
@@ -58,48 +42,20 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        console.log('💳 Initializing IAP connection...');
-        await RNIap.initConnection();
+        await InAppPurchases.connectAsync();
         console.log('💳 IAP Connected');
-
-        // Set up purchase update listener
-        const purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase) => {
-          console.log('💳 Purchase updated:', purchase);
-          const receipt = purchase.transactionReceipt;
-
-          if (receipt) {
-            try {
-              // Unlock premium
-              await AsyncStorage.setItem(PREMIUM_KEY, 'true');
-              setIsPremium(true);
-              console.log('💳 Purchase successful, finishing transaction');
-
-              // Finish the transaction (react-native-iap v12+ simplified API)
-              await RNIap.finishTransaction({ purchase });
-            } catch (error) {
-              console.log('💳 Error finishing transaction:', error);
-            }
-          }
-        });
-
-        const purchaseErrorSubscription = RNIap.purchaseErrorListener((error) => {
-          console.log('💳 Purchase error:', error);
-        });
-
-        // Cleanup subscriptions on unmount
-        return () => {
-          purchaseUpdateSubscription.remove();
-          purchaseErrorSubscription.remove();
-          RNIap.endConnection();
-        };
       } catch (error) {
         console.log('💳 IAP Connection failed:', error);
       }
     }
 
-    const cleanup = initializeIAP();
+    initializeIAP();
+
+    // Cleanup on unmount
     return () => {
-      cleanup?.then((fn) => fn?.());
+      if (!FORCE_FREE_TIER) {
+        InAppPurchases.disconnectAsync();
+      }
     };
   }, []);
 
@@ -137,6 +93,17 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
     loadPremiumStatus();
   }, []);
 
+  // Unlock premium (called after successful purchase)
+  const unlockPremium = async () => {
+    try {
+      await AsyncStorage.setItem(PREMIUM_KEY, 'true');
+      setIsPremium(true);
+      console.log('🔓 Premium unlocked');
+    } catch (error) {
+      throw new Error('Failed to unlock premium');
+    }
+  };
+
   // Purchase unlock via IAP
   const purchaseUnlock = async () => {
     // In development mode (simulator/Expo Go), allow test unlocking
@@ -152,58 +119,53 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // TestFlight bypass for testing UI before IAP is approved
-    if (TESTFLIGHT_BYPASS) {
-      console.log('💳 TestFlight bypass enabled - simulating purchase');
-      await unlockPremium();
-      return;
-    }
-
     try {
       console.log('💳 Starting purchase flow');
-      console.log('💳 Platform:', Platform.OS);
 
-      // Product IDs for both platforms
-      const productIds = [IAP_PRODUCTS.UNLOCK_ALL];
+      // Get products
+      const { results, responseCode } = await InAppPurchases.getProductsAsync([
+        IAP_PRODUCTS.UNLOCK_ALL,
+      ]);
 
-      console.log('💳 Fetching products:', productIds);
-      // react-native-iap v12+ uses direct array parameter, not object
-      const products = await RNIap.getProducts(productIds);
+      console.log('💳 Get products response code:', responseCode);
+      console.log('💳 Products:', results);
 
-      console.log('💳 Products received:', products);
-      console.log('💳 Number of products:', products?.length);
-
-      if (!products || products.length === 0) {
-        console.log('💳 ERROR: No products found!');
-        console.log('💳 Make sure IAP product exists in App Store Connect/Play Console');
-        console.log('💳 Product ID must be:', IAP_PRODUCTS.UNLOCK_ALL);
-        console.log('💳 IAP Status must be "Waiting for Review" or "Approved" for TestFlight');
+      if (responseCode !== InAppPurchases.IAPResponseCode.OK || !results || results.length === 0) {
+        console.log('💳 ERROR: Product not found!');
+        console.log('💳 Response code:', responseCode);
         throw new Error('Product not available. Please try again later.');
       }
 
-      console.log('💳 Product found:', JSON.stringify(products[0]));
+      console.log('💳 Product found:', results[0]);
+
+      // Set up purchase listener BEFORE making purchase
+      InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
+        console.log('💳 Purchase response code:', responseCode);
+        console.log('💳 Purchase error code:', errorCode);
+        console.log('💳 Purchase results:', results);
+
+        if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+          console.log('💳 Purchase successful');
+          await unlockPremium();
+
+          // Finish transaction
+          if (results && results.length > 0) {
+            await InAppPurchases.finishTransactionAsync(results[0], true);
+          }
+        } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+          console.log('💳 Purchase canceled by user');
+        } else {
+          console.log('💳 Purchase failed with error code:', errorCode);
+        }
+      });
 
       // Purchase the product
-      console.log('💳 Requesting purchase for SKU:', IAP_PRODUCTS.UNLOCK_ALL);
-      // react-native-iap v12+ uses skus (plural) with array
-      await RNIap.requestPurchase({ skus: [IAP_PRODUCTS.UNLOCK_ALL] });
+      console.log('💳 Requesting purchase for:', results[0].productId);
+      await InAppPurchases.purchaseItemAsync(results[0].productId);
 
-      console.log('💳 Purchase request sent, waiting for listener...');
-      // The purchase will be handled by the purchaseUpdatedListener set up in useEffect
     } catch (error: any) {
-      console.log('💳 Purchase error details:', JSON.stringify(error));
-      console.log('💳 Error code:', error.code);
+      console.log('💳 Purchase error:', error);
       console.log('💳 Error message:', error.message);
-
-      if (error.code === 'E_USER_CANCELLED') {
-        throw new Error('Purchase canceled');
-      }
-
-      // Better error messages
-      if (error.message?.includes('Product not available')) {
-        throw new Error('Product not available. Please try again later.');
-      }
-
       throw new Error(error.message || 'Purchase failed. Please try again.');
     }
   };
@@ -218,13 +180,14 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('💳 Restoring purchases');
 
-      // Get purchase history
-      const purchases = await RNIap.getAvailablePurchases();
-      console.log('💳 Available purchases:', purchases);
+      const { results, responseCode } = await InAppPurchases.getPurchaseHistoryAsync();
 
-      if (purchases && purchases.length > 0) {
-        const hasUnlockPurchase = purchases.some(
-          (purchase) => purchase.productId === IAP_PRODUCTS.UNLOCK_ALL
+      console.log('💳 Restore response code:', responseCode);
+      console.log('💳 Purchase history:', results);
+
+      if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
+        const hasUnlockPurchase = results.some(
+          (purchase: any) => purchase.productId === IAP_PRODUCTS.UNLOCK_ALL
         );
 
         if (hasUnlockPurchase) {
