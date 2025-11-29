@@ -74,8 +74,8 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
               setIsPremium(true);
               console.log('💳 Purchase successful, finishing transaction');
 
-              // Finish the transaction
-              await RNIap.finishTransaction({ purchase, isConsumable: false });
+              // Finish the transaction (react-native-iap v12+ simplified API)
+              await RNIap.finishTransaction({ purchase });
             } catch (error) {
               console.log('💳 Error finishing transaction:', error);
             }
@@ -163,13 +163,12 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       console.log('💳 Starting purchase flow');
       console.log('💳 Platform:', Platform.OS);
 
-      // Get products (iOS and Android use different product arrays)
-      const productIds = Platform.OS === 'ios'
-        ? [IAP_PRODUCTS.UNLOCK_ALL]  // iOS uses subscription/IAP format
-        : [IAP_PRODUCTS.UNLOCK_ALL]; // Android uses same format
+      // Product IDs for both platforms
+      const productIds = [IAP_PRODUCTS.UNLOCK_ALL];
 
       console.log('💳 Fetching products:', productIds);
-      const products = await RNIap.getProducts({ skus: productIds });
+      // react-native-iap v12+ uses direct array parameter, not object
+      const products = await RNIap.getProducts(productIds);
 
       console.log('💳 Products received:', products);
       console.log('💳 Number of products:', products?.length);
@@ -186,7 +185,8 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
 
       // Purchase the product
       console.log('💳 Requesting purchase for SKU:', IAP_PRODUCTS.UNLOCK_ALL);
-      await RNIap.requestPurchase({ sku: IAP_PRODUCTS.UNLOCK_ALL });
+      // react-native-iap v12+ uses skus (plural) with array
+      await RNIap.requestPurchase({ skus: [IAP_PRODUCTS.UNLOCK_ALL] });
 
       console.log('💳 Purchase request sent, waiting for listener...');
       // The purchase will be handled by the purchaseUpdatedListener set up in useEffect
